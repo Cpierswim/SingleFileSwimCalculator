@@ -19,9 +19,9 @@
       }
 
       #Coach_Controls {
-        background-color: red;
         width: 20vw;
         height: 100vh;
+        border-left: 8px solid red;
       }
 
       #container {
@@ -36,8 +36,18 @@
       .black_background {
         background-color: black;
       }
+
+      #connections_screen {
+        width: 100%;
+      }
+
+      #connection_status {
+        font-size: large;
+        color: white;
+      }
     </style>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
   </head>
   <body>
     <div class="container" id="container">
@@ -48,6 +58,9 @@
 
     <script>
       const BASE_URL = "http://localhost:3000/";
+      const PEER_BASE = "MZyZOVz2ALfaDgZOsYfG";
+      const PEER_TYPE = "COACH";
+      const ID = PEER_BASE + "-" + PEER_TYPE;
 
       var clock;
       var time_delta;
@@ -111,14 +124,26 @@
         main_screen.classList.add("black_background");
         main_screen.appendChild(clock);
 
-        //add the coach controlls
+        //add the coach controls
         const coach_control = document.createElement("div");
         coach_control.id = "Coach_Controls";
         main_screen.appendChild(coach_control);
 
+        //add the connections screen to the coach controls
+        const connections_screen = document.createElement("div");
+        connections_screen.id = "connections_screen";
+        coach_control.appendChild(connections_screen);
+
+        //add the connecting string
+        const connection_p = document.createElement("p");
+        connection_p.innerText = "Attempting to open for connections...";
+        connection_p.id = "connection_status";
+        connections_screen.appendChild(connection_p);
+
         //start the clock
         await getTimeDelta();
         StartClock();
+        OpenForConnections();
       }
 
       function ResetClock() {
@@ -137,6 +162,23 @@
         const date = new Date(start);
         var delay = 1000 - date.getMilliseconds();
         setTimeout(SetClockToTickEverySecond, delay);
+      }
+
+      function OpenForConnections() {
+        peer = new Peer([ID], {});
+
+        //Connection to server established - listening for lanes to connect
+        peer.on("open", function (id) {
+          document.getElementById("connection_status").innerText =
+            "Waiting to for first lane to connect...";
+        });
+
+        //Connection to server failed - try again
+        peer.on("error", () => {
+          setTimeout(() => {
+            OpenForConnections();
+          }, 200);
+        });
       }
     </script>
   </body>
