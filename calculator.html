@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>HTML 5 Boilerplate</title>
+    <title>Swimmer Client</title>
     <link
       href="https://fonts.googleapis.com/css?family=Noto Sans Mono"
       rel="stylesheet"
@@ -28,18 +28,34 @@
       .black_background {
         background-color: black;
       }
+
+      #connection_status {
+        position: fixed;
+        bottom: 3;
+        right: 3;
+        color: white;
+        font-weight: bolder;
+      }
     </style>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
   </head>
   <body>
     <div class="container" id="container">
-      <button type="button" onclick="startApp()" id="fullscreenbutton">
-        Cick Me
+      <button type="button" onclick="startApp(0)" id="fullscreenbutton">
+        Cick Me To Just Start Clock
+      </button>
+      <button type="button" onclick="startApp(1)" id="withconnectionbutton">
+        Click Me To Start With Connection
       </button>
     </div>
 
     <script>
       const BASE_URL = "http://localhost:3000/";
+      const PEER_BASE = "MZyZOVz2ALfaDgZOsYfG";
+      const PEER_TYPE = "LANE";
+      const COACH_ID = PEER_BASE + "-" + "COACH";
+      let ID = PEER_BASE + "-" + PEER_TYPE;
 
       var clock;
       var time_delta;
@@ -89,13 +105,44 @@
         }
       }
 
-      async function startApp() {
+      async function startApp(button_clicked) {
+        if (button_clicked === 0) {
+          setupClock();
+        } else {
+          removeInitialButtons();
+
+          let lane_selector = document.createElement("input");
+          lane_selector.type = "number";
+          lane_selector.id = "lane_selector";
+          lane_selector.min = 1;
+          lane_selector.max = 10;
+          lane_selector.value = 1;
+
+          let lane_label = document.createElement("label");
+          lane_label.htmlFor = "lane_selector";
+          lane_label.innerText = "Select your lane: ";
+          lane_label.id = "lane_label";
+
+          let connect_button = document.createElement("button");
+          connect_button.id = "connect_button";
+          connect_button.type = "button";
+          connect_button.innerText = "Connect";
+          connect_button.addEventListener("click", ConnectToCoach);
+
+          let container = document.getElementById("container");
+
+          container.appendChild(lane_label);
+          container.appendChild(lane_selector);
+          container.appendChild(connect_button);
+        }
+      }
+
+      async function setupClock() {
         var main_screen = document.getElementById("container");
         requestFullScreen(main_screen);
 
         //Update the display to the clock - will need to refactor later
-        const full_screen_button = document.getElementById("fullscreenbutton");
-        full_screen_button.remove();
+        removeInitialButtons();
         clock = document.createElement("p");
         clock.id = "Main_Clock";
         clock.className = "Main_Clock";
@@ -106,6 +153,15 @@
         //start the clock
         await getTimeDelta();
         StartClock();
+      }
+
+      function removeInitialButtons() {
+        const full_screen_button = document.getElementById("fullscreenbutton");
+        if (full_screen_button) full_screen_button.remove();
+        const with_conneciton_button = document.getElementById(
+          "withconnectionbutton"
+        );
+        if (with_conneciton_button) with_conneciton_button.remove();
       }
 
       function ResetClock() {
@@ -124,6 +180,41 @@
         const date = new Date(start);
         var delay = 1000 - date.getMilliseconds();
         setTimeout(SetClockToTickEverySecond, delay);
+      }
+
+      function ConnectToCoach() {
+        ID += "-" + document.getElementById("lane_selector").value;
+
+        if (typeof peer !== "undefined") {
+          if (peer) {
+            peer.destroy();
+          }
+        }
+
+        peer = new Peer([ID], {});
+
+        //connection to coach has been established
+        peer.on("open", function (id) {
+          document.getElementById("lane_label").remove();
+          document.getElementById("lane_selector").remove();
+          document.getElementById("connect_button").remove();
+
+          setupClock();
+
+          //debugger;
+          let connection_status_div = document.createElement("div");
+          connection_status_div.id = "connection_status";
+          connection_status_div.innerText = "Connected to Coach";
+          let temp = document.getElementById("container");
+          temp.appendChild(connection_status_div);
+        });
+
+        //connection failed. Likely because someone else is already connected
+        //with that lane
+        peer.on("error", (err) => {});
+
+        //conection object created, now register what to do with it
+        peer.on("connection", (c) => {});
       }
     </script>
   </body>
