@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>HTML 5 Boilerplate</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Noto Sans Mono"
+      rel="stylesheet"
+    />
+    <style>
+      #Main_Clock {
+        color: greenyellow;
+        font-size: 25.5vw;
+        font-weight: 600;
+        font-family: "Noto Sans Mono", "Courier New", Courier, monospace;
+        width: 80vw;
+      }
+
+      #Coach_Controls {
+        background-color: red;
+        width: 20vw;
+        height: 100vh;
+      }
+
+      #container {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: nowrap;
+      }
+
+      .black_background {
+        background-color: black;
+      }
+    </style>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    <div class="container" id="container">
+      <button type="button" onclick="startApp()" id="fullscreenbutton">
+        Cick Me To Start App
+      </button>
+    </div>
+
+    <script>
+      const BASE_URL = "http://localhost:3000/";
+
+      var clock;
+      var time_delta;
+
+      async function getTimeDelta() {
+        const start_millis = Date.now();
+        const response = await axios.get(
+          `https://worldtimeapi.org/api/timezone/America/Detroit`
+        );
+        const end_millis = Date.now();
+        const data = response.data;
+
+        const trip_time = end_millis - start_millis;
+        const server_millis = parseInt(
+          data["unixtime"] +
+            data["utc_datetime"].split(".")[1].split("+")[0].substring(0, 3)
+        );
+
+        time_delta = server_millis - start_millis - Math.floor(trip_time / 2);
+      }
+
+      function SetClock() {
+        var start = Date.now() + time_delta;
+        const date = new Date(start);
+        var minutes = date.getMinutes();
+        var seconds = date.getSeconds();
+        const checkTime = (i) => {
+          if (i < 10) return `0${i}`;
+          return i + "";
+        };
+        const minute = checkTime(minutes);
+        const second = checkTime(seconds);
+        clock.innerText = `${minute}:${second}`;
+      }
+
+      function requestFullScreen(div_to_fullscreen) {
+        //request Full Screen
+
+        if (div_to_fullscreen.requestFullscreen) {
+          div_to_fullscreen.requestFullscreen();
+        } else if (div_to_fullscreen.webkitRequestFullscreen) {
+          /* Safari */
+          div_to_fullscreen.webkitRequestFullscreen();
+        } else if (div_to_fullscreen.msRequestFullscreen) {
+          /* IE11 */
+          div_to_fullscreen.msRequestFullscreen();
+        }
+      }
+
+      async function startApp() {
+        var main_screen = document.getElementById("container");
+        requestFullScreen(main_screen);
+
+        //Update the display to the clock - will need to refactor later
+        const full_screen_button = document.getElementById("fullscreenbutton");
+        full_screen_button.remove();
+        clock = document.createElement("p");
+        clock.id = "Main_Clock";
+        clock.className = "Main_Clock";
+        clock.innerText = "00:00";
+        main_screen.classList.add("black_background");
+        main_screen.appendChild(clock);
+
+        //add the coach controlls
+        const coach_control = document.createElement("div");
+        coach_control.id = "Coach_Controls";
+        main_screen.appendChild(coach_control);
+
+        //start the clock
+        await getTimeDelta();
+        StartClock();
+      }
+
+      function ResetClock() {
+        SetClock();
+        SetClockFromClockData();
+      }
+
+      function SetClockToTickEverySecond() {
+        SetClock();
+        setInterval(ResetClock, 1000);
+      }
+
+      async function StartClock() {
+        SetClock();
+        var start = Date.now() + time_delta;
+        const date = new Date(start);
+        var delay = 1000 - date.getMilliseconds();
+        setTimeout(SetClockToTickEverySecond, delay);
+      }
+    </script>
+  </body>
+</html>
