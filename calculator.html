@@ -31,8 +31,8 @@
 
       #connection_status {
         position: fixed;
-        bottom: 3;
-        right: 3;
+        bottom: 3px;
+        right: 3px;
         color: white;
         font-weight: bolder;
       }
@@ -138,11 +138,14 @@
       }
 
       async function setupClock() {
+        debugger;
         var main_screen = document.getElementById("container");
         requestFullScreen(main_screen);
 
         //Update the display to the clock - will need to refactor later
         removeInitialButtons();
+        removeConnectionButtons();
+
         clock = document.createElement("p");
         clock.id = "Main_Clock";
         clock.className = "Main_Clock";
@@ -156,13 +159,13 @@
       }
 
       function removeInitialButtons() {
-        const full_screen_button = document.getElementById("fullscreenbutton");
-        if (full_screen_button) full_screen_button.remove();
-        const with_conneciton_button = document.getElementById(
-          "withconnectionbutton"
-        );
-        if (with_conneciton_button) with_conneciton_button.remove();
+        const container = document.getElementById("container");
+        while (container.firstChild) {
+          container.removeChild(container.firstChild);
+        }
       }
+
+      function removeConnectionButtons() {}
 
       function ResetClock() {
         SetClock();
@@ -195,10 +198,6 @@
 
         //connection to coach has been established
         peer.on("open", function (id) {
-          document.getElementById("lane_label").remove();
-          document.getElementById("lane_selector").remove();
-          document.getElementById("connect_button").remove();
-
           setupClock();
 
           //debugger;
@@ -211,7 +210,14 @@
 
         //connection failed. Likely because someone else is already connected
         //with that lane
-        peer.on("error", (err) => {});
+        peer.on("error", (err) => {
+          debugger;
+          let p = document.createElement("p");
+          p.innerText = "ERROR CONNECTING. Try a different lane";
+          p.id = "connection_error";
+          let temp = document.getElementById("container");
+          temp.appendChild(p);
+        });
 
         //conection object created, now register what to do with it
         peer.on("connection", (c) => {});
