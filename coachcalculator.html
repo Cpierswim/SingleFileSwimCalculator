@@ -224,7 +224,7 @@
               c.send({ connection_sucess: "Lane sucessfully added" });
               LANES[lane_number] = { connection: c };
 
-              AddConnectedLaneButton(lane_number);
+              UpdateLaneConnections();
             }
           });
 
@@ -236,14 +236,10 @@
             lane_number = parseInt(lane_number);
 
             //lane disconnected, but don't delete, change it to disconnected
-            let connections_screen =
-              document.getElementById("connections_screen");
-            Array.from(connections_screen.children).forEach((e) => {
-              if (parseInt(e.innerText) == lane_number) {
-                e.classList.remove("connectedLane");
-                e.classList.add("disconnected");
-              }
-            });
+
+            LANES[lane_number].connection = undefined;
+
+            UpdateLaneConnections();
           });
         });
 
@@ -256,19 +252,19 @@
         });
       }
 
-      function AddConnectedLaneButton(lane_number) {
-        const lane_keys = Object.keys(LANES);
-        lane_keys.sort((a, b) => a - b);
-        let connection_screen = document.getElementById("connections_screen");
-        if (connection_screen.firstChild.innerText.startsWith("Wait")) {
-          connection_screen.removeChild(connection_screen.firstChild);
+      function _isLaneConnected(lane_number) {
+        let buttons = document.getElementById("connections_screen");
+        let found = false;
+        Array.from(buttons.children).forEach((e) => {
+          if (parseInt(e.innerText) == lane_number) {
+            found = true;
+          }
+        });
+
+        if (found) {
+          return LANES[lane_number].connection != undefined;
         }
-
-        let lane_button = _getNewLaneButton(lane_number);
-
-        connection_screen.appendChild(lane_button);
-
-        _sortLaneButtons();
+        return found;
       }
 
       function _getNewLaneButton(lane_number) {
@@ -283,23 +279,35 @@
         lane_div.id = "lane_" + lane_number;
         return lane_div;
       }
-      function _sortLaneButtons() {
-        let buttons = document.getElementById("connections_screen");
-        let buttonsArray = Array.from(buttons.children);
-        let sorted = buttonsArray.sort((a, b) => {
-          return parseInt(a.innerText) - parseInt(b.innerText);
-        });
-        sorted.forEach((e) => buttons.appendChild(e));
+      function _getNewDisConnectedLaneButton(lane_number) {
+        let lane_div = document.createElement("div");
+        let lane_p = document.createElement("p");
+
+        lane_p.innerText = lane_number;
+        lane_p.classList.add("pfill");
+        lane_div.appendChild(lane_p);
+        lane_div.classList.add("disconnected");
+        lane_div.classList.add("lane");
+        lane_div.id = "lane_" + lane_number;
+        return lane_div;
       }
-      function _isLaneConnected(lane_number) {
-        let buttons = document.getElementById("connections_screen");
-        let found = false;
-        Array.from(buttons.children).forEach((e) => {
-          if (parseInt(e.innerText) == lane_number) {
-            found = true;
+      function UpdateLaneConnections() {
+        let keys = Object.keys(LANES);
+        let connections_screen = document.getElementById("connections_screen");
+        while (connections_screen.firstChild) {
+          connections_screen.removeChild(connections_screen.firstChild);
+        }
+
+        keys.forEach((key) => {
+          let lane = key;
+          let c = LANES[key].connection;
+
+          if (c !== undefined) {
+            connections_screen.appendChild(_getNewLaneButton(lane));
+          } else {
+            connections_screen.appendChild(_getNewDisConnectedLaneButton(lane));
           }
         });
-        return found;
       }
     </script>
   </body>

@@ -206,7 +206,6 @@
         //connection failed. Likely because someone else is already connected
         //with that lane
         peer.on("error", (err) => {
-          //debugger;
           _errorConnecting(err);
         });
       }
