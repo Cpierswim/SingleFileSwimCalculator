@@ -62,7 +62,7 @@
         font-weight: 800;
         font-family: "Bowlby One SC", cursive;
       }
-      .connnectedLane {
+      .connectedLane {
         border-color: aqua;
         background-color: aquamarine;
       }
@@ -203,7 +203,6 @@
 
         //A lane has connected
         peer.on("connection", function (c) {
-          debugger;
           console.log("Lane Connected");
           let lane_number = c.peer.replace(
             PEER_BASE + "-" + LANE_TYPE + "-",
@@ -211,6 +210,8 @@
           );
           lane_number = parseInt(lane_number);
           LANES[lane_number] = { connection: c };
+
+          PopulateLaneConnections();
 
           c.on("open", () => {});
           c.on("close", () => {});
@@ -228,14 +229,14 @@
       function PopulateLaneConnections() {
         const lane_keys = Object.keys(LANES);
         lane_keys.sort((a, b) => a - b);
-        let connection_screen = document.getElementById("connection_screen");
+        let connection_screen = document.getElementById("connections_screen");
         if (connection_screen.firstChild.innerText.startsWith("Wait")) {
           connection_screen.removeChild(connection_screen.firstChild);
         }
 
         if (lane_keys.length == 1) {
           let lane_button = _getNewLaneButton(lane_keys[0]);
-          connection_screen.children.appendChild(lane_button);
+          connection_screen.appendChild(lane_button);
         } else {
           //already one existing, needs to be addded in a certain order
         }
