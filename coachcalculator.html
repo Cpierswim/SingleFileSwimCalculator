@@ -66,6 +66,11 @@
         border-color: aqua;
         background-color: aquamarine;
       }
+      .disconnected {
+        border-color: blueviolet;
+        background-color: brown;
+        color: beige;
+      }
     </style>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
@@ -229,6 +234,16 @@
               ""
             );
             lane_number = parseInt(lane_number);
+
+            //lane disconnected, but don't delete, change it to disconnected
+            let connections_screen =
+              document.getElementById("connections_screen");
+            Array.from(connections_screen.children).forEach((e) => {
+              if (parseInt(e.innerText) == lane_number) {
+                e.classList.remove("connectedLane");
+                e.classList.add("disconnected");
+              }
+            });
           });
         });
 

@@ -40,7 +40,7 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
   </head>
-  <body>
+  <body onunload="disconnect()">
     <div class="container" id="container">
       <button type="button" onclick="startApp(0)" id="fullscreenbutton">
         Cick Me To Just Start Clock
@@ -249,6 +249,10 @@
         p.id = "connection_error";
         let temp = document.getElementById("container");
         temp.appendChild(p);
+      }
+
+      function disconnect() {
+        peer.destroy();
       }
     </script>
   </body>
