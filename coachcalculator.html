@@ -80,7 +80,7 @@
 
     <script>
       const BASE_URL = "http://localhost:3000/";
-      const PEER_BASE = "2SLDFGPSOGHAA";
+      const PEER_BASE = "3SLDFGPSOGHAA";
       const PEER_TYPE = "COACH";
       const LANE_TYPE = "LANE";
       let ID = PEER_BASE + "-" + PEER_TYPE;
@@ -211,9 +211,16 @@
               ""
             );
             lane_number = parseInt(lane_number);
-            LANES[lane_number] = { connection: c };
 
-            AddConnectedLaneButton(lane_number);
+            if (_isLaneConnected(lane_number)) {
+              c.send({ error: "That lane is taken" });
+              c.close();
+            } else {
+              c.send({ connection_sucess: "Lane sucessfully added" });
+              LANES[lane_number] = { connection: c };
+
+              AddConnectedLaneButton(lane_number);
+            }
           });
 
           c.on("close", () => {
@@ -268,6 +275,16 @@
           return parseInt(a.innerText) - parseInt(b.innerText);
         });
         sorted.forEach((e) => buttons.appendChild(e));
+      }
+      function _isLaneConnected(lane_number) {
+        let buttons = document.getElementById("connections_screen");
+        let found = false;
+        Array.from(buttons.children).forEach((e) => {
+          if (parseInt(e.innerText) == lane_number) {
+            found = true;
+          }
+        });
+        return found;
       }
     </script>
   </body>

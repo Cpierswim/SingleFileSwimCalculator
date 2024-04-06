@@ -53,10 +53,11 @@
     <script>
       const SKIP_FULLSCREEN = 1;
       const BASE_URL = "http://localhost:3000/";
-      const PEER_BASE = "2SLDFGPSOGHAA";
+      const PEER_BASE = "3SLDFGPSOGHAA";
       const PEER_TYPE = "LANE";
       const COACH_ID = PEER_BASE + "-" + "COACH";
       let ID = PEER_BASE + "-" + PEER_TYPE;
+      let CONNECTED_TO_COACH = false;
 
       var clock;
       var time_delta;
@@ -205,11 +206,8 @@
         //connection failed. Likely because someone else is already connected
         //with that lane
         peer.on("error", (err) => {
-          let p = document.createElement("p");
-          p.innerText = "ERROR CONNECTING. Try a different lane";
-          p.id = "connection_error";
-          let temp = document.getElementById("container");
-          temp.appendChild(p);
+          //debugger;
+          _errorConnecting(err);
         });
       }
 
@@ -218,14 +216,39 @@
 
         conn.on("open", function () {
           //connection with coach opened
-          setupClock();
 
-          let connection_status_div = document.createElement("div");
-          connection_status_div.id = "connection_status";
-          connection_status_div.innerText = "Connected to Coach";
-          let temp = document.getElementById("container");
-          temp.appendChild(connection_status_div);
+          conn.on("data", function (data) {
+            if ("error" in data) {
+              _errorConnecting({ message: "That lane is taken" });
+              conn.close();
+            }
+
+            if ("connection_sucess" in data) {
+              setupClock();
+
+              let connection_status_div = document.createElement("div");
+              connection_status_div.id = "connection_status";
+              connection_status_div.innerText = "Connected to Coach";
+              let temp = document.getElementById("container");
+              temp.appendChild(connection_status_div);
+            }
+          });
         });
+      }
+
+      function _errorConnecting(err) {
+        let p = document.createElement("p");
+        if (err.message == "Lost connection to server.") {
+          p.innerText = "Error. ";
+          console.log("Retry");
+        } else if (err.message.includes("is taken")) {
+          console.log("Lane taken");
+          p.innerText = "That lane is taken";
+        }
+
+        p.id = "connection_error";
+        let temp = document.getElementById("container");
+        temp.appendChild(p);
       }
     </script>
   </body>
