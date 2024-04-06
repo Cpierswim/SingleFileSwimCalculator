@@ -45,9 +45,31 @@
         font-size: large;
         color: white;
       }
+      .pfill {
+        margin: 0px;
+        margin-top: -4px;
+      }
+      .lane {
+        width: 50px;
+        height: 50px;
+        border-style: solid;
+        border-width: 2px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 50px;
+        font-weight: 800;
+        font-family: "Bowlby One SC", cursive;
+      }
+      .connnectedLane {
+        border-color: aqua;
+        background-color: aquamarine;
+      }
     </style>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
+    <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
   </head>
   <body>
     <div class="container" id="container">
@@ -58,9 +80,12 @@
 
     <script>
       const BASE_URL = "http://localhost:3000/";
-      const PEER_BASE = "MZyZOVz2ALfaDgZOsYfG";
+      const PEER_BASE = "2SLDFGPSOGHAA";
       const PEER_TYPE = "COACH";
-      const ID = PEER_BASE + "-" + PEER_TYPE;
+      const LANE_TYPE = "LANE";
+      let ID = PEER_BASE + "-" + PEER_TYPE;
+      const LANES = {};
+      const SKIP_FULLSCREEN = 1;
 
       var clock;
       var time_delta;
@@ -98,6 +123,8 @@
 
       function requestFullScreen(div_to_fullscreen) {
         //request Full Screen
+        if (typeof SKIP_FULLSCREEN === "undefined") return;
+        if (SKIP_FULLSCREEN == 1) return;
 
         if (div_to_fullscreen.requestFullscreen) {
           div_to_fullscreen.requestFullscreen();
@@ -148,7 +175,6 @@
 
       function ResetClock() {
         SetClock();
-        SetClockFromClockData();
       }
 
       function SetClockToTickEverySecond() {
@@ -169,16 +195,62 @@
 
         //Connection to server established - listening for lanes to connect
         peer.on("open", function (id) {
+          console.log("Connected and listening");
+          ID = id;
           document.getElementById("connection_status").innerText =
             "Waiting to for first lane to connect...";
         });
 
+        //A lane has connected
+        peer.on("connection", function (c) {
+          debugger;
+          console.log("Lane Connected");
+          let lane_number = c.peer.replace(
+            PEER_BASE + "-" + LANE_TYPE + "-",
+            ""
+          );
+          lane_number = parseInt(lane_number);
+          LANES[lane_number] = { connection: c };
+
+          c.on("open", () => {});
+          c.on("close", () => {});
+        });
+
         //Connection to server failed - try again
-        peer.on("error", () => {
+        peer.on("error", (err) => {
+          console.log("ERROR CONNECTING. Retrying...");
           setTimeout(() => {
             OpenForConnections();
           }, 200);
         });
+      }
+
+      function PopulateLaneConnections() {
+        const lane_keys = Object.keys(LANES);
+        lane_keys.sort((a, b) => a - b);
+        let connection_screen = document.getElementById("connection_screen");
+        if (connection_screen.firstChild.innerText.startsWith("Wait")) {
+          connection_screen.removeChild(connection_screen.firstChild);
+        }
+
+        if (lane_keys.length == 1) {
+          let lane_button = _getNewLaneButton(lane_keys[0]);
+          connection_screen.children.appendChild(lane_button);
+        } else {
+          //already one existing, needs to be addded in a certain order
+        }
+      }
+
+      function _getNewLaneButton(lane_number) {
+        let lane_div = document.createElement("div");
+        let lane_p = document.createElement("p");
+
+        lane_p.innerText = lane_number;
+        lane_p.classList.add("pfill");
+        lane_div.appendChild(lane_p);
+        lane_div.classList.add("connectedLane");
+        lane_div.classList.add("lane");
+        return lane_div;
       }
     </script>
   </body>

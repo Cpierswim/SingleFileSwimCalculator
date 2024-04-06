@@ -51,8 +51,9 @@
     </div>
 
     <script>
+      const SKIP_FULLSCREEN = 1;
       const BASE_URL = "http://localhost:3000/";
-      const PEER_BASE = "MZyZOVz2ALfaDgZOsYfG";
+      const PEER_BASE = "2SLDFGPSOGHAA";
       const PEER_TYPE = "LANE";
       const COACH_ID = PEER_BASE + "-" + "COACH";
       let ID = PEER_BASE + "-" + PEER_TYPE;
@@ -93,6 +94,8 @@
 
       function requestFullScreen(div_to_fullscreen) {
         //request Full Screen
+        if (typeof SKIP_FULLSCREEN === "undefined") return;
+        if (SKIP_FULLSCREEN == 1) return;
 
         if (div_to_fullscreen.requestFullscreen) {
           div_to_fullscreen.requestFullscreen();
@@ -138,13 +141,11 @@
       }
 
       async function setupClock() {
-        debugger;
         var main_screen = document.getElementById("container");
         requestFullScreen(main_screen);
 
         //Update the display to the clock - will need to refactor later
         removeInitialButtons();
-        removeConnectionButtons();
 
         clock = document.createElement("p");
         clock.id = "Main_Clock";
@@ -165,11 +166,8 @@
         }
       }
 
-      function removeConnectionButtons() {}
-
       function ResetClock() {
         SetClock();
-        SetClockFromClockData();
       }
 
       function SetClockToTickEverySecond() {
@@ -188,39 +186,47 @@
       function ConnectToCoach() {
         ID += "-" + document.getElementById("lane_selector").value;
 
-        if (typeof peer !== "undefined") {
-          if (peer) {
-            peer.destroy();
-          }
-        }
+        //if (typeof peer !== "undefined") {
+        //  if (peer) {
+        //    peer.destroy();
+        //  }
+        //}
 
         peer = new Peer([ID], {});
 
-        //connection to coach has been established
+        //connection to SERVER has been established
         peer.on("open", function (id) {
-          setupClock();
-
-          //debugger;
-          let connection_status_div = document.createElement("div");
-          connection_status_div.id = "connection_status";
-          connection_status_div.innerText = "Connected to Coach";
-          let temp = document.getElementById("container");
-          temp.appendChild(connection_status_div);
+          _connect();
         });
+
+        //conection object created, now register what to do with it
+        //peer.on("connection", function (c) {});
 
         //connection failed. Likely because someone else is already connected
         //with that lane
         peer.on("error", (err) => {
-          debugger;
           let p = document.createElement("p");
           p.innerText = "ERROR CONNECTING. Try a different lane";
           p.id = "connection_error";
           let temp = document.getElementById("container");
           temp.appendChild(p);
         });
+      }
 
-        //conection object created, now register what to do with it
-        peer.on("connection", (c) => {});
+      function _connect() {
+        conn = peer.connect(COACH_ID, { serialization: "json" });
+
+        conn.on("open", function () {
+          //connection with coach opened
+          debugger;
+          setupClock();
+
+          let connection_status_div = document.createElement("div");
+          connection_status_div.id = "connection_status";
+          connection_status_div.innerText = "Connected to Coach";
+          let temp = document.getElementById("container");
+          temp.appendChild(connection_status_div);
+        });
       }
     </script>
   </body>
