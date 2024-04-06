@@ -204,17 +204,25 @@
         //A lane has connected
         peer.on("connection", function (c) {
           console.log("Lane Connected");
-          let lane_number = c.peer.replace(
-            PEER_BASE + "-" + LANE_TYPE + "-",
-            ""
-          );
-          lane_number = parseInt(lane_number);
-          LANES[lane_number] = { connection: c };
 
-          PopulateLaneConnections();
+          c.on("open", () => {
+            let lane_number = c.peer.replace(
+              PEER_BASE + "-" + LANE_TYPE + "-",
+              ""
+            );
+            lane_number = parseInt(lane_number);
+            LANES[lane_number] = { connection: c };
 
-          c.on("open", () => {});
-          c.on("close", () => {});
+            AddConnectedLaneButton(lane_number);
+          });
+
+          c.on("close", () => {
+            let lane_number = c.peer.replace(
+              PEER_BASE + "-" + LANE_TYPE + "-",
+              ""
+            );
+            lane_number = parseInt(lane_number);
+          });
         });
 
         //Connection to server failed - try again
@@ -226,7 +234,7 @@
         });
       }
 
-      function PopulateLaneConnections() {
+      function AddConnectedLaneButton(lane_number) {
         const lane_keys = Object.keys(LANES);
         lane_keys.sort((a, b) => a - b);
         let connection_screen = document.getElementById("connections_screen");
@@ -234,12 +242,11 @@
           connection_screen.removeChild(connection_screen.firstChild);
         }
 
-        if (lane_keys.length == 1) {
-          let lane_button = _getNewLaneButton(lane_keys[0]);
-          connection_screen.appendChild(lane_button);
-        } else {
-          //already one existing, needs to be addded in a certain order
-        }
+        let lane_button = _getNewLaneButton(lane_number);
+
+        connection_screen.appendChild(lane_button);
+
+        _sortLaneButtons();
       }
 
       function _getNewLaneButton(lane_number) {
@@ -251,7 +258,16 @@
         lane_div.appendChild(lane_p);
         lane_div.classList.add("connectedLane");
         lane_div.classList.add("lane");
+        lane_div.id = "lane_" + lane_number;
         return lane_div;
+      }
+      function _sortLaneButtons() {
+        let buttons = document.getElementById("connections_screen");
+        let buttonsArray = Array.from(buttons.children);
+        let sorted = buttonsArray.sort((a, b) => {
+          return parseInt(a.innerText) - parseInt(b.innerText);
+        });
+        sorted.forEach((e) => buttons.appendChild(e));
       }
     </script>
   </body>
