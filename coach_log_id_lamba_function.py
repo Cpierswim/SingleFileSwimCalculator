@@ -54,7 +54,7 @@ def get_random_code():
         return code
             
 
-def lambda_handler2(event, context):
+def lambda_handler(event, context):
     if not 'id' in event.keys():
         return {
             'statusCode': 401,
