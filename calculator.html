@@ -52,10 +52,9 @@
 
     <script>
       const SKIP_FULLSCREEN = 1;
-      const BASE_URL = "http://localhost:3000/";
       const PEER_BASE = "3SLDFGPSOGHAA";
       const PEER_TYPE = "LANE";
-      const COACH_ID = PEER_BASE + "-" + "COACH";
+      let COACH_ID = PEER_BASE + "-" + "COACH";
       let ID = PEER_BASE + "-" + PEER_TYPE;
       let CONNECTED_TO_COACH = false;
 
@@ -135,6 +134,19 @@
 
           let container = document.getElementById("container");
 
+          let code_label = document.createElement("label");
+          code_label.htmlFor = "code";
+          code_label.innerText = "Enter Room Code: ";
+          code_label.id = "code_label";
+
+          let code = document.createElement("input");
+          code.type = "text";
+          code.id = "code";
+          code.maxLength = "3";
+
+          container.appendChild(code_label);
+          container.appendChild(code);
+
           container.appendChild(lane_label);
           container.appendChild(lane_selector);
           container.appendChild(connect_button);
@@ -184,33 +196,61 @@
         setTimeout(SetClockToTickEverySecond, delay);
       }
 
-      function ConnectToCoach() {
-        ID += "-" + document.getElementById("lane_selector").value;
-
-        //if (typeof peer !== "undefined") {
-        //  if (peer) {
-        //    peer.destroy();
-        //  }
-        //}
-
-        peer = new Peer([ID], {});
-
-        //connection to SERVER has been established
-        peer.on("open", function (id) {
-          _connect();
-        });
-
-        //conection object created, now register what to do with it
-        //peer.on("connection", function (c) {});
-
-        //connection failed. Likely because someone else is already connected
-        //with that lane
-        peer.on("error", (err) => {
-          _errorConnecting(err);
-        });
+      function getRandomCode(length) {
+        const acceptable = Array.from(
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890-"
+        );
+        let return_code = "";
+        for (i = 0; i < length; i++)
+          return_code +=
+            acceptable[Math.floor(Math.random() * acceptable.length)];
+        return return_code;
       }
 
-      function _connect() {
+      function ConnectToCoach() {
+        let room_key = document.getElementById("code").value;
+
+        if (room_key.length < 3) {
+          _errorConnecting({ message: "Room Key invalid" });
+        } else {
+          ID =
+            getRandomCode(20) +
+            "Lane-" +
+            document.getElementById("lane_selector").value;
+          peer = new Peer(ID);
+
+          //connection to SERVER has been established
+          peer.on("open", function (id) {
+            _connect();
+          });
+
+          //conection object created, now register what to do with it
+          //peer.on("connection", function (c) {});
+
+          //connection failed. Likely because someone else is already connected
+          //with that lane
+          peer.on("error", (err) => {
+            _errorConnecting(err);
+          });
+        }
+      }
+
+      async function _connect() {
+        let room_code = document.getElementById("code").value.toUpperCase();
+
+        let aws_result = await axios.post(
+          "https://v0b4jr6h2k.execute-api.us-east-2.amazonaws.com/test/swimmer/get_id_from_key",
+          {
+            key: room_code,
+          },
+          {
+            headers: { "Content-Type": "text/plain" },
+          }
+        );
+
+        let coach_id = aws_result.data.body.id;
+        COACH_ID = coach_id;
+
         conn = peer.connect(COACH_ID, { serialization: "json" });
 
         conn.on("open", function () {
@@ -243,6 +283,9 @@
         } else if (err.message.includes("is taken")) {
           console.log("Lane taken");
           p.innerText = "That lane is taken";
+        } else if (err.message.includes("Room Key")) {
+          console.log(err.message);
+          p.innerText = err.message;
         }
 
         p.id = "connection_error";

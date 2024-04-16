@@ -12,7 +12,7 @@
     <style>
       #Main_Clock {
         color: greenyellow;
-        font-size: 25.5vw;
+
         font-weight: 600;
         font-family: "Noto Sans Mono", "Courier New", Courier, monospace;
         width: 80vw;
@@ -20,17 +20,13 @@
 
       #Coach_Controls {
         width: 20vw;
-        height: 100vh;
         border-left: 8px solid red;
       }
 
       #container {
         width: 100vw;
         height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-wrap: nowrap;
+        display: block;
       }
 
       .black_background {
@@ -71,10 +67,53 @@
         background-color: brown;
         color: beige;
       }
+      #upper_div {
+        width: 100%;
+        height: 20%;
+      }
+      #lower_div {
+        height: 80%;
+        width: 100%;
+        border-color: white;
+        border-bottom: 3px;
+        border-style: solid;
+      }
+      #room_code {
+        float: left;
+        width: 15%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5vw;
+        color: white;
+        font-weight: 600;
+        text-align: center;
+      }
+      #clock_div {
+        float: left;
+        width: 45%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10vw;
+        color: greenyellow;
+        font-weight: 600;
+        font-family: "Courier New", Courier, monospace;
+      }
+      #connections_div {
+        float: left;
+        width: 40%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+      }
     </style>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
-    <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
   </head>
   <body>
     <div class="container" id="container">
@@ -84,11 +123,11 @@
     </div>
 
     <script>
-      const BASE_URL = "http://localhost:3000/";
       const PEER_BASE = "3SLDFGPSOGHAA";
       const PEER_TYPE = "COACH";
       const LANE_TYPE = "LANE";
       let ID = PEER_BASE + "-" + PEER_TYPE;
+      let ROOM_CODE = "";
       const LANES = {};
       const SKIP_FULLSCREEN = 1;
 
@@ -144,33 +183,42 @@
 
       async function startApp() {
         var main_screen = document.getElementById("container");
+        main_screen.classList.add("black_background");
         requestFullScreen(main_screen);
 
         //Update the display to the clock - will need to refactor later
         const full_screen_button = document.getElementById("fullscreenbutton");
         full_screen_button.remove();
-        clock = document.createElement("p");
-        clock.id = "Main_Clock";
-        clock.className = "Main_Clock";
-        clock.innerText = "00:00";
-        main_screen.classList.add("black_background");
-        main_screen.appendChild(clock);
 
-        //add the coach controls
-        const coach_control = document.createElement("div");
-        coach_control.id = "Coach_Controls";
-        main_screen.appendChild(coach_control);
+        const upper_div = document.createElement("div");
+        upper_div.id = "upper_div";
+        main_screen.appendChild(upper_div);
 
-        //add the connections screen to the coach controls
-        const connections_screen = document.createElement("div");
-        connections_screen.id = "connections_screen";
-        coach_control.appendChild(connections_screen);
+        const lower_div = document.createElement("div");
+        lower_div.id = "lower_div";
+        main_screen.appendChild(lower_div);
 
-        //add the connecting string
-        const connection_p = document.createElement("p");
-        connection_p.innerText = "Attempting to open for connections...";
-        connection_p.id = "connection_status";
-        connections_screen.appendChild(connection_p);
+        const room_code_div = document.createElement("div");
+        room_code_div.id = "room_code";
+        upper_div.appendChild(room_code_div);
+        const room_code_p = document.createElement("p");
+        room_code_p.id = "room_code_text";
+        room_code_p.innerHTML = "Room Code: <br />---";
+        room_code_div.appendChild(room_code_p);
+
+        const clock_div = document.createElement("div");
+        clock_div.id = "clock_div";
+        upper_div.appendChild(clock_div);
+        const clock_p = document.createElement("p");
+        clock_p.id = "clock_text";
+        clock_p.innerHTML = "00:00";
+        clock_div.appendChild(clock_p);
+        const connections_div = document.createElement("div");
+        connections_div.id = "connections_div";
+        connections_div.innerText = "Connecting to server...";
+        upper_div.appendChild(connections_div);
+
+        clock = clock_p;
 
         //start the clock
         await getTimeDelta();
@@ -196,13 +244,28 @@
       }
 
       function OpenForConnections() {
-        peer = new Peer([ID], {});
+        peer = new Peer();
 
         //Connection to server established - listening for lanes to connect
-        peer.on("open", function (id) {
+        peer.on("open", async function (id) {
           console.log("Connected and listening");
           ID = id;
-          document.getElementById("connection_status").innerText =
+          let aws_result = await axios.post(
+            "https://v0b4jr6h2k.execute-api.us-east-2.amazonaws.com/test/coach",
+            {
+              id: ID,
+            },
+            {
+              headers: { "Content-Type": "text/plain" },
+            }
+          );
+
+          ROOM_CODE = aws_result.data.body.key;
+
+          document.getElementById("room_code_text").innerHTML =
+            "Room Code:<br />" + ROOM_CODE;
+
+          document.getElementById("connections_div").innerText =
             "Waiting to for first lane to connect...";
         });
 
@@ -211,11 +274,13 @@
           console.log("Lane Connected");
 
           c.on("open", () => {
-            let lane_number = c.peer.replace(
-              PEER_BASE + "-" + LANE_TYPE + "-",
-              ""
-            );
+            let lane_number = c.peer;
+            let index = c.peer.indexOf("Lane-");
+            index += "Lane-".length;
+            lane_number = c.peer.substring(index, c.peer.length);
             lane_number = parseInt(lane_number);
+
+            lane_number = _getLaneNumerFromLaneConnectionID(c.peer);
 
             if (_isLaneConnected(lane_number)) {
               c.send({ error: "That lane is taken" });
@@ -229,11 +294,7 @@
           });
 
           c.on("close", () => {
-            let lane_number = c.peer.replace(
-              PEER_BASE + "-" + LANE_TYPE + "-",
-              ""
-            );
-            lane_number = parseInt(lane_number);
+            let lane_number = _getLaneNumerFromLaneConnectionID(c.peer);
 
             //lane disconnected, but don't delete, change it to disconnected
 
@@ -252,8 +313,16 @@
         });
       }
 
+      function _getLaneNumerFromLaneConnectionID(id) {
+        let index = id.indexOf("Lane-");
+        index += "Lane-".length;
+        let lane_number = id.substring(index, id.length);
+        lane_number = parseInt(lane_number);
+        return lane_number;
+      }
+
       function _isLaneConnected(lane_number) {
-        let buttons = document.getElementById("connections_screen");
+        let buttons = document.getElementById("connections_div");
         let found = false;
         Array.from(buttons.children).forEach((e) => {
           if (parseInt(e.innerText) == lane_number) {
@@ -293,7 +362,7 @@
       }
       function UpdateLaneConnections() {
         let keys = Object.keys(LANES);
-        let connections_screen = document.getElementById("connections_screen");
+        let connections_screen = document.getElementById("connections_div");
         while (connections_screen.firstChild) {
           connections_screen.removeChild(connections_screen.firstChild);
         }
