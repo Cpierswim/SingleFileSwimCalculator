@@ -2,6 +2,7 @@
 import json 
 import boto3 
 from random import randrange
+import time
 
 
 s3 = boto3.client('s3')
@@ -78,10 +79,12 @@ def lambda_handler(event, context):
         coach_key = get_random_code()
 
         key_file_name = "coach_keys/" + coach_key + ".json"
+        ttl = int(time.time()) + (4 * 60 * 60)
 
         data = {
             "id": id,
-            "key": coach_key
+            "key": coach_key,
+            "ttl": ttl
         }
 
         s3.put_object(
@@ -98,5 +101,8 @@ def lambda_handler(event, context):
 
         return {
                 'statusCode': 201,
-                'body': data
+                'body': {
+                    "id": id,
+                    "key": coach_key
+                }
             }   
