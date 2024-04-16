@@ -17,8 +17,6 @@ for file in response['Contents'] :
         key = name.split('.')[0]
         UsedKeys.append(key)
 
-UsedKeys.append("AAA")
-
 
 bad_words_list = ["ass", "fuc", "fuk", "fuq", "fux", "fck", "coc", "cok", "coq", "kox", 
 "koc", "kok", "koq", "cac", "cak", "caq", "kac", "kak", "kaq", "dic", "dik", "diq", "dix", 
