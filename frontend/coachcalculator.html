@@ -115,7 +115,7 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
   </head>
-  <body>
+  <body onbeforeunload="return closeWebSocket()">
     <div class="container" id="container">
       <button type="button" onclick="startApp()" id="fullscreenbutton">
         Cick Me To Start App
@@ -130,6 +130,7 @@
       let ROOM_CODE = "";
       const LANES = {};
       const SKIP_FULLSCREEN = 1;
+      let socket = undefined;
 
       var clock;
       var time_delta;
@@ -243,74 +244,80 @@
         setTimeout(SetClockToTickEverySecond, delay);
       }
 
+      function keepAlive() {
+        let data = { action: "keepAlive" };
+        socket.send(JSON.stringify(data));
+      }
+
       function OpenForConnections() {
-        peer = new Peer();
+        socket = new WebSocket(
+          "wss://mjim68pp6h.execute-api.us-east-2.amazonaws.com/production/"
+        );
 
-        //Connection to server established - listening for lanes to connect
-        peer.on("open", async function (id) {
-          console.log("Connected and listening");
-          ID = id;
-          let aws_result = await axios.post(
-            "https://v0b4jr6h2k.execute-api.us-east-2.amazonaws.com/test/coach",
-            {
-              id: ID,
-            },
-            {
-              headers: { "Content-Type": "text/plain" },
+        socket.onopen = (event) => {
+          debugger;
+          let connections_div = document.getElementById("connections_div");
+          connections_div.innerText =
+            "Sever connection established. Setting as coach...";
+          let set_connection_type_data = {
+            action: "setConnectionType",
+            type: "coach",
+          };
+          socket.send(JSON.stringify(set_connection_type_data));
+          connections_div.innerText = "Creating room...";
+          let data = { action: "createRoom" };
+          socket.send(JSON.stringify(data));
+
+          setInterval(keepAlive, 120000);
+        };
+
+        socket.onerror = (error) => {
+          let connections_div = document.getElementById("connections_div");
+          connections_div.innerHTML = "Connection Error";
+        };
+
+        socket.onmessage = (event) => {
+          let data = JSON.parse(event.data);
+          debugger;
+          if (data?.message == "Internal server error")
+            _processServerError(event.data);
+          else {
+            if (data.type) {
+              switch (data.type) {
+                case "RoomCreated":
+                  _processRoomCreation(data.data);
+                  break;
+                case "LaneConnect":
+                  _processLaneConnection(data.laneNumber);
+                  break;
+                case "LaneDisconnect":
+                  _processLaneDisconnect(data.laneNumber);
+                  break;
+              }
             }
-          );
+          }
+        };
+      }
 
-          ROOM_CODE = aws_result.data.body.key;
+      function _processServerError(data) {}
 
-          document.getElementById("room_code_text").innerHTML =
-            "Room Code:<br />" + ROOM_CODE;
+      function _processRoomCreation(data) {
+        let room_code_text = document.getElementById("room_code_text");
+        room_code_text.innerHTML = "Room Code<br />" + data.room_key;
+        let connections_div = document.getElementById("connections_div");
+        connections_div.innerText = "Waiting for lanes to connect.";
+      }
 
-          document.getElementById("connections_div").innerText =
-            "Waiting to for first lane to connect...";
-        });
+      function _processLaneConnection(laneNumber) {
+        let lane = parseInt(laneNumber);
+        LANES[lane] = true;
+        UpdateLaneConnections();
+      }
 
-        //A lane has connected
-        peer.on("connection", function (c) {
-          console.log("Lane Connected");
-
-          c.on("open", () => {
-            let lane_number = c.peer;
-            let index = c.peer.indexOf("Lane-");
-            index += "Lane-".length;
-            lane_number = c.peer.substring(index, c.peer.length);
-            lane_number = parseInt(lane_number);
-
-            lane_number = _getLaneNumerFromLaneConnectionID(c.peer);
-
-            if (_isLaneConnected(lane_number)) {
-              c.send({ error: "That lane is taken" });
-              c.close();
-            } else {
-              c.send({ connection_sucess: "Lane sucessfully added" });
-              LANES[lane_number] = { connection: c };
-
-              UpdateLaneConnections();
-            }
-          });
-
-          c.on("close", () => {
-            let lane_number = _getLaneNumerFromLaneConnectionID(c.peer);
-
-            //lane disconnected, but don't delete, change it to disconnected
-
-            LANES[lane_number].connection = undefined;
-
-            UpdateLaneConnections();
-          });
-        });
-
-        //Connection to server failed - try again
-        peer.on("error", (err) => {
-          console.log("ERROR CONNECTING. Retrying...");
-          setTimeout(() => {
-            OpenForConnections();
-          }, 200);
-        });
+      function _processLaneDisconnect(laneNumber) {
+        let lane = parseInt(laneNumber);
+        LANES[lane] = false;
+        UpdateLaneConnections();
       }
 
       function _getLaneNumerFromLaneConnectionID(id) {
@@ -348,6 +355,7 @@
         lane_div.id = "lane_" + lane_number;
         return lane_div;
       }
+
       function _getNewDisConnectedLaneButton(lane_number) {
         let lane_div = document.createElement("div");
         let lane_p = document.createElement("p");
@@ -360,6 +368,7 @@
         lane_div.id = "lane_" + lane_number;
         return lane_div;
       }
+
       function UpdateLaneConnections() {
         let keys = Object.keys(LANES);
         let connections_screen = document.getElementById("connections_div");
@@ -367,16 +376,22 @@
           connections_screen.removeChild(connections_screen.firstChild);
         }
 
+        keys.sort((a, b) => a - b);
+
         keys.forEach((key) => {
           let lane = key;
-          let c = LANES[key].connection;
 
-          if (c !== undefined) {
+          if (LANES[lane]) {
             connections_screen.appendChild(_getNewLaneButton(lane));
           } else {
             connections_screen.appendChild(_getNewDisConnectedLaneButton(lane));
           }
         });
+      }
+
+      function closeWebSocket() {
+        debugger;
+        example_socket.close();
       }
     </script>
   </body>

@@ -40,7 +40,7 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
   </head>
-  <body onunload="disconnect()">
+  <body onbeforeunload="return closeWebSocket()">
     <div class="container" id="container">
       <button type="button" onclick="startApp(0)" id="fullscreenbutton">
         Cick Me To Just Start Clock
@@ -52,14 +52,17 @@
 
     <script>
       const SKIP_FULLSCREEN = 1;
+      const BASE_URL = "http://localhost:3000/";
       const PEER_BASE = "3SLDFGPSOGHAA";
       const PEER_TYPE = "LANE";
-      let COACH_ID = PEER_BASE + "-" + "COACH";
+      const COACH_ID = PEER_BASE + "-" + "COACH";
       let ID = PEER_BASE + "-" + PEER_TYPE;
       let CONNECTED_TO_COACH = false;
 
       var clock;
       var time_delta;
+
+      let socket = undefined;
 
       async function getTimeDelta() {
         const start_millis = Date.now();
@@ -114,6 +117,14 @@
         } else {
           removeInitialButtons();
 
+          let room_code_label = document.createElement("label");
+          room_code_label.htmlFor = "room_code_input";
+          room_code_label.innerText = "Room Code: ";
+          room_code_label.id = "room_code_label";
+
+          let room_code_input = document.createElement("input");
+          room_code_input.id = "room_code_input";
+
           let lane_selector = document.createElement("input");
           lane_selector.type = "number";
           lane_selector.id = "lane_selector";
@@ -132,24 +143,17 @@
           connect_button.innerText = "Connect";
           connect_button.addEventListener("click", ConnectToCoach);
 
+          let connection_messages_display = document.createElement("p");
+          connection_messages_display.id = "connection_messages_display";
+
           let container = document.getElementById("container");
 
-          let code_label = document.createElement("label");
-          code_label.htmlFor = "code";
-          code_label.innerText = "Enter Room Code: ";
-          code_label.id = "code_label";
-
-          let code = document.createElement("input");
-          code.type = "text";
-          code.id = "code";
-          code.maxLength = "3";
-
-          container.appendChild(code_label);
-          container.appendChild(code);
-
+          container.appendChild(room_code_label);
+          container.appendChild(room_code_input);
           container.appendChild(lane_label);
           container.appendChild(lane_selector);
           container.appendChild(connect_button);
+          container.appendChild(connection_messages_display);
         }
       }
 
@@ -196,61 +200,92 @@
         setTimeout(SetClockToTickEverySecond, delay);
       }
 
-      function getRandomCode(length) {
-        const acceptable = Array.from(
-          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890-"
-        );
-        let return_code = "";
-        for (i = 0; i < length; i++)
-          return_code +=
-            acceptable[Math.floor(Math.random() * acceptable.length)];
-        return return_code;
+      function keepAlive() {
+        let data = { action: "keepAlive" };
+        socket.send(JSON.stringify(data));
       }
 
       function ConnectToCoach() {
-        let room_key = document.getElementById("code").value;
-
-        if (room_key.length < 3) {
-          _errorConnecting({ message: "Room Key invalid" });
-        } else {
-          ID =
-            getRandomCode(20) +
-            "Lane-" +
-            document.getElementById("lane_selector").value;
-          peer = new Peer(ID);
-
-          //connection to SERVER has been established
-          peer.on("open", function (id) {
-            _connect();
-          });
-
-          //conection object created, now register what to do with it
-          //peer.on("connection", function (c) {});
-
-          //connection failed. Likely because someone else is already connected
-          //with that lane
-          peer.on("error", (err) => {
-            _errorConnecting(err);
-          });
-        }
-      }
-
-      async function _connect() {
-        let room_code = document.getElementById("code").value.toUpperCase();
-
-        let aws_result = await axios.post(
-          "https://v0b4jr6h2k.execute-api.us-east-2.amazonaws.com/test/swimmer/get_id_from_key",
-          {
-            key: room_code,
-          },
-          {
-            headers: { "Content-Type": "text/plain" },
-          }
+        let connection_messages_display = document.getElementById(
+          "connection_messages_display"
+        );
+        connection_messages_display.innerHTML =
+          "Attempting to connect to server...";
+        socket = new WebSocket(
+          "wss://mjim68pp6h.execute-api.us-east-2.amazonaws.com/production/"
         );
 
-        let coach_id = aws_result.data.body.id;
-        COACH_ID = coach_id;
+        socket.onopen = (event) => {
+          debugger;
+          connection_messages_display.innerHTML +=
+            "<br />Connection Established.";
+          let set_connection_type_data = {
+            action: "setConnectionType",
+            type: "swimmer",
+          };
+          socket.send(JSON.stringify(set_connection_type_data));
+          setInterval(keepAlive, 120000);
 
+          connection_messages_display.innerHTML +=
+            "<br />Attempting to connect to room";
+          let room_code_input = document.getElementById("room_code_input");
+          let roomKey = room_code_input.value;
+          let lane_selector = document.getElementById("lane_selector");
+          let lane = lane_selector.value;
+          let data = {
+            action: "laneConnect",
+            LaneNumber: lane,
+            roomKey: roomKey,
+          };
+          socket.send(JSON.stringify(data));
+        };
+
+        socket.onerror = (error) => {
+          connection_messages_display.innerHTML += "<br />Error in connection";
+        };
+
+        socket.onmessage = (event) => {
+          let data = JSON.parse(event.data);
+          debugger;
+          if (data?.message == "Internal server error")
+            _handleInternalServerError();
+          else {
+            switch (data.type) {
+              case "LaneConnect":
+                connection_messages_display.innerHTML +=
+                  "<br />Connected to Room";
+                _processLaneConnect(data.laneNumber);
+                break;
+              case "error":
+                _processError(data);
+                break;
+            }
+          }
+        };
+
+        socket.onclose = (event) => {};
+      }
+
+      function _handleInternalServerError() {}
+
+      function _processLaneConnect(laneNumber) {
+        debugger;
+        setupClock();
+
+        let connection_status_div = document.createElement("div");
+        connection_status_div.id = "connection_status";
+        connection_status_div.innerText = "Connected to Coach";
+        let temp = document.getElementById("container");
+        temp.appendChild(connection_status_div);
+      }
+
+      function _processError(data) {
+        let connection_messages_display = document.getElementById(
+          "connection_messages_display"
+        );
+        connection_messages_display.innerHTML += "<br />Error: " + data.message;
+      }
+      function _connect() {
         conn = peer.connect(COACH_ID, { serialization: "json" });
 
         conn.on("open", function () {
@@ -283,9 +318,6 @@
         } else if (err.message.includes("is taken")) {
           console.log("Lane taken");
           p.innerText = "That lane is taken";
-        } else if (err.message.includes("Room Key")) {
-          console.log(err.message);
-          p.innerText = err.message;
         }
 
         p.id = "connection_error";
@@ -295,6 +327,11 @@
 
       function disconnect() {
         peer.destroy();
+      }
+
+      function closeWebSocket() {
+        debugger;
+        example_socket.close();
       }
     </script>
   </body>
