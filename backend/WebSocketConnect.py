@@ -17,7 +17,7 @@ def lambda_handler(event, context):
 
     filename = BUCKET_PREFIX + connectionId + ".json"
 
-    ttl = int(time.time()) + (4 * 60 * 60)
+    ttl = int(time.time()) + (12 * 60 * 60)
 
     data = {
         "connectionId": connectionId,
