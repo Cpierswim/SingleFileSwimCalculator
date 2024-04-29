@@ -59,8 +59,9 @@
       let ID = PEER_BASE + "-" + PEER_TYPE;
       let CONNECTED_TO_COACH = false;
 
-      var clock;
-      var time_delta;
+      let clock;
+      let time_delta;
+      let clock_promise;
 
       let socket = undefined;
 
@@ -173,7 +174,21 @@
 
         //start the clock
         await getTimeDelta();
-        StartClock();
+        //StartClock();
+        newStartClock();
+      }
+
+      function newSetClock() {
+        let curr = Date.now();
+        curr += time_delta;
+        let display_time = new Date(curr);
+        clock.innerText = `${checkTime(display_time.getMinutes())}:${checkTime(
+          display_time.getSeconds()
+        )}`;
+      }
+
+      function newStartClock() {
+        setInterval(newSetClock, 10);
       }
 
       function removeInitialButtons() {
@@ -189,7 +204,7 @@
 
       function SetClockToTickEverySecond() {
         SetClock();
-        setInterval(ResetClock, 1000);
+        clock_promise = setInterval(ResetClock, 1000);
       }
 
       async function StartClock() {
@@ -216,7 +231,6 @@
         );
 
         socket.onopen = (event) => {
-          debugger;
           connection_messages_display.innerHTML +=
             "<br />Connection Established.";
           let set_connection_type_data = {
@@ -246,7 +260,6 @@
 
         socket.onmessage = (event) => {
           let data = JSON.parse(event.data);
-          debugger;
           if (data?.message == "Internal server error")
             _handleInternalServerError();
           else {
@@ -259,6 +272,10 @@
               case "error":
                 _processError(data);
                 break;
+              case "resetClock":
+                //syncClock(data);
+                newSyncClock(data);
+                break;
             }
           }
         };
@@ -269,7 +286,6 @@
       function _handleInternalServerError() {}
 
       function _processLaneConnect(laneNumber) {
-        debugger;
         setupClock();
 
         let connection_status_div = document.createElement("div");
@@ -330,8 +346,51 @@
       }
 
       function closeWebSocket() {
-        debugger;
         example_socket.close();
+      }
+
+      function syncClock(data) {
+        clearInterval(clock_promise);
+        const checkTime = (i) => {
+          if (i < 10) return `0${i}`;
+          return i + "";
+        };
+
+        let minutes = checkTime(data.minutes);
+        let seconds = checkTime(data.seconds);
+
+        clock.innerText = minutes + ":" + seconds;
+        clock_promise = setInterval(tempResetClock, 1000);
+      }
+
+      function tempResetClock() {
+        let clock_text = clock.innerText;
+        let clock_text_list = clock_text.split(":");
+        let minutes = parseInt(clock_text_list[0]);
+        let seconds = parseInt(clock_text_list[1]);
+        seconds++;
+        if (seconds >= 60) {
+          minutes++;
+          seconds = 0;
+        }
+        if (minutes >= 60) minutes = 0;
+        let new_text = checkTime(minutes) + ":" + checkTime(seconds);
+        clock.innerText = new_text;
+      }
+
+      function checkTime(i) {
+        if (i < 10) return `0${i}`;
+        return i + "";
+      }
+
+      function newSyncClock(data) {
+        let now = Date.now();
+        let adjusted_time = new Date(now);
+
+        adjusted_time.setMinutes(data.minutes);
+        adjusted_time.setSeconds(data.seconds);
+        adjusted_time.setMilliseconds(0);
+        time_delta = 0 - (now - adjusted_time.getTime());
       }
     </script>
   </body>

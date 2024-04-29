@@ -132,11 +132,8 @@
       const SKIP_FULLSCREEN = 1;
       let socket = undefined;
 
-      let clock;
-      let time_delta;
-      let roomKey;
-
-      clock_promise = undefined;
+      var clock;
+      var time_delta;
 
       async function getTimeDelta() {
         const start_millis = Date.now();
@@ -224,17 +221,9 @@
 
         clock = clock_p;
 
-        const sync_clock_button = document.createElement("button");
-        sync_clock_button.id = "sync_clock_button";
-        sync_clock_button.innerText = "Sync Clocks";
-        sync_clock_button.addEventListener("click", sendSyncClocksCommand);
-
-        lower_div.appendChild(sync_clock_button);
-
         //start the clock
         await getTimeDelta();
-        //StartClock();
-        newStartClock();
+        StartClock();
         OpenForConnections();
       }
 
@@ -244,7 +233,7 @@
 
       function SetClockToTickEverySecond() {
         SetClock();
-        clock_promise = setInterval(ResetClock, 1000);
+        setInterval(ResetClock, 1000);
       }
 
       async function StartClock() {
@@ -253,19 +242,6 @@
         const date = new Date(start);
         var delay = 1000 - date.getMilliseconds();
         setTimeout(SetClockToTickEverySecond, delay);
-      }
-
-      function newStartClock() {
-        setInterval(newSetClock, 10);
-      }
-
-      function newSetClock() {
-        let curr = Date.now();
-        curr += time_delta;
-        let display_time = new Date(curr);
-        clock.innerText = `${checkTime(display_time.getMinutes())}:${checkTime(
-          display_time.getSeconds()
-        )}`;
       }
 
       function keepAlive() {
@@ -279,6 +255,7 @@
         );
 
         socket.onopen = (event) => {
+          debugger;
           let connections_div = document.getElementById("connections_div");
           connections_div.innerText =
             "Sever connection established. Setting as coach...";
@@ -301,6 +278,7 @@
 
         socket.onmessage = (event) => {
           let data = JSON.parse(event.data);
+          debugger;
           if (data?.message == "Internal server error")
             _processServerError(event.data);
           else {
@@ -315,10 +293,6 @@
                 case "LaneDisconnect":
                   _processLaneDisconnect(data.laneNumber);
                   break;
-                case "resetClock":
-                  //syncClock(data);
-                  newSyncClock(data);
-                  break;
               }
             }
           }
@@ -330,7 +304,6 @@
       function _processRoomCreation(data) {
         let room_code_text = document.getElementById("room_code_text");
         room_code_text.innerHTML = "Room Code<br />" + data.room_key;
-        roomKey = data.room_key;
         let connections_div = document.getElementById("connections_div");
         connections_div.innerText = "Waiting for lanes to connect.";
       }
@@ -417,67 +390,8 @@
       }
 
       function closeWebSocket() {
+        debugger;
         example_socket.close();
-      }
-
-      function sendSyncClocksCommand() {
-        let clock_text = clock_div.innerText;
-        let split_clock_text = clock_text.split(":");
-        let minutes = parseInt(split_clock_text[0]);
-        let seconds = parseInt(split_clock_text[1]);
-
-        let data = {
-          action: "syncClocks",
-          minutes: minutes,
-          seconds: 0,
-          roomKey: roomKey,
-        };
-
-        socket.send(JSON.stringify(data));
-      }
-
-      function syncClock(data) {
-        clearInterval(clock_promise);
-        const checkTime = (i) => {
-          if (i < 10) return `0${i}`;
-          return i + "";
-        };
-
-        let minutes = checkTime(data.minutes);
-        let seconds = checkTime(data.seconds);
-
-        clock_div.innerText = minutes + ":" + seconds;
-        clock_promise = setInterval(tempResetClock, 1000);
-      }
-
-      function newSyncClock(data) {
-        let now = Date.now();
-        let adjusted_time = new Date(now);
-
-        adjusted_time.setMinutes(data.minutes);
-        adjusted_time.setSeconds(data.seconds);
-        adjusted_time.setMilliseconds(0);
-        time_delta = 0 - (now - adjusted_time.getTime());
-      }
-
-      function tempResetClock() {
-        let clock_text = clock_div.innerText;
-        let clock_text_list = clock_text.split(":");
-        let minutes = parseInt(clock_text_list[0]);
-        let seconds = parseInt(clock_text_list[1]);
-        seconds++;
-        if (seconds >= 60) {
-          minutes++;
-          seconds = 0;
-        }
-        if (minutes >= 60) minutes = 0;
-        let new_text = checkTime(minutes) + ":" + checkTime(seconds);
-        clock_div.innerText = new_text;
-      }
-
-      function checkTime(i) {
-        if (i < 10) return `0${i}`;
-        return i + "";
       }
     </script>
   </body>

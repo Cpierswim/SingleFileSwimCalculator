@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coach Server</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Noto Sans Mono"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+      #main_screen {
+        width: 100vw;
+        height: 100vh;
+      }
+      #upper_portion {
+        width: 100%;
+        height: 20%;
+        background-color: red;
+        display: flex;
+      }
+      #lower_portion {
+        width: 100%;
+        height: 80%;
+        background-color: blue;
+      }
+      #room_code_div {
+        width: 15%;
+        height: 100%;
+        background-color: green;
+      }
+      #clock_div {
+        width: 25%;
+        background-color: black;
+        color: white;
+      }
+      #connected_lanes_display {
+        width: 60%;
+        background-color: yellow;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main_screen" id="container">
+      <button type="button" onclick="startApp()" id="fullscreenbutton">
+        Cick Me To Start App
+      </button>
+    </div>
+
+    <script>
+      //GLOBAL CONSTANTS
+      const ROOM_CODE_DISPLAY_ID = "room_code_display";
+      const CLOCK_DISPLAY_ID = "clock_display";
+      const CONNECTED_LANES_DISPLAY_ID = "connected_lanes_display";
+
+      //GOBAL VARIABLES
+      let room_code_display = undefined;
+      let clock_display = undefined;
+      let clock_minutes = 0;
+      let clock_seconds = 0;
+      let connected_lanes_display = undefined;
+      let time_delta = 0;
+
+      async function startApp() {
+        requestFullScreen(main_screen);
+        createCoachView();
+        debugger;
+        //start the clock
+        await getTimeDelta();
+        StartClock();
+      }
+
+      function requestFullScreen(div_to_fullscreen) {
+        //request Full Screen
+        if (typeof SKIP_FULLSCREEN === "undefined") return;
+        if (SKIP_FULLSCREEN == 1) return;
+
+        if (div_to_fullscreen.requestFullscreen) {
+          div_to_fullscreen.requestFullscreen();
+        } else if (div_to_fullscreen.webkitRequestFullscreen) {
+          /* Safari */
+          div_to_fullscreen.webkitRequestFullscreen();
+        } else if (div_to_fullscreen.msRequestFullscreen) {
+          /* IE11 */
+          div_to_fullscreen.msRequestFullscreen();
+        }
+      }
+      function createCoachView() {
+        let main_screen = document.getElementById("main_screen");
+        //create a blank canvas
+        const full_screen_button = document.getElementById("fullscreenbutton");
+        full_screen_button.remove();
+
+        //create an upper and lower portion
+        let upper_portion = document.createElement("div");
+        upper_portion.id = "upper_portion";
+        let lower_portion = document.createElement("div");
+        lower_portion.id = "lower_portion";
+        main_screen.appendChild(upper_portion);
+        main_screen.appendChild(lower_portion);
+
+        //in the upper left portion, create the room code display
+        let room_code_div = document.createElement("div");
+        room_code_div.id = "room_code_div";
+        upper_portion.appendChild(room_code_div);
+        let room_code_label = document.createElement("p");
+        room_code_label.innerText = "Room Code:";
+        room_code_div.appendChild(room_code_label);
+        room_code_display = document.createElement("p");
+        room_code_display.id = ROOM_CODE_DISPLAY_ID;
+        room_code_display.innerText = "---";
+        room_code_div.appendChild(room_code_display);
+
+        //in the upper middle portion, create the clock
+        let clock_div = document.createElement("div");
+        clock_div.id = "clock_div";
+        upper_portion.appendChild(clock_div);
+        clock_display = document.createElement("p");
+        clock_display.id = CLOCK_DISPLAY_ID;
+        clock_div.appendChild(clock_display);
+        clock_display.innerText = "00:00";
+
+        //in the upper right portion, create the conencted lanes display
+        connected_lanes_display = document.createElement("div");
+        connected_lanes_display.id = CONNECTED_LANES_DISPLAY_ID;
+        upper_portion.appendChild(connected_lanes_display);
+      }
+      async function getTimeDelta() {
+        const start_millis = Date.now();
+        const response = await axios.get(
+          `https://worldtimeapi.org/api/timezone/America/Detroit`
+        );
+        const end_millis = Date.now();
+        const data = response.data;
+
+        const trip_time = end_millis - start_millis;
+        const server_millis = parseInt(
+          data["unixtime"] +
+            data["utc_datetime"].split(".")[1].split("+")[0].substring(0, 3)
+        );
+
+        time_delta = server_millis - start_millis - Math.floor(trip_time / 2);
+      }
+      function StartClock() {
+        var start = Date.now() + time_delta;
+        const date = new Date(start);
+        var delay = 1000 - date.getMilliseconds();
+        setTimeout(SetClockToTickEverySecond, delay);
+      }
+      function SetClock() {
+        const addLeadingZeroes = (i) => {
+          if (i < 10) return `0${i}`;
+          return i + "";
+        };
+        clock_display.innerText = `${addLeadingZeroes(
+          minutes
+        )}:${addLeadingZeroes(clock_seconds)}`;
+      }
+      function ResetClock() {
+        SetClock();
+      }
+
+      function SetClockToTickEverySecond() {
+        SetClock();
+        setInterval(ResetClock, 1000);
+      }
+    </script>
+  </body>
+</html>
