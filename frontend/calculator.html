@@ -51,7 +51,7 @@
     </div>
 
     <script>
-      const SKIP_FULLSCREEN = 1;
+      const SKIP_FULLSCREEN = 0;
       const BASE_URL = "http://localhost:3000/";
       const PEER_BASE = "3SLDFGPSOGHAA";
       const PEER_TYPE = "LANE";
@@ -83,8 +83,10 @@
       }
 
       function newGetTimeDelta() {
-        let data = { action: "getTime", initial_time: Date.now() };
-        socket.send(JSON.stringify(data));
+        if (socket.readyState == 1) {
+          let data = { action: "getTime", initial_time: Date.now() };
+          socket.send(JSON.stringify(data));
+        }
       }
 
       function dealWithTimeStamp(data) {
@@ -170,6 +172,23 @@
       }
 
       async function setupClock() {
+        socket = new WebSocket(
+          "wss://mjim68pp6h.execute-api.us-east-2.amazonaws.com/production/"
+        );
+        socket.onopen = (event) => {
+          newGetTimeDelta();
+        };
+        socket.onmessage = (event) => {
+          let data = JSON.parse(event.data);
+          if (data?.message == "Internal server error")
+            _handleInternalServerError();
+          else {
+            if (data.type == "timestamp") {
+              dealWithTimeStamp(data);
+            }
+          }
+        };
+
         var main_screen = document.getElementById("container");
         requestFullScreen(main_screen);
 
@@ -247,6 +266,7 @@
         );
 
         socket.onopen = (event) => {
+          newGetTimeDelta();
           connection_messages_display.innerHTML +=
             "<br />Connection Established.";
           let set_connection_type_data = {
@@ -254,7 +274,7 @@
             type: "swimmer",
           };
           socket.send(JSON.stringify(set_connection_type_data));
-          setInterval(newGetTimeDelta, 120000);
+          setInterval(newGetTimeDelta, 10000);
 
           connection_messages_display.innerHTML +=
             "<br />Attempting to connect to room";
