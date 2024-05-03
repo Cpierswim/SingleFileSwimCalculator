@@ -123,77 +123,16 @@
     </div>
 
     <script>
-      const PEER_BASE = "3SLDFGPSOGHAA";
-      const PEER_TYPE = "COACH";
-      const LANE_TYPE = "LANE";
-      let ID = PEER_BASE + "-" + PEER_TYPE;
-      let ROOM_CODE = "";
-      const LANES = {};
       const SKIP_FULLSCREEN = 1;
-      let socket = undefined;
 
+      let socket = undefined;
+      const LANES = {};
       let clock;
       let time_delta;
       let roomKey;
 
-      clock_promise = undefined;
-
-      async function getTimeDelta() {
-        const start_millis = Date.now();
-        const response = await axios.get(
-          `https://worldtimeapi.org/api/timezone/America/Detroit`
-        );
-        const end_millis = Date.now();
-        const data = response.data;
-
-        const trip_time = end_millis - start_millis;
-        const server_millis = parseInt(
-          data["unixtime"] +
-            data["utc_datetime"].split(".")[1].split("+")[0].substring(0, 3)
-        );
-
-        time_delta = server_millis - start_millis + Math.floor(trip_time / 2);
-      }
-
-      function newGetTimeDelta() {
-        let data = { action: "getTime", initial_time: Date.now() };
-        socket.send(JSON.stringify(data));
-      }
-
-      function dealWithTimeStamp(data) {
-        let current_time = Date.now();
-        let trip_time = current_time - data.initial_time;
-        time_delta = data.timestamp - current_time + Math.floor(trip_time / 2);
-      }
-
-      function SetClock() {
-        var start = Date.now() + time_delta;
-        const date = new Date(start);
-        var minutes = date.getMinutes();
-        var seconds = date.getSeconds();
-        const checkTime = (i) => {
-          if (i < 10) return `0${i}`;
-          return i + "";
-        };
-        const minute = checkTime(minutes);
-        const second = checkTime(seconds);
-        clock.innerText = `${minute}:${second}`;
-      }
-
-      function requestFullScreen(div_to_fullscreen) {
-        //request Full Screen
-        if (typeof SKIP_FULLSCREEN === "undefined") return;
-        if (SKIP_FULLSCREEN == 1) return;
-
-        if (div_to_fullscreen.requestFullscreen) {
-          div_to_fullscreen.requestFullscreen();
-        } else if (div_to_fullscreen.webkitRequestFullscreen) {
-          /* Safari */
-          div_to_fullscreen.webkitRequestFullscreen();
-        } else if (div_to_fullscreen.msRequestFullscreen) {
-          /* IE11 */
-          div_to_fullscreen.msRequestFullscreen();
-        }
+      function closeWebSocket() {
+        socket.close();
       }
 
       async function startApp() {
@@ -246,29 +185,8 @@
         //await getTimeDelta();
 
         //StartClock();
-        newStartClock();
-        OpenForConnections();
-      }
-
-      function ResetClock() {
-        SetClock();
-      }
-
-      function SetClockToTickEverySecond() {
-        SetClock();
-        clock_promise = setInterval(ResetClock, 1000);
-      }
-
-      async function StartClock() {
-        SetClock();
-        var start = Date.now() + time_delta;
-        const date = new Date(start);
-        var delay = 1000 - date.getMilliseconds();
-        setTimeout(SetClockToTickEverySecond, delay);
-      }
-
-      function newStartClock() {
         setInterval(newSetClock, 10);
+        OpenForConnections();
       }
 
       function newSetClock() {
@@ -284,10 +202,20 @@
         )}`;
       }
 
-      function keepAlive() {
-        //let data = { action: "keepAlive" };
-        //socket.send(JSON.stringify(data));
-        newGetTimeDelta();
+      function requestFullScreen(div_to_fullscreen) {
+        //request Full Screen
+        if (typeof SKIP_FULLSCREEN === "undefined") return;
+        if (SKIP_FULLSCREEN == 1) return;
+
+        if (div_to_fullscreen.requestFullscreen) {
+          div_to_fullscreen.requestFullscreen();
+        } else if (div_to_fullscreen.webkitRequestFullscreen) {
+          /* Safari */
+          div_to_fullscreen.webkitRequestFullscreen();
+        } else if (div_to_fullscreen.msRequestFullscreen) {
+          /* IE11 */
+          div_to_fullscreen.msRequestFullscreen();
+        }
       }
 
       function OpenForConnections() {
@@ -346,6 +274,11 @@
         };
       }
 
+      function newGetTimeDelta() {
+        let data = { action: "getTime", initial_time: Date.now() };
+        socket.send(JSON.stringify(data));
+      }
+
       function _processServerError(data) {}
 
       function _processRoomCreation(data) {
@@ -368,27 +301,40 @@
         UpdateLaneConnections();
       }
 
-      function _getLaneNumerFromLaneConnectionID(id) {
-        let index = id.indexOf("Lane-");
-        index += "Lane-".length;
-        let lane_number = id.substring(index, id.length);
-        lane_number = parseInt(lane_number);
-        return lane_number;
+      function newSyncClock(data) {
+        let now = Date.now();
+        let adjusted_time = new Date(now);
+
+        adjusted_time.setMinutes(data.minutes);
+        adjusted_time.setSeconds(data.seconds);
+        adjusted_time.setMilliseconds(0);
+        time_delta = 0 - (now - adjusted_time.getTime());
       }
 
-      function _isLaneConnected(lane_number) {
-        let buttons = document.getElementById("connections_div");
-        let found = false;
-        Array.from(buttons.children).forEach((e) => {
-          if (parseInt(e.innerText) == lane_number) {
-            found = true;
+      function dealWithTimeStamp(data) {
+        let current_time = Date.now();
+        let trip_time = current_time - data.initial_time;
+        time_delta = data.timestamp - current_time + Math.floor(trip_time / 2);
+      }
+
+      function UpdateLaneConnections() {
+        let keys = Object.keys(LANES);
+        let connections_screen = document.getElementById("connections_div");
+        while (connections_screen.firstChild) {
+          connections_screen.removeChild(connections_screen.firstChild);
+        }
+
+        keys.sort((a, b) => a - b);
+
+        keys.forEach((key) => {
+          let lane = key;
+
+          if (LANES[lane]) {
+            connections_screen.appendChild(_getNewLaneButton(lane));
+          } else {
+            connections_screen.appendChild(_getNewDisConnectedLaneButton(lane));
           }
         });
-
-        if (found) {
-          return LANES[lane_number].connection != undefined;
-        }
-        return found;
       }
 
       function _getNewLaneButton(lane_number) {
@@ -417,30 +363,6 @@
         return lane_div;
       }
 
-      function UpdateLaneConnections() {
-        let keys = Object.keys(LANES);
-        let connections_screen = document.getElementById("connections_div");
-        while (connections_screen.firstChild) {
-          connections_screen.removeChild(connections_screen.firstChild);
-        }
-
-        keys.sort((a, b) => a - b);
-
-        keys.forEach((key) => {
-          let lane = key;
-
-          if (LANES[lane]) {
-            connections_screen.appendChild(_getNewLaneButton(lane));
-          } else {
-            connections_screen.appendChild(_getNewDisConnectedLaneButton(lane));
-          }
-        });
-      }
-
-      function closeWebSocket() {
-        example_socket.close();
-      }
-
       function sendSyncClocksCommand() {
         let clock_text = clock_div.innerText;
         let split_clock_text = clock_text.split(":");
@@ -455,45 +377,6 @@
         };
 
         socket.send(JSON.stringify(data));
-      }
-
-      function syncClock(data) {
-        clearInterval(clock_promise);
-        const checkTime = (i) => {
-          if (i < 10) return `0${i}`;
-          return i + "";
-        };
-
-        let minutes = checkTime(data.minutes);
-        let seconds = checkTime(data.seconds);
-
-        clock_div.innerText = minutes + ":" + seconds;
-        clock_promise = setInterval(tempResetClock, 1000);
-      }
-
-      function newSyncClock(data) {
-        let now = Date.now();
-        let adjusted_time = new Date(now);
-
-        adjusted_time.setMinutes(data.minutes);
-        adjusted_time.setSeconds(data.seconds);
-        adjusted_time.setMilliseconds(0);
-        time_delta = 0 - (now - adjusted_time.getTime());
-      }
-
-      function tempResetClock() {
-        let clock_text = clock_div.innerText;
-        let clock_text_list = clock_text.split(":");
-        let minutes = parseInt(clock_text_list[0]);
-        let seconds = parseInt(clock_text_list[1]);
-        seconds++;
-        if (seconds >= 60) {
-          minutes++;
-          seconds = 0;
-        }
-        if (minutes >= 60) minutes = 0;
-        let new_text = checkTime(minutes) + ":" + checkTime(seconds);
-        clock_div.innerText = new_text;
       }
 
       function checkTime(i) {
