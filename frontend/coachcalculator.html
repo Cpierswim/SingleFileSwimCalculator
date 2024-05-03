@@ -152,7 +152,18 @@
             data["utc_datetime"].split(".")[1].split("+")[0].substring(0, 3)
         );
 
-        time_delta = server_millis - start_millis - Math.floor(trip_time / 2);
+        time_delta = server_millis - start_millis + Math.floor(trip_time / 2);
+      }
+
+      function newGetTimeDelta() {
+        let data = { action: "getTime", initial_time: Date.now() };
+        socket.send(JSON.stringify(data));
+      }
+
+      function dealWithTimeStamp(data) {
+        let current_time = Date.now();
+        let trip_time = current_time - data.initial_time;
+        time_delta = data.timestamp - current_time + Math.floor(trip_time / 2);
       }
 
       function SetClock() {
@@ -232,7 +243,8 @@
         lower_div.appendChild(sync_clock_button);
 
         //start the clock
-        await getTimeDelta();
+        //await getTimeDelta();
+
         //StartClock();
         newStartClock();
         OpenForConnections();
@@ -260,6 +272,10 @@
       }
 
       function newSetClock() {
+        if (isNaN(time_delta)) {
+          clock.innerText = "00:00";
+          return "";
+        }
         let curr = Date.now();
         curr += time_delta;
         let display_time = new Date(curr);
@@ -269,8 +285,9 @@
       }
 
       function keepAlive() {
-        let data = { action: "keepAlive" };
-        socket.send(JSON.stringify(data));
+        //let data = { action: "keepAlive" };
+        //socket.send(JSON.stringify(data));
+        newGetTimeDelta();
       }
 
       function OpenForConnections() {
@@ -279,6 +296,7 @@
         );
 
         socket.onopen = (event) => {
+          newGetTimeDelta();
           let connections_div = document.getElementById("connections_div");
           connections_div.innerText =
             "Sever connection established. Setting as coach...";
@@ -291,7 +309,7 @@
           let data = { action: "createRoom" };
           socket.send(JSON.stringify(data));
 
-          setInterval(keepAlive, 120000);
+          setInterval(newGetTimeDelta, 120000);
         };
 
         socket.onerror = (error) => {
@@ -318,6 +336,9 @@
                 case "resetClock":
                   //syncClock(data);
                   newSyncClock(data);
+                  break;
+                case "timestamp":
+                  dealWithTimeStamp(data);
                   break;
               }
             }
@@ -429,7 +450,7 @@
         let data = {
           action: "syncClocks",
           minutes: minutes,
-          seconds: 0,
+          seconds: seconds,
           roomKey: roomKey,
         };
 

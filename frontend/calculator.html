@@ -79,7 +79,18 @@
             data["utc_datetime"].split(".")[1].split("+")[0].substring(0, 3)
         );
 
-        time_delta = server_millis - start_millis - Math.floor(trip_time / 2);
+        time_delta = server_millis - start_millis + Math.floor(trip_time / 2);
+      }
+
+      function newGetTimeDelta() {
+        let data = { action: "getTime", initial_time: Date.now() };
+        socket.send(JSON.stringify(data));
+      }
+
+      function dealWithTimeStamp(data) {
+        let current_time = Date.now();
+        let trip_time = current_time - data.initial_time;
+        time_delta = data.timestamp - current_time + Math.floor(trip_time / 2);
       }
 
       function SetClock() {
@@ -173,12 +184,17 @@
         main_screen.appendChild(clock);
 
         //start the clock
-        await getTimeDelta();
+        //await getTimeDelta();
+        newGetTimeDelta();
         //StartClock();
         newStartClock();
       }
 
       function newSetClock() {
+        if (isNaN(time_delta)) {
+          clock.innerText = "00:00";
+          return "";
+        }
         let curr = Date.now();
         curr += time_delta;
         let display_time = new Date(curr);
@@ -238,7 +254,7 @@
             type: "swimmer",
           };
           socket.send(JSON.stringify(set_connection_type_data));
-          setInterval(keepAlive, 120000);
+          setInterval(newGetTimeDelta, 120000);
 
           connection_messages_display.innerHTML +=
             "<br />Attempting to connect to room";
@@ -275,6 +291,9 @@
               case "resetClock":
                 //syncClock(data);
                 newSyncClock(data);
+                break;
+              case "timestamp":
+                dealWithTimeStamp(data);
                 break;
             }
           }

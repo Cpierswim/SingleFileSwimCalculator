@@ -17,7 +17,7 @@ def lambda_handler(event, context):
     room_key = body["roomKey"]
     minutes =  body["minutes"]
     seconds = body["seconds"]
-    round_trip_time = body["round_trip_time"]
+    time_stamp = body["time_stamp"]
 
     key_file_name = BUCKET_PREFIX + room_key + ".json"
 
@@ -45,20 +45,20 @@ def lambda_handler(event, context):
     connected_lanes = data["connected_lanes"]
 
     message_data = {
-            "type": "resetClock",
+            "type": "ping",
             "minutes": minutes,
-            "seconds": seconds, 
-            "round_trip_time": round_trip_time
+            "seconds": seconds,
+            "time_stamp": time_stamp,
+            "roomKey": room_key
         }
 
     for LaneNumber in connected_lanes.keys():
-        print ("Attempting to send to lane: " + str(LaneNumber))
-        client.post_to_connection(ConnectionId=connected_lanes[LaneNumber], Data=json.dumps(message_data).encode('utf-8'))
+        pass
 
     print ("Attempting to send to coach: " + coachID)
     client.post_to_connection(ConnectionId=coachID, Data=json.dumps(message_data).encode('utf-8'))
 
-    print("All messages sent")
+    print("Message sent")
 
     return {
         'statusCode': 200,
