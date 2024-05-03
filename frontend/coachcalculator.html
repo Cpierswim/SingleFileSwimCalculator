@@ -309,7 +309,7 @@
           let data = { action: "createRoom" };
           socket.send(JSON.stringify(data));
 
-          setInterval(newGetTimeDelta, 10000);
+          setInterval(newGetTimeDelta, 120000);
         };
 
         socket.onerror = (error) => {

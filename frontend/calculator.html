@@ -51,78 +51,12 @@
     </div>
 
     <script>
-      const SKIP_FULLSCREEN = 0;
-      const BASE_URL = "http://localhost:3000/";
-      const PEER_BASE = "3SLDFGPSOGHAA";
-      const PEER_TYPE = "LANE";
-      const COACH_ID = PEER_BASE + "-" + "COACH";
-      let ID = PEER_BASE + "-" + PEER_TYPE;
-      let CONNECTED_TO_COACH = false;
-
+      let socket = undefined;
       let clock;
       let time_delta;
-      let clock_promise;
 
-      let socket = undefined;
-
-      async function getTimeDelta() {
-        const start_millis = Date.now();
-        const response = await axios.get(
-          `https://worldtimeapi.org/api/timezone/America/Detroit`
-        );
-        const end_millis = Date.now();
-        const data = response.data;
-
-        const trip_time = end_millis - start_millis;
-        const server_millis = parseInt(
-          data["unixtime"] +
-            data["utc_datetime"].split(".")[1].split("+")[0].substring(0, 3)
-        );
-
-        time_delta = server_millis - start_millis + Math.floor(trip_time / 2);
-      }
-
-      function newGetTimeDelta() {
-        if (socket.readyState == 1) {
-          let data = { action: "getTime", initial_time: Date.now() };
-          socket.send(JSON.stringify(data));
-        }
-      }
-
-      function dealWithTimeStamp(data) {
-        let current_time = Date.now();
-        let trip_time = current_time - data.initial_time;
-        time_delta = data.timestamp - current_time + Math.floor(trip_time / 2);
-      }
-
-      function SetClock() {
-        var start = Date.now() + time_delta;
-        const date = new Date(start);
-        var minutes = date.getMinutes();
-        var seconds = date.getSeconds();
-        const checkTime = (i) => {
-          if (i < 10) return `0${i}`;
-          return i + "";
-        };
-        const minute = checkTime(minutes);
-        const second = checkTime(seconds);
-        clock.innerText = `${minute}:${second}`;
-      }
-
-      function requestFullScreen(div_to_fullscreen) {
-        //request Full Screen
-        if (typeof SKIP_FULLSCREEN === "undefined") return;
-        if (SKIP_FULLSCREEN == 1) return;
-
-        if (div_to_fullscreen.requestFullscreen) {
-          div_to_fullscreen.requestFullscreen();
-        } else if (div_to_fullscreen.webkitRequestFullscreen) {
-          /* Safari */
-          div_to_fullscreen.webkitRequestFullscreen();
-        } else if (div_to_fullscreen.msRequestFullscreen) {
-          /* IE11 */
-          div_to_fullscreen.msRequestFullscreen();
-        }
+      function closeWebSocket() {
+        socket.close();
       }
 
       async function startApp(button_clicked) {
@@ -206,7 +140,46 @@
         //await getTimeDelta();
         newGetTimeDelta();
         //StartClock();
-        newStartClock();
+
+        setInterval(newSetClock, 10);
+      }
+
+      function removeInitialButtons() {
+        const container = document.getElementById("container");
+        while (container.firstChild) {
+          container.removeChild(container.firstChild);
+        }
+      }
+
+      function newGetTimeDelta() {
+        if (socket.readyState == 1) {
+          let data = { action: "getTime", initial_time: Date.now() };
+          socket.send(JSON.stringify(data));
+        }
+      }
+
+      function _handleInternalServerError() {}
+
+      function dealWithTimeStamp(data) {
+        let current_time = Date.now();
+        let trip_time = current_time - data.initial_time;
+        time_delta = data.timestamp - current_time + Math.floor(trip_time / 2);
+      }
+
+      function requestFullScreen(div_to_fullscreen) {
+        //request Full Screen
+        if (typeof SKIP_FULLSCREEN === "undefined") return;
+        if (SKIP_FULLSCREEN == 1) return;
+
+        if (div_to_fullscreen.requestFullscreen) {
+          div_to_fullscreen.requestFullscreen();
+        } else if (div_to_fullscreen.webkitRequestFullscreen) {
+          /* Safari */
+          div_to_fullscreen.webkitRequestFullscreen();
+        } else if (div_to_fullscreen.msRequestFullscreen) {
+          /* IE11 */
+          div_to_fullscreen.msRequestFullscreen();
+        }
       }
 
       function newSetClock() {
@@ -220,39 +193,6 @@
         clock.innerText = `${checkTime(display_time.getMinutes())}:${checkTime(
           display_time.getSeconds()
         )}`;
-      }
-
-      function newStartClock() {
-        setInterval(newSetClock, 10);
-      }
-
-      function removeInitialButtons() {
-        const container = document.getElementById("container");
-        while (container.firstChild) {
-          container.removeChild(container.firstChild);
-        }
-      }
-
-      function ResetClock() {
-        SetClock();
-      }
-
-      function SetClockToTickEverySecond() {
-        SetClock();
-        clock_promise = setInterval(ResetClock, 1000);
-      }
-
-      async function StartClock() {
-        SetClock();
-        var start = Date.now() + time_delta;
-        const date = new Date(start);
-        var delay = 1000 - date.getMilliseconds();
-        setTimeout(SetClockToTickEverySecond, delay);
-      }
-
-      function keepAlive() {
-        let data = { action: "keepAlive" };
-        socket.send(JSON.stringify(data));
       }
 
       function ConnectToCoach() {
@@ -322,8 +262,6 @@
         socket.onclose = (event) => {};
       }
 
-      function _handleInternalServerError() {}
-
       function _processLaneConnect(laneNumber) {
         setupClock();
 
@@ -340,87 +278,6 @@
         );
         connection_messages_display.innerHTML += "<br />Error: " + data.message;
       }
-      function _connect() {
-        conn = peer.connect(COACH_ID, { serialization: "json" });
-
-        conn.on("open", function () {
-          //connection with coach opened
-
-          conn.on("data", function (data) {
-            if ("error" in data) {
-              _errorConnecting({ message: "That lane is taken" });
-              conn.close();
-            }
-
-            if ("connection_sucess" in data) {
-              setupClock();
-
-              let connection_status_div = document.createElement("div");
-              connection_status_div.id = "connection_status";
-              connection_status_div.innerText = "Connected to Coach";
-              let temp = document.getElementById("container");
-              temp.appendChild(connection_status_div);
-            }
-          });
-        });
-      }
-
-      function _errorConnecting(err) {
-        let p = document.createElement("p");
-        if (err.message == "Lost connection to server.") {
-          p.innerText = "Error. ";
-          console.log("Retry");
-        } else if (err.message.includes("is taken")) {
-          console.log("Lane taken");
-          p.innerText = "That lane is taken";
-        }
-
-        p.id = "connection_error";
-        let temp = document.getElementById("container");
-        temp.appendChild(p);
-      }
-
-      function disconnect() {
-        peer.destroy();
-      }
-
-      function closeWebSocket() {
-        example_socket.close();
-      }
-
-      function syncClock(data) {
-        clearInterval(clock_promise);
-        const checkTime = (i) => {
-          if (i < 10) return `0${i}`;
-          return i + "";
-        };
-
-        let minutes = checkTime(data.minutes);
-        let seconds = checkTime(data.seconds);
-
-        clock.innerText = minutes + ":" + seconds;
-        clock_promise = setInterval(tempResetClock, 1000);
-      }
-
-      function tempResetClock() {
-        let clock_text = clock.innerText;
-        let clock_text_list = clock_text.split(":");
-        let minutes = parseInt(clock_text_list[0]);
-        let seconds = parseInt(clock_text_list[1]);
-        seconds++;
-        if (seconds >= 60) {
-          minutes++;
-          seconds = 0;
-        }
-        if (minutes >= 60) minutes = 0;
-        let new_text = checkTime(minutes) + ":" + checkTime(seconds);
-        clock.innerText = new_text;
-      }
-
-      function checkTime(i) {
-        if (i < 10) return `0${i}`;
-        return i + "";
-      }
 
       function newSyncClock(data) {
         let now = Date.now();
@@ -430,6 +287,11 @@
         adjusted_time.setSeconds(data.seconds);
         adjusted_time.setMilliseconds(0);
         time_delta = 0 - (now - adjusted_time.getTime());
+      }
+
+      function checkTime(i) {
+        if (i < 10) return `0${i}`;
+        return i + "";
       }
     </script>
   </body>
