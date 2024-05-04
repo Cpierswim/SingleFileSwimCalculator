@@ -129,6 +129,7 @@
       const LANES = {};
       let clock;
       let time_delta;
+      let additional_time_delta = 0;
       let roomKey;
 
       function closeWebSocket() {
@@ -179,8 +180,26 @@
         const sync_clock_button = document.createElement("button");
         sync_clock_button.id = "sync_clock_button";
         sync_clock_button.innerText = "Sync Clocks";
-        sync_clock_button.addEventListener("click", sendSyncClocksCommand);
+        sync_clock_button.addEventListener("click", syncClocks);
 
+        const set_to_zero_button = document.createElement("button");
+        set_to_zero_button.id = "set_to_zero_button";
+        set_to_zero_button.innerText = "Set to :00";
+        set_to_zero_button.addEventListener("click", setToZero);
+
+        const add_one_minute_button = document.createElement("button");
+        add_one_minute_button.id = "add_one_minute_button";
+        add_one_minute_button.innerText = "Add 1 min";
+        add_one_minute_button.addEventListener("click", addOneMinute);
+
+        const subtract_one_minute_button = document.createElement("button");
+        subtract_one_minute_button.id = "subtract_one_minute_button";
+        subtract_one_minute_button.innerText = "Sub 1 min";
+        subtract_one_minute_button.addEventListener("click", subtractOneMinute);
+
+        lower_div.appendChild(set_to_zero_button);
+        lower_div.appendChild(add_one_minute_button);
+        lower_div.appendChild(subtract_one_minute_button);
         lower_div.appendChild(sync_clock_button);
 
         //start the clock
@@ -197,7 +216,7 @@
           return "";
         }
         let curr = Date.now();
-        curr += time_delta;
+        curr += time_delta + additional_time_delta;
         let display_time = new Date(curr);
         clock.innerText = `${checkTime(display_time.getMinutes())}:${checkTime(
           display_time.getSeconds()
@@ -365,22 +384,6 @@
         return lane_div;
       }
 
-      function sendSyncClocksCommand() {
-        let clock_text = clock_div.innerText;
-        let split_clock_text = clock_text.split(":");
-        let minutes = parseInt(split_clock_text[0]);
-        let seconds = parseInt(split_clock_text[1]);
-
-        let data = {
-          action: "syncClocks",
-          minutes: minutes,
-          seconds: seconds,
-          roomKey: roomKey,
-        };
-
-        socket.send(JSON.stringify(data));
-      }
-
       function checkTime(i) {
         if (i < 10) return `0${i}`;
         return i + "";
@@ -399,6 +402,49 @@
             //don't need to do anything if it doesn't work
           }
         }
+      }
+
+      function setToZero() {
+        let temp = Date.now();
+        //debugger;
+
+        let split_clock_text = clock.innerText.split(":");
+        let minutes = parseInt(split_clock_text[0]);
+        let seconds = parseInt(split_clock_text[1]);
+
+        let running_time = new Date(temp + time_delta);
+        let new_time = new Date(running_time);
+        new_time.setMinutes(minutes);
+        new_time.setSeconds(0);
+        new_time.setMilliseconds(0);
+
+        let diff = new_time.getTime() - running_time.getTime();
+        sendSyncClocksCommand(diff);
+        additional_time_delta = diff;
+      }
+
+      function sendSyncClocksCommand(diff) {
+        let data = {
+          action: "syncClocks",
+          additional_time_delta: diff,
+          roomKey: roomKey,
+        };
+
+        socket.send(JSON.stringify(data));
+      }
+
+      function addOneMinute() {
+        additional_time_delta += 60000;
+        sendSyncClocksCommand(additional_time_delta);
+      }
+
+      function subtractOneMinute() {
+        additional_time_delta -= 60000;
+        sendSyncClocksCommand(additional_time_delta);
+      }
+
+      function syncClocks() {
+        sendSyncClocksCommand(additional_time_delta);
       }
     </script>
   </body>

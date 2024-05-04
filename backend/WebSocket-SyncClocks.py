@@ -15,9 +15,7 @@ def lambda_handler(event, context):
 
     body = json.loads(event['body'])
     room_key = body["roomKey"]
-    minutes =  body["minutes"]
-    seconds = body["seconds"]
-    round_trip_time = body["round_trip_time"]
+    additional_time_delta = body["additional_time_delta"]
 
     key_file_name = BUCKET_PREFIX + room_key + ".json"
 
@@ -46,17 +44,15 @@ def lambda_handler(event, context):
 
     message_data = {
             "type": "resetClock",
-            "minutes": minutes,
-            "seconds": seconds, 
-            "round_trip_time": round_trip_time
+            "additional_time_delta": additional_time_delta
         }
 
     for LaneNumber in connected_lanes.keys():
         print ("Attempting to send to lane: " + str(LaneNumber))
         client.post_to_connection(ConnectionId=connected_lanes[LaneNumber], Data=json.dumps(message_data).encode('utf-8'))
 
-    print ("Attempting to send to coach: " + coachID)
-    client.post_to_connection(ConnectionId=coachID, Data=json.dumps(message_data).encode('utf-8'))
+    #print ("Attempting to send to coach: " + coachID)
+    #client.post_to_connection(ConnectionId=coachID, Data=json.dumps(message_data).encode('utf-8'))
 
     print("All messages sent")
 
