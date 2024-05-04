@@ -36,6 +36,9 @@
         color: white;
         font-weight: bolder;
       }
+      .disconnected_from_coach {
+        color: red;
+      }
     </style>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
@@ -55,6 +58,7 @@
       let socket = undefined;
       let clock;
       let time_delta;
+      let wakeLock = null;
 
       function closeWebSocket() {
         socket.close();
@@ -126,6 +130,8 @@
 
         var main_screen = document.getElementById("container");
         requestFullScreen(main_screen);
+
+        requestScreenLock();
 
         //Update the display to the clock - will need to refactor later
         removeInitialButtons();
@@ -260,7 +266,11 @@
           }
         };
 
-        socket.onclose = (event) => {};
+        socket.onclose = (event) => {
+          let connection_status = document.getElementById("connection_status");
+          connection_status.innerText = "Disconnected...";
+          connection_status.classList.add("disconnected_from_coach");
+        };
       }
 
       function _processLaneConnect(laneNumber) {
@@ -293,6 +303,21 @@
       function checkTime(i) {
         if (i < 10) return `0${i}`;
         return i + "";
+      }
+
+      async function requestScreenLock() {
+        if ("wakeLock" in navigator) {
+          try {
+            wakeLock = await awaitnavigator.wakeLock.request("screen");
+            document.addEventListener("visibilitychange", async () => {
+              if (wakeLock !== null && document.visibilityState === "visible") {
+                wakeLock = await navigator.wakeLock.request("screen");
+              }
+            });
+          } catch (err) {
+            //don't need to do anything if it doesn't work
+          }
+        }
       }
     </script>
   </body>

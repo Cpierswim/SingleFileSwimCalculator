@@ -140,6 +140,8 @@
         main_screen.classList.add("black_background");
         requestFullScreen(main_screen);
 
+        requestScreenLock();
+
         //Update the display to the clock - will need to refactor later
         const full_screen_button = document.getElementById("fullscreenbutton");
         full_screen_button.remove();
@@ -382,6 +384,21 @@
       function checkTime(i) {
         if (i < 10) return `0${i}`;
         return i + "";
+      }
+
+      async function requestScreenLock() {
+        if ("wakeLock" in navigator) {
+          try {
+            wakeLock = await awaitnavigator.wakeLock.request("screen");
+            document.addEventListener("visibilitychange", async () => {
+              if (wakeLock !== null && document.visibilityState === "visible") {
+                wakeLock = await navigator.wakeLock.request("screen");
+              }
+            });
+          } catch (err) {
+            //don't need to do anything if it doesn't work
+          }
+        }
       }
     </script>
   </body>
