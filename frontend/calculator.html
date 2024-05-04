@@ -58,6 +58,7 @@
       let socket = undefined;
       let clock;
       let time_delta;
+      let additional_time_delta = 0;
       let wakeLock = null;
 
       function closeWebSocket() {
@@ -195,7 +196,7 @@
           return "";
         }
         let curr = Date.now();
-        curr += time_delta;
+        curr += time_delta + additional_time_delta;
         let display_time = new Date(curr);
         clock.innerText = `${checkTime(display_time.getMinutes())}:${checkTime(
           display_time.getSeconds()
@@ -291,13 +292,7 @@
       }
 
       function newSyncClock(data) {
-        let now = Date.now();
-        let adjusted_time = new Date(now);
-
-        adjusted_time.setMinutes(data.minutes);
-        adjusted_time.setSeconds(data.seconds);
-        adjusted_time.setMilliseconds(0);
-        time_delta = 0 - (now - adjusted_time.getTime());
+        additional_time_delta = data.additional_time_delta;
       }
 
       function checkTime(i) {
