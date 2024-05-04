@@ -23,7 +23,7 @@ def lambda_handler(event, context):
     
     connectionID = event["requestContext"]["connectionId"]
     message_body = json.loads(event["body"])
-    roomKey = message_body["roomKey"]
+    roomKey = message_body["roomKey"].upper()
     LaneNumber = message_body["LaneNumber"]
 
     key_file_name = BUCKET_PREFIX + roomKey + ".json"
