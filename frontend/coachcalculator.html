@@ -195,10 +195,16 @@
         subtract_one_minute_button.innerText = "Sub 1 min";
         subtract_one_minute_button.addEventListener("click", subtractOneMinute);
 
+        const send_info_button = document.createElement("button");
+        send_info_button.id = "send_info_button";
+        send_info_button.innerText = "Send Info...";
+        send_info_button.addEventListener("click", sendInfo);
+
         lower_div.appendChild(set_to_zero_button);
         lower_div.appendChild(add_one_minute_button);
         lower_div.appendChild(subtract_one_minute_button);
         lower_div.appendChild(sync_clock_button);
+        lower_div.appendChild(send_info_button);
 
         //start the clock
         //await getTimeDelta();
@@ -443,6 +449,27 @@
 
       function syncClocks() {
         sendSyncClocksCommand(additional_time_delta);
+      }
+
+      function sendInfo() {
+        data = {
+          action: "sendMessage",
+          roomKey: roomKey,
+          message: {
+            1: [
+              { name: "Swimmer 1", time: "01:30", description: "100 FR" },
+              { name: "", time: "01:35", description: "100 FR" },
+              { name: "", time: "01:40", description: "100 FR" },
+              { name: "", time: "01:45", description: "100 FR" },
+              { name: "", time: "03:00", description: "100 FR" },
+              { name: "", time: "03:05", description: "100 FR" },
+              { name: "", time: "03:10", description: "100 FR" },
+              { name: "", time: "03:15", description: "100 FR" },
+            ],
+          },
+        };
+
+        socket.send(JSON.stringify(data));
       }
     </script>
   </body>
