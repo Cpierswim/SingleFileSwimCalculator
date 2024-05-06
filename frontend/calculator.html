@@ -138,6 +138,8 @@
       let additional_time_delta = 0;
       let wakeLock = null;
       let displaying_sendoffs = false;
+      let next_up_display;
+      let green_amount;
 
       function closeWebSocket() {
         socket.close();
@@ -281,6 +283,45 @@
         clock.innerText = `${checkTime(display_time.getMinutes())}:${checkTime(
           display_time.getSeconds()
         )}`;
+        const set_table = document.getElementById("set_table");
+
+        if (next_up_display && green_amount > 0) {
+          next_up_display.style.backgroundColor =
+            "rgb(0, " + green_amount + ", 0)";
+          green_amount--;
+        }
+
+        let next_up_time = document.getElementById("next_up_time");
+
+        if (set_table && clock.innerText == next_up_time.innerText) {
+          //move on to the next swimmer
+          green_amount = 255;
+          const first_row = set_table.children[1].children[0];
+          if (!first_row) return 0;
+          let parent_element = first_row.parentElement;
+          parent_element.removeChild(first_row);
+
+          let next_first_row = parent_element.children[0];
+
+          //if (!next_first_row) return 0;
+          SetNextDisplayFromRow(next_first_row);
+        }
+      }
+
+      function SetNextDisplayFromRow(row) {
+        const next_up_swimmer = document.getElementById("next_up_swimmer");
+        const next_up_time = document.getElementById("next_up_time");
+
+        if (row) {
+          next_up_time.innerText = row.children[0].innerText;
+          next_up_swimmer.innerText = row.children[1].innerText;
+
+          if (next_up_swimmer.innerText.length === 0)
+            next_up_swimmer.innerText = row.children[2].innerText;
+        } else {
+          next_up_time.innerText = "--:--";
+          next_up_swimmer.innerText = "";
+        }
       }
 
       function ConnectToCoach() {
@@ -451,6 +492,7 @@
           sendoff_row.appendChild(sendoff_name);
           sendoff_row.appendChild(sendoff_description);
           set_table_body.appendChild(sendoff_row);
+          if (counter === 0) SetNextDisplayFromRow(sendoff_row);
           counter++;
         });
 
@@ -465,8 +507,9 @@
 
         container.appendChild(message_display);
 
-        let next_up_display = document.createElement("div");
+        next_up_display = document.createElement("div");
         next_up_display.id = "next_up_display";
+        next_up_display.style.backgroundColor = "rgb(0, 0, 0)";
         let next_up_label = document.createElement("div");
         next_up_label.id = "next_up_label";
         next_up_label.innerText = "Next Up";
