@@ -32,7 +32,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
       }
 
       #set_display {
@@ -73,15 +73,15 @@
 
       #next_up_label {
         text-decoration: underline;
-        font-size: 2vw;
+        font-size: 3vw;
       }
 
       #next_up_swimmer {
-        font-size: 8vw;
+        font-size: 4vw;
       }
 
       #next_up_time {
-        font-size: 13vw;
+        font-size: 8vw;
         font-weight: 800;
         font-family: monospace;
       }
@@ -511,11 +511,10 @@
 
         next_up_display = document.createElement("div");
         next_up_display.id = "next_up_display";
-        next_up_display.style.backgroundColor = "rgb(0, 0, 0)";
-        let next_up_label = document.createElement("div");
-        next_up_label.id = "next_up_label";
-        next_up_label.innerText = "Next Up";
-        next_up_display.appendChild(next_up_label);
+        //let next_up_label = document.createElement("div");
+        //next_up_label.id = "next_up_label";
+        //next_up_label.innerText = "Next Up";
+        //next_up_display.appendChild(next_up_label);
         let next_up_swimmer = document.createElement("div");
         next_up_swimmer.id = "next_up_swimmer";
         next_up_swimmer.innerText = "TBA";
