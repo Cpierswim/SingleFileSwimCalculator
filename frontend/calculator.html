@@ -285,8 +285,10 @@
         )}`;
         const set_table = document.getElementById("set_table");
 
-        if (next_up_display && green_amount > 0) {
-          next_up_display.style.backgroundColor =
+        if (next_up_display && green_amount > -0) {
+          //next_up_display.style.backgroundColor =
+          //  "rgb(0, " + green_amount + ", 0)";
+          document.getElementById("container").style.backgroundColor =
             "rgb(0, " + green_amount + ", 0)";
           green_amount--;
         }
