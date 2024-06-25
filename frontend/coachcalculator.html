@@ -6,23 +6,16 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Coach Server</title>
     <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <link
       href="https://fonts.googleapis.com/css?family=Noto Sans Mono"
       rel="stylesheet"
     />
     <style>
-      #Main_Clock {
-        color: greenyellow;
-
-        font-weight: 600;
-        font-family: "Noto Sans Mono", "Courier New", Courier, monospace;
-        width: 80vw;
-      }
-
-      #Coach_Controls {
-        width: 20vw;
-        border-left: 8px solid red;
-      }
-
       #container {
         width: 100vw;
         height: 100vh;
@@ -33,34 +26,30 @@
         background-color: black;
       }
 
-      #connections_screen {
-        width: 100%;
-      }
-
-      #connection_status {
-        font-size: large;
-        color: white;
-      }
       .pfill {
         margin: 0px;
         margin-top: -4px;
       }
       .lane {
-        width: 50px;
-        height: 50px;
+        width: 5vw;
+        max-width: 50px;
+        height: 5vw;
+        max-height: 50px;
         border-style: solid;
         border-width: 2px;
         border-radius: 50%;
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 50px;
+        font-size: 200%;
         font-weight: 800;
-        font-family: "Bowlby One SC", cursive;
+        font-family: sans-serif;
+        padding-top: 0.5%;
+        padding-right: 0.25%;
       }
       .connectedLane {
-        border-color: aqua;
-        background-color: aquamarine;
+        border-color: rgb(104, 230, 146);
+        background-color: green;
       }
       .disconnected {
         border-color: blueviolet;
@@ -70,51 +59,191 @@
       #upper_div {
         width: 100%;
         height: 20%;
+        display: flex;
       }
       #lower_div {
         height: 80%;
         width: 100%;
         border-color: white;
-        border-bottom: 3px;
-        border-style: solid;
+        border-top-style: solid;
+        border-top-width: 2px;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 0.25vw;
       }
+
+      #lanes_display {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 0.25vw;
+        overflow: auto;
+        height: 100%;
+      }
+
       #room_code {
         float: left;
-        width: 15%;
+        width: 20%;
         height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5vw;
+        font-size: 4vh;
         color: white;
         font-weight: 600;
         text-align: center;
+        line-height: 1.6;
       }
-      #clock_div {
-        float: left;
-        width: 45%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 10vw;
-        color: greenyellow;
-        font-weight: 600;
-        font-family: "Courier New", Courier, monospace;
-      }
+
       #connections_div {
         float: left;
-        width: 40%;
+        width: 50%;
         height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
+        gap: 0.25vw;
         color: white;
+        flex-wrap: wrap;
+      }
+
+      /* For the clock part */
+
+      #clock_container {
+        height: 100%;
+        width: 30%;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-content: center;
+        align-items: center;
+        min-width: 235px;
+      }
+      #clock_contining_div {
+        display: flex;
+        align-items: center;
+      }
+      #clock_text {
+        font-weight: 600;
+        font-family: monospace;
+        font-size: 10vmin;
+        line-height: 100%;
+        color: lime;
+        padding-top: 1.5vh;
+      }
+
+      .active_lane {
+        border-color: lime;
+        color: lime;
+      }
+
+      .disconnected_lane {
+        border-color: red;
+        color: red;
+      }
+
+      .lane_display_container {
+        height: 98%;
+        width: 320px;
+        min-width: 320px;
+        max-width: 350px;
+        border-style: solid;
+        border-width: 3px;
+        border-radius: 10px;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-evenly;
+      }
+      .control_lane {
+        border-color: white;
+        border: hidden;
+        width: 160px;
+        min-width: 160px;
+        max-width: 160px;
+        border-radius: 0px;
+        border-color: white;
+        border-right-width: 2px;
+        border-right-style: solid;
+        height: 100%;
+      }
+
+      .nearly_full_width {
+        width: 96%;
+      }
+
+      .lane_label {
+        text-align: center;
+        text-decoration: underline;
+      }
+
+      .lane_clock {
+        text-align: center;
+        font-weight: 400;
+        font-family: monospace;
+      }
+
+      .lane_table {
+        width: 93%;
+        border-color: white;
+        color: white;
+      }
+
+      .LO_column {
+        width: 25%;
+        text-align: center;
+        border-bottom-width: 2px;
+      }
+
+      .LO_column_data {
+        font-weight: 800;
+        font-family: monospace;
+        text-align: right;
+        font-size: 22px;
+        border-bottom-width: 2px;
+      }
+
+      .middle_column {
+        width: 12%;
+        border-bottom-width: 2px;
+        text-align: center;
+        font-weight: bold;
+      }
+
+      .DA_coluumn {
+        width: 63%;
+        text-align: left;
+        border-bottom-width: 2px;
+      }
+
+      .DA_column_data {
+        text-align: left;
+        font-size: 17px;
+        font-weight: bold;
+        border-bottom-width: 2px;
+      }
+
+      .lane_controls {
+        width: 93%;
+        margin: 10px;
+        display: flex;
+        justify-content: space-around;
+      }
+
+      .next_up_display {
+        width: 93%;
+        font-size: 30px;
       }
     </style>
   </head>
   <body onbeforeunload="return closeWebSocket()">
-    <div class="container" id="container">
+    <div id="container">
       <button type="button" onclick="startApp()" id="fullscreenbutton">
         Cick Me To Start App
       </button>
@@ -129,6 +258,7 @@
       let time_delta;
       let additional_time_delta = 0;
       let roomKey;
+      let lanes_display;
 
       function closeWebSocket() {
         socket.close();
@@ -138,78 +268,231 @@
         var main_screen = document.getElementById("container");
         main_screen.classList.add("black_background");
         requestFullScreen(main_screen);
-
         requestScreenLock();
 
-        //Update the display to the clock - will need to refactor later
-        const full_screen_button = document.getElementById("fullscreenbutton");
-        full_screen_button.remove();
+        const clearScreenOfBeginningControls = () => {
+          //Update the display to the clock - will need to refactor later
+          const full_screen_button =
+            document.getElementById("fullscreenbutton");
+          full_screen_button.remove();
+        };
+        const buildUpperDisplay = () => {
+          const upper_div = document.createElement("div");
+          upper_div.id = "upper_div";
+          main_screen.appendChild(upper_div);
 
-        const upper_div = document.createElement("div");
-        upper_div.id = "upper_div";
-        main_screen.appendChild(upper_div);
+          const addRoomCodeDiv = () => {
+            const room_code_div = document.createElement("div");
+            room_code_div.id = "room_code";
+            upper_div.appendChild(room_code_div);
 
-        const lower_div = document.createElement("div");
-        lower_div.id = "lower_div";
-        main_screen.appendChild(lower_div);
+            const room_code_p = document.createElement("p");
+            room_code_p.id = "room_code_text";
+            room_code_p.innerHTML =
+              '<span style="text-decoration: underline">Room Code</span><br />---';
+            room_code_div.appendChild(room_code_p);
+          };
+          const addClockDiv = () => {
+            const clock_container = document.createElement("div");
+            clock_container.id = "clock_container";
+            upper_div.appendChild(clock_container);
 
-        const room_code_div = document.createElement("div");
-        room_code_div.id = "room_code";
-        upper_div.appendChild(room_code_div);
-        const room_code_p = document.createElement("p");
-        room_code_p.id = "room_code_text";
-        room_code_p.innerHTML = "Room Code: <br />---";
-        room_code_div.appendChild(room_code_p);
+            const buildLeftOfClockButtonGroup = () => {
+              const clock_minute_button_group = document.createElement("div");
+              clock_minute_button_group.id = "clock_minute_button_group";
+              clock_minute_button_group.classList.add("btn-group-vertical");
+              clock_minute_button_group.role = "group";
+              clock_minute_button_group.ariaLabel = "Vertical button group";
+              clock_container.appendChild(clock_minute_button_group);
 
-        const clock_div = document.createElement("div");
-        clock_div.id = "clock_div";
-        upper_div.appendChild(clock_div);
-        const clock_p = document.createElement("p");
-        clock_p.id = "clock_text";
-        clock_p.innerHTML = "00:00";
-        clock_div.appendChild(clock_p);
-        const connections_div = document.createElement("div");
-        connections_div.id = "connections_div";
-        connections_div.innerText = "Connecting to server...";
-        upper_div.appendChild(connections_div);
+              const add_minute_button = document.createElement("button");
+              add_minute_button.type = "button";
+              add_minute_button.classList.add("btn");
+              add_minute_button.classList.add("btn-primary");
+              add_minute_button.innerText = "^";
+              add_minute_button.addEventListener("click", addOneMinute);
+              add_minute_button.disabled = true;
+              clock_minute_button_group.appendChild(add_minute_button);
 
-        clock = clock_p;
+              const subtract_minute_button = document.createElement("button");
+              subtract_minute_button.type = "button";
+              subtract_minute_button.classList.add("btn");
+              subtract_minute_button.classList.add("btn-primary");
+              subtract_minute_button.innerText = "⌄";
+              subtract_minute_button.disabled = true;
+              subtract_minute_button.addEventListener(
+                "click",
+                subtractOneMinute
+              );
+              clock_minute_button_group.appendChild(subtract_minute_button);
+            };
+            const buildClock = () => {
+              const clock_conatining_div = document.createElement("div");
+              clock_conatining_div.id = "clock_containing_div";
+              clock_container.appendChild(clock_conatining_div);
 
-        const sync_clock_button = document.createElement("button");
-        sync_clock_button.id = "sync_clock_button";
-        sync_clock_button.innerText = "Sync Clocks";
-        sync_clock_button.addEventListener("click", syncClocks);
+              const clock_p = document.createElement("p");
+              clock_p.id = "clock_text";
+              clock_p.innerHTML = "00:00";
+              clock_conatining_div.appendChild(clock_p);
 
-        const set_to_zero_button = document.createElement("button");
-        set_to_zero_button.id = "set_to_zero_button";
-        set_to_zero_button.innerText = "Set to :00";
-        set_to_zero_button.addEventListener("click", setToZero);
+              clock = clock_p;
+            };
+            const buildRightOfClockButtonGroup = () => {
+              const after_clock_button_group = document.createElement("div");
+              after_clock_button_group.id = "after_clock_button_group";
+              after_clock_button_group.classList.add("btn-group-vertical");
+              after_clock_button_group.role = "group";
+              after_clock_button_group.ariaLabel = "Vertical button group";
+              clock_container.appendChild(after_clock_button_group);
 
-        const add_one_minute_button = document.createElement("button");
-        add_one_minute_button.id = "add_one_minute_button";
-        add_one_minute_button.innerText = "Add 1 min";
-        add_one_minute_button.addEventListener("click", addOneMinute);
+              const zero_out_button = document.createElement("button");
+              zero_out_button.id = "zero_out_button";
+              zero_out_button.type = "button";
+              zero_out_button.classList.add("btn");
+              zero_out_button.classList.add("btn-primary");
+              zero_out_button.innerText = ":00";
+              zero_out_button.addEventListener("click", setToZero);
+              zero_out_button.disabled = true;
+              after_clock_button_group.appendChild(zero_out_button);
 
-        const subtract_one_minute_button = document.createElement("button");
-        subtract_one_minute_button.id = "subtract_one_minute_button";
-        subtract_one_minute_button.innerText = "Sub 1 min";
-        subtract_one_minute_button.addEventListener("click", subtractOneMinute);
+              const sync_button = document.createElement("button");
+              sync_button.id = "sync_button";
+              sync_button.type = "button";
+              sync_button.classList.add("btn");
+              sync_button.classList.add("btn-primary");
+              sync_button.innerText = "Sync";
+              sync_button.addEventListener("click", syncClocks);
+              sync_button.disabled = true;
+              after_clock_button_group.appendChild(sync_button);
+            };
 
-        const send_info_button = document.createElement("button");
-        send_info_button.id = "send_info_button";
-        send_info_button.innerText = "Send Info...";
-        send_info_button.addEventListener("click", sendInfo);
+            buildLeftOfClockButtonGroup();
+            buildClock();
+            buildRightOfClockButtonGroup();
+          };
+          const addConnectionsDiv = () => {
+            const connections_div = document.createElement("div");
+            connections_div.id = "connections_div";
+            connections_div.innerText = "Connecting to server...";
+            upper_div.appendChild(connections_div);
+          };
 
-        lower_div.appendChild(set_to_zero_button);
-        lower_div.appendChild(add_one_minute_button);
-        lower_div.appendChild(subtract_one_minute_button);
-        lower_div.appendChild(sync_clock_button);
-        lower_div.appendChild(send_info_button);
+          addRoomCodeDiv();
+          addClockDiv();
+          addConnectionsDiv();
+        };
+        const buildLowerDisplay = () => {
+          const lower_div = document.createElement("div");
+          lower_div.id = "lower_div";
+          main_screen.appendChild(lower_div);
 
-        //start the clock
-        //await getTimeDelta();
+          const add_controls_div = () => {
+            const controls_div = document.createElement("div");
+            controls_div.id = "controls";
+            controls_div.classList.add("lane_display_container");
+            controls_div.classList.add("control_lane");
+            lower_div.appendChild(controls_div);
 
-        //StartClock();
+            const pick_set_button = document.createElement("button");
+            pick_set_button.id = "pick_set_button";
+            pick_set_button.type = "button";
+            pick_set_button.classList.add("btn");
+            pick_set_button.classList.add("btn-primary");
+            pick_set_button.classList.add("nearly_full_width");
+            pick_set_button.innerText = "Pick Set";
+            pick_set_button.disabled = true;
+            controls_div.appendChild(pick_set_button);
+
+            const start_on_top_button = document.createElement("button");
+            start_on_top_button.id = "start_on_top_button";
+            start_on_top_button.type = "button";
+            start_on_top_button.classList.add("btn");
+            start_on_top_button.classList.add("btn-success");
+            start_on_top_button.classList.add("nearly_full_width");
+            start_on_top_button.innerText = "Start Set on next :00";
+            start_on_top_button.disabled = true;
+            controls_div.appendChild(start_on_top_button);
+
+            const switch_mode_button = document.createElement("button");
+            switch_mode_button.id = "switch_mode_button";
+            switch_mode_button.type = "button";
+            switch_mode_button.classList.add("btn");
+            switch_mode_button.classList.add("btn-success");
+            switch_mode_button.classList.add("nearly_full_width");
+            switch_mode_button.innerText = "Enable Lane Time Edit Mode";
+            switch_mode_button.disabled = true;
+            controls_div.appendChild(switch_mode_button);
+
+            const split_mode_button = document.createElement("button");
+            split_mode_button.id = "split_mode_button";
+            split_mode_button.type = "button";
+            split_mode_button.classList.add("btn");
+            split_mode_button.classList.add("btn-primary");
+            split_mode_button.classList.add("nearly_full_width");
+            split_mode_button.innerText = "Switch to Split Mode";
+            split_mode_button.disabled = true;
+            split_mode_button.addEventListener("click", switchToSplitMode);
+            controls_div.appendChild(split_mode_button);
+
+            const send_off_mode_button = document.createElement("button");
+            send_off_mode_button.id = "send_off_mode_button";
+            send_off_mode_button.type = "button";
+            send_off_mode_button.classList.add("btn");
+            send_off_mode_button.classList.add("btn-success");
+            send_off_mode_button.classList.add("nearly_full_width");
+            send_off_mode_button.innerText = "Switch to Sendoff Mode";
+            send_off_mode_button.disabled = true;
+            send_off_mode_button.style.display = "none";
+            send_off_mode_button.addEventListener("click", switchToSendoffMode);
+            controls_div.appendChild(send_off_mode_button);
+
+            const pause_all_lanes_button = document.createElement("button");
+            pause_all_lanes_button.id = "pause_all_lanes_button";
+            pause_all_lanes_button.type = "button";
+            pause_all_lanes_button.classList.add("btn");
+            pause_all_lanes_button.classList.add("btn-warning");
+            pause_all_lanes_button.classList.add("nearly_full_width");
+            pause_all_lanes_button.innerText = "Pause All Lanes";
+            pause_all_lanes_button.disabled = true;
+            controls_div.appendChild(pause_all_lanes_button);
+
+            const stop_all_lanes_button = document.createElement("button");
+            stop_all_lanes_button.id = "stop_all_lanes_button";
+            stop_all_lanes_button.type = "button";
+            stop_all_lanes_button.classList.add("btn");
+            stop_all_lanes_button.classList.add("btn-danger");
+            stop_all_lanes_button.classList.add("nearly_full_width");
+            stop_all_lanes_button.innerText = "Stop All Lanes";
+            stop_all_lanes_button.disabled = true;
+            controls_div.appendChild(stop_all_lanes_button);
+          };
+          const add_initial_empty_lanes_display = () => {
+            lanes_display = document.createElement("div");
+            lanes_display.id = "lanes_display";
+            lower_div.appendChild(lanes_display);
+
+            const send_info_button = document.createElement("button");
+            send_info_button.id = "send_info_button";
+            send_info_button.innerText = "Send Info...";
+            send_info_button.addEventListener("click", sendInfo);
+
+            const split_button = document.createElement("button");
+            split_button.id = "split_button";
+            split_button.innerText = "Split";
+            split_button.addEventListener("click", Split);
+
+            lanes_display.appendChild(send_info_button);
+            lanes_display.appendChild(split_button);
+          };
+
+          add_controls_div();
+          add_initial_empty_lanes_display();
+        };
+
+        clearScreenOfBeginningControls();
+        buildUpperDisplay();
+        buildLowerDisplay();
         setInterval(newSetClock, 10);
         OpenForConnections();
       }
@@ -225,6 +508,19 @@
         clock.innerText = `${checkTime(display_time.getMinutes())}:${checkTime(
           display_time.getSeconds()
         )}`;
+
+        const lanes = Object.keys(LANES);
+        lanes.sort((a, b) => a - b);
+
+        lanes.forEach((lane_number) => {
+          if (LANES[lane_number].connected) {
+            const lane_panel = LANES[lane_number].lane_panel;
+
+            const lane_clock = getLaneClock(lane_panel);
+            lane_clock.innerText =
+              LANES[lane_number].lane_clock.getDisplayTime();
+          }
+        });
       }
 
       function requestFullScreen(div_to_fullscreen) {
@@ -287,7 +583,6 @@
                   _processLaneDisconnect(data.laneNumber);
                   break;
                 case "resetClock":
-                  //syncClock(data);
                   newSyncClock(data);
                   break;
                 case "timestamp":
@@ -308,22 +603,45 @@
 
       function _processRoomCreation(data) {
         let room_code_text = document.getElementById("room_code_text");
-        room_code_text.innerHTML = "Room Code<br />" + data.room_key;
+        room_code_text.innerHTML = room_code_text.innerHTML.replace(
+          "---",
+          data.room_key
+        );
         roomKey = data.room_key;
         let connections_div = document.getElementById("connections_div");
         connections_div.innerText = "Waiting for lanes to connect.";
+
+        let buttons = document.getElementsByTagName("button");
+        for (i = 0; i < buttons.length; i++) {
+          buttons[i].disabled = false;
+        }
       }
 
       function _processLaneConnection(laneNumber) {
+        //lane created here
         let lane = parseInt(laneNumber);
-        LANES[lane] = true;
+        LANES[lane] = {
+          connected: true,
+          lane_clock: new LaneClock(time_delta, additional_time_delta),
+        };
         UpdateLaneConnections();
+        LANES[lane].lane_panel = createLaneTable(lane);
+        const lanes_display = document.getElementById("lanes_display");
+        while (lanes_display.children.length > 0)
+          lanes_display.children[0].remove();
+        let lanes = Object.keys(LANES);
+        lanes.sort((a, b) => a - b);
+        lanes.forEach((lane) => {
+          lanes_display.appendChild(LANES[lane].lane_panel);
+        });
       }
 
       function _processLaneDisconnect(laneNumber) {
         let lane = parseInt(laneNumber);
-        LANES[lane] = false;
+        LANES[lane].connected = false;
         UpdateLaneConnections();
+        LANES[lane].lane_panel.classList.remove("connectedLane");
+        LANES[lane].lane_panel.classList.add("disconnected_lane");
       }
 
       function newSyncClock(data) {
@@ -354,7 +672,7 @@
         keys.forEach((key) => {
           let lane = key;
 
-          if (LANES[lane]) {
+          if (LANES[lane].connected) {
             connections_screen.appendChild(_getNewLaneButton(lane));
           } else {
             connections_screen.appendChild(_getNewDisConnectedLaneButton(lane));
@@ -424,6 +742,12 @@
 
         let diff = new_time.getTime() - running_time.getTime();
         sendSyncClocksCommand(diff);
+        const lanes = Object.keys(LANES);
+        lanes.forEach((lane) => {
+          const lane_clock = LANES[lane].lane_clock;
+          if (lane_clock.additional_time_delta == additional_time_delta)
+            lane_clock.additional_time_delta = diff;
+        });
         additional_time_delta = diff;
       }
 
@@ -440,11 +764,25 @@
       function addOneMinute() {
         additional_time_delta += 60000;
         sendSyncClocksCommand(additional_time_delta);
+
+        const lanes = Object.keys(LANES);
+        lanes.forEach((lane) => {
+          const lane_clock = LANES[lane].lane_clock;
+          if (lane_clock.additional_time_delta == additional_time_delta - 60000)
+            lane_clock.additional_time_delta += 60000;
+        });
       }
 
       function subtractOneMinute() {
         additional_time_delta -= 60000;
         sendSyncClocksCommand(additional_time_delta);
+
+        const lanes = Object.keys(LANES);
+        lanes.forEach((lane) => {
+          const lane_clock = LANES[lane].lane_clock;
+          if (lane_clock.additional_time_delta == additional_time_delta + 60000)
+            lane_clock.additional_time_delta -= 60000;
+        });
       }
 
       function syncClocks() {
@@ -470,6 +808,271 @@
         };
 
         socket.send(JSON.stringify(data));
+      }
+
+      function roundToTenth(n) {
+        let a = parseInt(n / 100, 10) * 100;
+        let b = a + 100;
+        n = n - a >= b - n ? b : a;
+        return n / 100;
+      }
+
+      function getSplit() {
+        let curr = Date.now();
+        curr += time_delta + additional_time_delta;
+        let split = new Date(curr);
+        let milis = split.getMilliseconds();
+        milis = roundToTenth(milis);
+        split = `${checkTime(split.getMinutes())}:${checkTime(
+          split.getSeconds()
+        )}.${milis}`;
+        return split;
+      }
+
+      function Split() {
+        let split = getSplit();
+        debugger;
+        socket.send(
+          JSON.stringify({
+            action: "split",
+            split: split,
+            lane_to_send_to: 1,
+            roomKey: roomKey,
+          })
+        );
+
+        sendInfo();
+      }
+
+      function createLaneTable(lane_number) {
+        const lanes_display = document.getElementById("lanes_display");
+
+        let active_lane = LANES[lane_number].connected;
+        const lane_div = document.createElement("div");
+        lane_div.id = "lane" + lane_number;
+        lane_div.classList.add("lane_display_container");
+        active_lane
+          ? lane_div.classList.add("active_lane")
+          : lane_div.classList.add("disconnected_lane");
+
+        const addLaneLabel = () => {
+          const lane_label = document.createElement("h5");
+          lane_label.id = "lane" + lane_number + "_label";
+          lane_label.classList.add("lane_label");
+          lane_label.innerText = "Lane " + lane_number;
+          lane_div.appendChild(lane_label);
+        };
+        const addLaneClock = () => {
+          const lane_clock = document.createElement("h3");
+          lane_clock.id = "lane" + lane_number + "clock";
+          lane_clock.classList.add("lane_clock");
+          lane_clock.innerText = LANES[lane_number].lane_clock.getDisplayTime();
+          lane_div.appendChild(lane_clock);
+        };
+        const addStopStartControls = () => {
+          const lane_controls_major_div = document.createElement("div");
+          lane_controls_major_div.id =
+            "lane" + lane_number + "_controls_major_lane" + lane_number;
+          lane_controls_major_div.classList.add("lane_controls");
+          lane_div.appendChild(lane_controls_major_div);
+
+          const pause_button = document.createElement("button");
+          pause_button.type = "button";
+          pause_button.id = "lane" + lane_number + "_pause_button";
+          pause_button.classList.add("btn");
+          pause_button.classList.add("btn-warning");
+          pause_button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000" height="35" width="35" version="1.1" id="Capa_1" viewBox="0 0 512 512" xml:space="preserve">
+                  <path d="M256,0C114.617,0,0,114.615,0,256s114.617,256,256,256s256-114.615,256-256S397.383,0,256,0z M224,320  c0,8.836-7.164,16-16,16h-32c-8.836,0-16-7.164-16-16V192c0-8.836,7.164-16,16-16h32c8.836,0,16,7.164,16,16V320z M352,320  c0,8.836-7.164,16-16,16h-32c-8.836,0-16-7.164-16-16V192c0-8.836,7.164-16,16-16h32c8.836,0,16,7.164,16,16V320z"></path>
+                </svg>`;
+          lane_controls_major_div.appendChild(pause_button);
+
+          const stop_button = document.createElement("button");
+          stop_button.type = "button";
+          stop_button.id = "lane" + lane_number + "_stop_button";
+          stop_button.classList.add("btn");
+          stop_button.classList.add("btn-danger");
+          stop_button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="35" width="35" version="1.1" id="Capa_1" viewBox="0 0 30.05 30.05" xml:space="preserve">
+                  <g>
+                    <path style="fill: #030104" d="M18.993,10.688h-7.936c-0.19,0-0.346,0.149-0.346,0.342v8.022c0,0.189,0.155,0.344,0.346,0.344   h7.936c0.19,0,0.344-0.154,0.344-0.344V11.03C19.336,10.838,19.183,10.688,18.993,10.688z"></path>
+                    <path style="fill: #030104" d="M15.026,0C6.729,0,0.001,6.726,0.001,15.025S6.729,30.05,15.026,30.05   c8.298,0,15.023-6.726,15.023-15.025S23.324,0,15.026,0z M15.026,27.54c-6.912,0-12.516-5.604-12.516-12.515   c0-6.914,5.604-12.517,12.516-12.517c6.913,0,12.514,5.603,12.514,12.517C27.54,21.936,21.939,27.54,15.026,27.54z"></path>
+                  </g>
+                </svg>`;
+          lane_controls_major_div.appendChild(stop_button);
+        };
+        const addLaneClockControls = () => {
+          const lane_clock_controls_div = document.createElement("div");
+          lane_clock_controls_div.id =
+            "lane" + lane_number + "_lane_clock_controls_div";
+          lane_clock_controls_div.classList.add("lane_clock_controls");
+          lane_div.appendChild(lane_clock_controls_div);
+
+          const edit_lane_control_button = document.createElement("button");
+          edit_lane_control_button.id =
+            "lane" + lane_number + "_edit_lane_control_button";
+          edit_lane_control_button.classList.add("btn");
+          edit_lane_control_button.classList.add("btn-success");
+          edit_lane_control_button.innerText = "Clock Controls";
+          lane_clock_controls_div.appendChild(edit_lane_control_button);
+
+          const start_controls_div = document.createElement("div");
+          start_controls_div.id = "lane" + lane_number + "_start_controls";
+          start_controls_div.classList.add("lane_controls");
+          start_controls_div.style.display = "none";
+          lane_div.appendChild(start_controls_div);
+
+          const start_on_top_button = document.createElement("button");
+          start_on_top_button.type = "button";
+          start_on_top_button.classList.add("btn");
+          start_on_top_button.classList.add("btn-success");
+          start_on_top_button.innerText = "Start on :00";
+          start_controls_div.appendChild(start_on_top_button);
+
+          const start_on_thirty_button = document.createElement("button");
+          start_on_thirty_button.type = "button";
+          start_on_thirty_button.classList.add("btn");
+          start_on_thirty_button.classList.add("btn-success");
+          start_on_thirty_button.innerText = "Start on :30";
+          start_controls_div.appendChild(start_on_thirty_button);
+
+          const lane_controls_subtract_time_div = document.createElement("div");
+          lane_controls_subtract_time_div.id =
+            "lane_controls_subtract_time_lane" + lane_number;
+          lane_controls_subtract_time_div.classList.add("lane_controls");
+          lane_controls_subtract_time_div.style.display = "none";
+          lane_div.appendChild(lane_controls_subtract_time_div);
+
+          const subtract_min_button = document.createElement("button");
+          subtract_min_button.type = "button";
+          subtract_min_button.classList.add("btn");
+          subtract_min_button.classList.add("btn-primary");
+          subtract_min_button.innerText = "-1:00";
+          lane_controls_subtract_time_div.appendChild(subtract_min_button);
+
+          const subtract_ten_button = document.createElement("button");
+          subtract_ten_button.type = "button";
+          subtract_ten_button.classList.add("btn");
+          subtract_ten_button.classList.add("btn-primary");
+          subtract_ten_button.innerText = "-:10";
+          lane_controls_subtract_time_div.appendChild(subtract_ten_button);
+
+          const subtract_one_button = document.createElement("button");
+          subtract_one_button.type = "button";
+          subtract_one_button.classList.add("btn");
+          subtract_one_button.classList.add("btn-primary");
+          subtract_one_button.innerText = "-:01";
+          lane_controls_subtract_time_div.appendChild(subtract_one_button);
+
+          const lane_controls_tare_div = document.createElement("div");
+          lane_controls_tare_div.id = "lane_controls_tare_lane" + lane_number;
+          lane_controls_tare_div.classList.add("lane_controls");
+          lane_controls_tare_div.style.display = "none";
+          lane_div.appendChild(lane_controls_tare_div);
+
+          const tare_button = document.createElement("button");
+          tare_button.type = "button";
+          tare_button.classList.add("btn");
+          tare_button.classList.add("btn-primary");
+          tare_button.innerText = "set to :00";
+          lane_controls_tare_div.appendChild(tare_button);
+
+          const lane_controls_addtime_div = document.createElement("div");
+          lane_controls_addtime_div.id =
+            "lane_controls_add_time_lane" + lane_number;
+          lane_controls_addtime_div.classList.add("lane_controls");
+          lane_controls_addtime_div.style.display = "none";
+          lane_div.appendChild(lane_controls_addtime_div);
+
+          const add_min_button = document.createElement("button");
+          add_min_button.type = "button";
+          add_min_button.classList.add("btn");
+          add_min_button.classList.add("btn-primary");
+          add_min_button.innerText = "+1:00";
+          lane_controls_addtime_div.appendChild(add_min_button);
+
+          const add_ten_button = document.createElement("button");
+          add_ten_button.type = "button";
+          add_ten_button.classList.add("btn");
+          add_ten_button.classList.add("btn-primary");
+          add_ten_button.innerText = "+:10";
+          lane_controls_addtime_div.appendChild(add_ten_button);
+
+          const add_one_button = document.createElement("button");
+          add_one_button.type = "button";
+          add_one_button.classList.add("btn");
+          add_one_button.classList.add("btn-primary");
+          add_one_button.innerText = "+:01";
+          lane_controls_addtime_div.appendChild(add_one_button);
+        };
+        const addDisplays = () => {
+          const next_up_div = document.createElement("div");
+          next_up_div.id = "lane" + lane_number + "_next_up_div";
+          next_up_div.classList.add("next_up_display");
+          lane_div.appendChild(next_up_div);
+
+          next_up_div.appendChild(document.createElement("p"));
+          next_up_div.appendChild(document.createElement("p"));
+
+          const next_table = document.createElement("table");
+          next_table.id = "lane" + lane_number + "_next_table";
+          next_table.classList.add("lane_table");
+        };
+
+        addLaneLabel();
+        addLaneClock();
+        addStopStartControls();
+        addLaneClockControls();
+        addDisplays();
+
+        return lane_div;
+      }
+
+      function getLaneClock(lane_panel) {
+        return lane_panel.children[1];
+      }
+
+      class LaneClock {
+        constructor(time_delta, additional_time_delta) {
+          this.time_delta = time_delta;
+          this.additional_time_delta = additional_time_delta;
+        }
+
+        getDisplayTime() {
+          let text = "";
+          if (isNaN(this.time_delta)) {
+            return "00:00";
+          }
+          let curr = Date.now();
+          curr += this.time_delta + this.additional_time_delta;
+          let display_time = new Date(curr);
+          text = `${checkTime(display_time.getMinutes())}:${checkTime(
+            display_time.getSeconds()
+          )}`;
+          return text;
+        }
+      }
+
+      function switchToSplitMode() {
+        const split_mode_button = document.getElementById("split_mode_button");
+        const send_off_mode_button = document.getElementById(
+          "send_off_mode_button"
+        );
+        const lanes_display = document.getElementById("lanes_display");
+
+        split_mode_button.style.display = "none";
+        send_off_mode_button.style.display = "inline";
+        lanes_display.style.display = "none";
+      }
+
+      function switchToSendoffMode() {
+        const split_mode_button = document.getElementById("split_mode_button");
+        const send_off_mode_button = document.getElementById(
+          "send_off_mode_button"
+        );
+        const lanes_display = document.getElementById("lanes_display");
+
+        split_mode_button.style.display = "inline";
+        send_off_mode_button.style.display = "none";
+        lanes_display.style.display = "flex";
       }
     </script>
   </body>

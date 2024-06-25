@@ -64,7 +64,7 @@
         position: fixed;
         top: 3px;
         right: 3px;
-        color: white;
+        color: green;
         font-weight: bolder;
       }
       .disconnected_from_coach {
@@ -388,6 +388,9 @@
               case "sendoffs":
                 addNewSendoffs(data.message);
                 break;
+              case "split":
+                processSplit(data.split);
+                break;
             }
           }
         };
@@ -405,8 +408,7 @@
 
         let connection_status_div = document.createElement("div");
         connection_status_div.id = "connection_status";
-        connection_status_div.innerText =
-          "Connected to Coach as Lane " + laneNumber;
+        connection_status_div.innerText = "Lane " + laneNumber;
         let temp = document.getElementById("container");
         temp.appendChild(connection_status_div);
       }
@@ -544,6 +546,8 @@
           last_child = set_display.lastElementChild;
         }
       }
+
+      function processSplit(split) {}
     </script>
   </body>
 </html>
