@@ -21,8 +21,39 @@
         width: 100vw;
         height: 100vh;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
+      }
+
+      #next_up_display {
+        width: 50%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+      }
+
+      #set_display {
+        width: 50%;
+        height: 100%;
+        overflow: auto;
+        border-left-style: solid;
+        border-left-color: white;
+        border-left-width: 2px;
+      }
+
+      #message_display {
+        width: 100vw;
+        height: 50vh;
+        display: flex;
+        flex-direction: row;
+        border-top: 2px;
+        border-top-color: white;
+        border-top-style: solid;
+        color: white;
+        overflow: none;
       }
 
       .black_background {
@@ -31,17 +62,63 @@
 
       #connection_status {
         position: fixed;
-        bottom: 3px;
+        top: 3px;
         right: 3px;
-        color: white;
+        color: green;
         font-weight: bolder;
       }
       .disconnected_from_coach {
         color: red;
       }
+
+      #next_up_label {
+        text-decoration: underline;
+        font-size: 3vw;
+      }
+
+      #next_up_swimmer {
+        font-size: 4vw;
+      }
+
+      #next_up_time {
+        font-size: 8vw;
+        font-weight: 800;
+        font-family: monospace;
+      }
+
+      #set_table {
+        width: 98%;
+      }
+
+      .set_table_sendoff_time {
+        font-size: 3vw;
+        font-weight: 800;
+        font-family: monospace;
+        width: 20%;
+        text-align: center;
+      }
+
+      .set_table_name {
+        font-size: 3vw;
+        width: 30%;
+        text-align: center;
+      }
+
+      .set_table_noname {
+        width: 3%;
+      }
+
+      .set_table_description {
+        font-size: 2vw;
+        width: 50%;
+      }
+
+      .set_table_row {
+        border-bottom-style: solid;
+        border-bottom-color: white;
+        border-bottom-width: 2px;
+      }
     </style>
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <script src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
   </head>
   <body onbeforeunload="return closeWebSocket()">
     <div class="container" id="container">
@@ -60,6 +137,9 @@
       let time_delta;
       let additional_time_delta = 0;
       let wakeLock = null;
+      let displaying_sendoffs = false;
+      let next_up_display;
+      let green_amount;
 
       function closeWebSocket() {
         socket.close();
@@ -112,22 +192,25 @@
       }
 
       async function setupClock() {
-        socket = new WebSocket(
-          "wss://mjim68pp6h.execute-api.us-east-2.amazonaws.com/production/"
-        );
-        socket.onopen = (event) => {
-          newGetTimeDelta();
-        };
-        socket.onmessage = (event) => {
-          let data = JSON.parse(event.data);
-          if (data?.message == "Internal server error")
-            _handleInternalServerError();
-          else {
-            if (data.type == "timestamp") {
-              dealWithTimeStamp(data);
+        if (!socket) {
+          socket = new WebSocket(
+            "wss://mjim68pp6h.execute-api.us-east-2.amazonaws.com/production/"
+          );
+
+          socket.onopen = (event) => {
+            newGetTimeDelta();
+          };
+          socket.onmessage = (event) => {
+            let data = JSON.parse(event.data);
+            if (data?.message == "Internal server error")
+              _handleInternalServerError();
+            else {
+              if (data.type == "timestamp") {
+                dealWithTimeStamp(data);
+              }
             }
-          }
-        };
+          };
+        }
 
         var main_screen = document.getElementById("container");
         requestFullScreen(main_screen);
@@ -137,7 +220,7 @@
         //Update the display to the clock - will need to refactor later
         removeInitialButtons();
 
-        clock = document.createElement("p");
+        clock = document.createElement("div");
         clock.id = "Main_Clock";
         clock.className = "Main_Clock";
         clock.innerText = "00:00";
@@ -147,7 +230,6 @@
         //start the clock
         //await getTimeDelta();
         newGetTimeDelta();
-        //StartClock();
 
         setInterval(newSetClock, 10);
       }
@@ -201,6 +283,47 @@
         clock.innerText = `${checkTime(display_time.getMinutes())}:${checkTime(
           display_time.getSeconds()
         )}`;
+        const set_table = document.getElementById("set_table");
+
+        if (next_up_display && green_amount > -0) {
+          //next_up_display.style.backgroundColor =
+          //  "rgb(0, " + green_amount + ", 0)";
+          document.getElementById("container").style.backgroundColor =
+            "rgb(0, " + green_amount + ", 0)";
+          green_amount--;
+        }
+
+        let next_up_time = document.getElementById("next_up_time");
+
+        if (set_table && clock.innerText == next_up_time.innerText) {
+          //move on to the next swimmer
+          green_amount = 255;
+          const first_row = set_table.children[1].children[0];
+          if (!first_row) return 0;
+          let parent_element = first_row.parentElement;
+          parent_element.removeChild(first_row);
+
+          let next_first_row = parent_element.children[0];
+
+          //if (!next_first_row) return 0;
+          SetNextDisplayFromRow(next_first_row);
+        }
+      }
+
+      function SetNextDisplayFromRow(row) {
+        const next_up_swimmer = document.getElementById("next_up_swimmer");
+        const next_up_time = document.getElementById("next_up_time");
+
+        if (row) {
+          next_up_time.innerText = row.children[0].innerText;
+          next_up_swimmer.innerText = row.children[1].innerText;
+
+          if (next_up_swimmer.innerText.length === 0)
+            next_up_swimmer.innerText = row.children[2].innerText;
+        } else {
+          next_up_time.innerText = "--:--";
+          next_up_swimmer.innerText = "";
+        }
       }
 
       function ConnectToCoach() {
@@ -257,11 +380,16 @@
                 _processError(data);
                 break;
               case "resetClock":
-                //syncClock(data);
                 newSyncClock(data);
                 break;
               case "timestamp":
                 dealWithTimeStamp(data);
+                break;
+              case "sendoffs":
+                addNewSendoffs(data.message);
+                break;
+              case "split":
+                processSplit(data.split);
                 break;
             }
           }
@@ -276,10 +404,11 @@
 
       function _processLaneConnect(laneNumber) {
         setupClock();
+        addSendoffsScreen();
 
         let connection_status_div = document.createElement("div");
         connection_status_div.id = "connection_status";
-        connection_status_div.innerText = "Connected to Coach";
+        connection_status_div.innerText = "Lane " + laneNumber;
         let temp = document.getElementById("container");
         temp.appendChild(connection_status_div);
       }
@@ -314,6 +443,111 @@
           }
         }
       }
+
+      function addNewSendoffs(sendoffs) {
+        if (!displaying_sendoffs) addSendoffsScreen();
+        else clearSendoffs();
+
+        //setup the sendoffs
+        const set_display = document.getElementById("set_display");
+
+        const set_table = document.createElement("table");
+        set_table.id = "set_table";
+        const set_header = document.createElement("thead");
+        set_header.id = "set_header";
+        const header_row = document.createElement("tr");
+        header_row.id = "header_row";
+        header_row.classList.add("set_table_row");
+        const header_time_column = document.createElement("td");
+        header_time_column.id = "header_time_column";
+        const header_name_column = document.createElement("td");
+        header_name_column.id = "header_name_column";
+        const header_description_column = document.createElement("td");
+        header_description_column.id = "header_description_column";
+        header_row.appendChild(header_time_column);
+        header_row.appendChild(header_name_column);
+        header_row.appendChild(header_description_column);
+        set_header.appendChild(header_row);
+        set_table.appendChild(set_header);
+        const set_table_body = document.createElement("tbody");
+        set_table_body.id = "set_table_body";
+        set_table.appendChild(set_table_body);
+
+        let counter = 0;
+        sendoffs.forEach((sendoff) => {
+          const sendoff_row = document.createElement("tr");
+          sendoff_row.id = "sendoff" + counter;
+          sendoff_row.classList.add("set_table_row");
+          const sendoff_time = document.createElement("td");
+          sendoff_time.id = "sendoff" + counter + "time";
+          sendoff_time.classList.add("set_table_sendoff_time");
+          sendoff_time.innerText = sendoff.time;
+          const sendoff_name = document.createElement("td");
+          sendoff_name.id = "sendoff" + counter + "name";
+          sendoff_name.innerText = sendoff.name;
+          if (sendoff_name.innerText.length === 0)
+            sendoff_name.classList.add("set_table_noname");
+          else sendoff_name.classList.add("set_table_name");
+          const sendoff_description = document.createElement("td");
+          sendoff_description.id = "sendoff" + counter + "description";
+          sendoff_description.innerText = sendoff.description;
+          sendoff_description.classList.add("set_table_description");
+          sendoff_row.appendChild(sendoff_time);
+          sendoff_row.appendChild(sendoff_name);
+          sendoff_row.appendChild(sendoff_description);
+          set_table_body.appendChild(sendoff_row);
+          if (counter === 0) SetNextDisplayFromRow(sendoff_row);
+          counter++;
+        });
+
+        set_display.appendChild(set_table);
+      }
+
+      function addSendoffsScreen() {
+        let container = document.getElementById("container");
+
+        let message_display = document.createElement("div");
+        message_display.id = "message_display";
+
+        container.appendChild(message_display);
+
+        next_up_display = document.createElement("div");
+        next_up_display.id = "next_up_display";
+        //let next_up_label = document.createElement("div");
+        //next_up_label.id = "next_up_label";
+        //next_up_label.innerText = "Next Up";
+        //next_up_display.appendChild(next_up_label);
+        let next_up_swimmer = document.createElement("div");
+        next_up_swimmer.id = "next_up_swimmer";
+        next_up_swimmer.innerText = "TBA";
+        next_up_display.appendChild(next_up_swimmer);
+        let next_up_time = document.createElement("div");
+        next_up_time.id = "next_up_time";
+        next_up_time.innerText = "??:??";
+        next_up_display.appendChild(next_up_time);
+        message_display.appendChild(next_up_display);
+
+        let set_display = document.createElement("div");
+        set_display.id = "set_display";
+        message_display.appendChild(set_display);
+
+        displaying_sendoffs = true;
+      }
+
+      function clearSendoffs() {
+        let next_up_swimmer = document.getElementById("next_up_swimmer");
+        next_up_swimmer.innerText = "TBA";
+        let next_up_time = document.getElementById("next_up_time");
+        next_up_time.innerText = "??:??";
+        let set_display = document.getElementById("set_display");
+        let last_child = set_display.lastElementChild;
+        while (last_child) {
+          set_display.removeChild(last_child);
+          last_child = set_display.lastElementChild;
+        }
+      }
+
+      function processSplit(split) {}
     </script>
   </body>
 </html>
