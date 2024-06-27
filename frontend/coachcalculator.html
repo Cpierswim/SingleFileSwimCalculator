@@ -866,7 +866,7 @@
 
       function roundToTenth(n) {
         let a = parseInt(n / 10, 10) * 10;
-        let b = a + 100;
+        let b = a + 10;
         n = n - a >= b - n ? b : a;
         return n / 10;
       }
@@ -884,23 +884,37 @@
         return split;
       }
 
-      function Split(e) {
-        const lane_number = parseInt(
-          e.srcElement.id.replace("lane", "").replace("_split_button")
-        );
-        let split = getSplit(lane_number);
-        const split_p = document.getElementById(
-          "lane" + lane_number + "_split"
-        );
-        split_p.innerText = split;
-        //socket.send(
-        //  JSON.stringify({
-        //    action: "split",
-        //    split: split,
-        //    lane_to_send_to: lane_number,
-        //    roomKey: roomKey,
-        //  })
-        //);
+      let last_touch = 0;
+
+      async function Split(e) {
+        setTimeout(() => {
+          let process = true;
+          if (e.type === "mousedown") {
+            if (Date.now - last_touch < 20) {
+              process = false;
+            }
+          } else {
+            last_touch = Date.now();
+          }
+          if (process) {
+            const lane_number = parseInt(
+              e.srcElement.id.replace("lane", "").replace("_split_button")
+            );
+            let split = getSplit(lane_number);
+            const split_p = document.getElementById(
+              "lane" + lane_number + "_split"
+            );
+            split_p.innerText = split;
+          }
+          //socket.send(
+          //  JSON.stringify({
+          //    action: "split",
+          //    split: split,
+          //    lane_to_send_to: lane_number,
+          //    roomKey: roomKey,
+          //  })
+          //);
+        }, 1);
       }
 
       function createLaneTable(lane_number) {
@@ -1114,7 +1128,8 @@
         split_button.classList.add("btn-primary");
         split_button.classList.add("split_button");
         split_button.innerText = "Lane " + lane_number + " Split";
-        split_button.addEventListener("click", Split);
+        split_button.addEventListener("mousedown", Split);
+        split_button.addEventListener("touchstart", Split);
         lane_split_panel.appendChild(split_button);
 
         const split_p = document.createElement("p");
