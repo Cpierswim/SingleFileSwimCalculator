@@ -240,6 +240,39 @@
         width: 93%;
         font-size: 30px;
       }
+
+      .lane_split_panel {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin: 4px;
+        border-radius: 9%;
+        border-width: 2px;
+        border-style: solid;
+        padding: 15px;
+        max-height: 45%;
+      }
+
+      .split_button {
+        width: 15vw;
+        height: 15vh;
+      }
+
+      #splits_display {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        width: 100%;
+        height: 100%;
+      }
+
+      .split {
+        margin-top: 10px;
+        font-size: 30px;
+        font-weight: 600;
+        font-family: monospace;
+      }
     </style>
   </head>
   <body onbeforeunload="return closeWebSocket()">
@@ -485,9 +518,17 @@
             lanes_display.appendChild(send_info_button);
             lanes_display.appendChild(split_button);
           };
+          const add_initial_empty_splits_display = () => {
+            const lower_div = document.getElementById("lower_div");
 
+            const splits_display = document.createElement("div");
+            splits_display.id = "splits_display";
+            splits_display.style.display = "none";
+            lower_div.appendChild(splits_display);
+          };
           add_controls_div();
           add_initial_empty_lanes_display();
+          add_initial_empty_splits_display();
         };
 
         clearScreenOfBeginningControls();
@@ -502,7 +543,8 @@
           clock.innerText = "00:00";
           return "";
         }
-        let curr = Date.now();
+        let now = Date.now();
+        let curr = now;
         curr += time_delta + additional_time_delta;
         let display_time = new Date(curr);
         clock.innerText = `${checkTime(display_time.getMinutes())}:${checkTime(
@@ -515,10 +557,15 @@
         lanes.forEach((lane_number) => {
           if (LANES[lane_number].connected) {
             const lane_panel = LANES[lane_number].lane_panel;
+            const split_panel = LANES[lane_number].split_panel;
 
             const lane_clock = getLaneClock(lane_panel);
-            lane_clock.innerText =
-              LANES[lane_number].lane_clock.getDisplayTime();
+            display_time =
+              LANES[lane_number].lane_clock.getDisplayTimeFromTime(now);
+            lane_clock.innerText = display_time;
+
+            const split_clock = getLaneClock(split_panel);
+            split_clock.innerText = display_time;
           }
         });
       }
@@ -626,13 +673,18 @@
         };
         UpdateLaneConnections();
         LANES[lane].lane_panel = createLaneTable(lane);
+        LANES[lane].split_panel = createSplitTable(lane);
         const lanes_display = document.getElementById("lanes_display");
         while (lanes_display.children.length > 0)
           lanes_display.children[0].remove();
+        const splits_display = document.getElementById("splits_display");
+        while (splits_display.children.length > 0)
+          splits_display.children[0].remove();
         let lanes = Object.keys(LANES);
         lanes.sort((a, b) => a - b);
         lanes.forEach((lane) => {
           lanes_display.appendChild(LANES[lane].lane_panel);
+          splits_display.appendChild(LANES[lane].split_panel);
         });
       }
 
@@ -642,6 +694,8 @@
         UpdateLaneConnections();
         LANES[lane].lane_panel.classList.remove("connectedLane");
         LANES[lane].lane_panel.classList.add("disconnected_lane");
+        LANES[lane].split_panel.classList.remove("connectedLane");
+        LANES[lane].split_panel.classList.add("disconnected_lane");
       }
 
       function newSyncClock(data) {
@@ -811,37 +865,42 @@
       }
 
       function roundToTenth(n) {
-        let a = parseInt(n / 100, 10) * 100;
+        let a = parseInt(n / 10, 10) * 10;
         let b = a + 100;
         n = n - a >= b - n ? b : a;
-        return n / 100;
+        return n / 10;
       }
 
-      function getSplit() {
+      function getSplit(lane_number) {
         let curr = Date.now();
-        curr += time_delta + additional_time_delta;
+        curr +=
+          LANES[lane_number].lane_clock.time_delta +
+          LANES[lane_number].lane_clock.additional_time_delta;
         let split = new Date(curr);
         let milis = split.getMilliseconds();
         milis = roundToTenth(milis);
-        split = `${checkTime(split.getMinutes())}:${checkTime(
-          split.getSeconds()
-        )}.${milis}`;
+        milis < 10 ? (milis = "0" + milis) : (milis = milis + "");
+        split = `${checkTime(split.getSeconds())}.${milis}`;
         return split;
       }
 
-      function Split() {
-        let split = getSplit();
-        debugger;
-        socket.send(
-          JSON.stringify({
-            action: "split",
-            split: split,
-            lane_to_send_to: 1,
-            roomKey: roomKey,
-          })
+      function Split(e) {
+        const lane_number = parseInt(
+          e.srcElement.id.replace("lane", "").replace("_split_button")
         );
-
-        sendInfo();
+        let split = getSplit(lane_number);
+        const split_p = document.getElementById(
+          "lane" + lane_number + "_split"
+        );
+        split_p.innerText = split;
+        //socket.send(
+        //  JSON.stringify({
+        //    action: "split",
+        //    split: split,
+        //    lane_to_send_to: lane_number,
+        //    roomKey: roomKey,
+        //  })
+        //);
       }
 
       function createLaneTable(lane_number) {
@@ -868,6 +927,8 @@
           lane_clock.classList.add("lane_clock");
           lane_clock.innerText = LANES[lane_number].lane_clock.getDisplayTime();
           lane_div.appendChild(lane_clock);
+
+          LANES[lane_number].lane_clock_display;
         };
         const addStopStartControls = () => {
           const lane_controls_major_div = document.createElement("div");
@@ -1026,6 +1087,47 @@
         return lane_div;
       }
 
+      function createSplitTable(lane_number) {
+        const lane_split_panel = document.createElement("div");
+        lane_split_panel.id = "lane" + lane_number + "_split_panel";
+        let active_lane = LANES[lane_number].connected;
+        active_lane
+          ? lane_split_panel.classList.add("active_lane")
+          : lane_split_panel.classList.add("disconnected_lane");
+        lane_split_panel.classList.add("lane_split_panel");
+
+        const lane_label = document.createElement("h5");
+        lane_label.id = "lane" + lane_number + "_label";
+        lane_label.classList.add("lane_label");
+        lane_label.innerText = "Lane " + lane_number;
+        lane_split_panel.appendChild(lane_label);
+
+        const lane_clock = document.createElement("h3");
+        lane_clock.id = "lane" + lane_number + "clock";
+        lane_clock.classList.add("lane_clock");
+        lane_clock.innerText = LANES[lane_number].lane_clock.getDisplayTime();
+        lane_split_panel.appendChild(lane_clock);
+
+        const split_button = document.createElement("button");
+        split_button.id = "lane" + lane_number + "_split_button";
+        split_button.classList.add("btn");
+        split_button.classList.add("btn-primary");
+        split_button.classList.add("split_button");
+        split_button.innerText = "Lane " + lane_number + " Split";
+        split_button.addEventListener("click", Split);
+        lane_split_panel.appendChild(split_button);
+
+        const split_p = document.createElement("p");
+        split_p.id = "lane" + lane_number + "_split";
+        split_p.innerText = "00.00";
+        split_p.classList.add("split");
+        lane_split_panel.appendChild(split_p);
+
+        LANES[lane_number].split_p = split_p;
+
+        return lane_split_panel;
+      }
+
       function getLaneClock(lane_panel) {
         return lane_panel.children[1];
       }
@@ -1037,14 +1139,22 @@
         }
 
         getDisplayTime() {
-          let text = "";
           if (isNaN(this.time_delta)) {
             return "00:00";
           }
           let curr = Date.now();
           curr += this.time_delta + this.additional_time_delta;
           let display_time = new Date(curr);
-          text = `${checkTime(display_time.getMinutes())}:${checkTime(
+          let text = `${checkTime(display_time.getMinutes())}:${checkTime(
+            display_time.getSeconds()
+          )}`;
+          return text;
+        }
+
+        getDisplayTimeFromTime(time) {
+          time += this.time_delta + this.additional_time_delta;
+          let display_time = new Date(time);
+          let text = `${checkTime(display_time.getMinutes())}:${checkTime(
             display_time.getSeconds()
           )}`;
           return text;
@@ -1053,14 +1163,17 @@
 
       function switchToSplitMode() {
         const split_mode_button = document.getElementById("split_mode_button");
+
         const send_off_mode_button = document.getElementById(
           "send_off_mode_button"
         );
         const lanes_display = document.getElementById("lanes_display");
+        const splits_display = document.getElementById("splits_display");
 
         split_mode_button.style.display = "none";
         send_off_mode_button.style.display = "inline";
         lanes_display.style.display = "none";
+        splits_display.style.display = "flex";
       }
 
       function switchToSendoffMode() {
@@ -1069,10 +1182,12 @@
           "send_off_mode_button"
         );
         const lanes_display = document.getElementById("lanes_display");
+        const splits_display = document.getElementById("splits_display");
 
         split_mode_button.style.display = "inline";
         send_off_mode_button.style.display = "none";
         lanes_display.style.display = "flex";
+        splits_display.style.display = "none";
       }
     </script>
   </body>
