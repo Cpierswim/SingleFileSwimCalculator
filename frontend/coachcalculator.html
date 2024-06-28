@@ -725,6 +725,10 @@
         let current_time = Date.now();
         let trip_time = current_time - data.initial_time;
         time_delta = data.timestamp - current_time + Math.floor(trip_time / 2);
+        const keys = Object.keys(LANES);
+        keys.forEach((lane_number) => {
+          LANES[lane_number].lane_clock.time_delta = time_delta;
+        });
       }
 
       function UpdateLaneConnections() {
