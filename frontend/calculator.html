@@ -12,9 +12,18 @@
     <style>
       #Main_Clock {
         color: greenyellow;
-        font-size: 25.5vw;
+        font-size: 12vw;
         font-weight: 600;
         font-family: "Noto Sans Mono", "Courier New", Courier, monospace;
+        line-height: 90%;
+      }
+
+      #clock_display {
+        height: 40%;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       #container {
@@ -44,9 +53,21 @@
         border-left-width: 2px;
       }
 
+      #split_display {
+        width: 50%;
+        height: 100%;
+        overflow: auto;
+        border-left-style: solid;
+        border-left-color: white;
+        border-left-width: 2px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
       #message_display {
         width: 100vw;
-        height: 50vh;
+        height: 60%;
         display: flex;
         flex-direction: row;
         border-top: 2px;
@@ -118,6 +139,12 @@
         border-bottom-color: white;
         border-bottom-width: 2px;
       }
+
+      #split {
+        font-size: 7vw;
+        color: white;
+        font-weight: 600;
+      }
     </style>
   </head>
   <body onbeforeunload="return closeWebSocket()">
@@ -139,7 +166,10 @@
       let wakeLock = null;
       let displaying_sendoffs = false;
       let next_up_display;
-      let green_amount;
+      let split_display;
+      let green_amount_main_clock = 0;
+      let green_amount_split = 0;
+      let time_to_stop_displaying_split = Date.now();
 
       function closeWebSocket() {
         socket.close();
@@ -213,6 +243,7 @@
         }
 
         var main_screen = document.getElementById("container");
+        main_screen.classList.add("black_background");
         requestFullScreen(main_screen);
 
         requestScreenLock();
@@ -220,12 +251,16 @@
         //Update the display to the clock - will need to refactor later
         removeInitialButtons();
 
+        let clock_div = document.createElement("div");
+        clock_div.id = "clock_display";
+        main_screen.appendChild(clock_div);
+
         clock = document.createElement("div");
         clock.id = "Main_Clock";
         clock.className = "Main_Clock";
         clock.innerText = "00:00";
-        main_screen.classList.add("black_background");
-        main_screen.appendChild(clock);
+        clock.addEventListener("resize", resizeClockText);
+        clock_div.appendChild(clock);
 
         //start the clock
         //await getTimeDelta();
@@ -285,19 +320,33 @@
         )}`;
         const set_table = document.getElementById("set_table");
 
-        if (next_up_display && green_amount > -0) {
+        if (green_amount_split > -1) {
+          split_display.style.backgroundColor =
+            "rgb(0, " + green_amount_split + ", 0)";
+          green_amount_split--;
+        }
+
+        if (Date.now() >= time_to_stop_displaying_split) {
+          set_display.style.display = "";
+          split_display.style.display = "none";
+        } else {
+          set_display.style.display = "none";
+          split_display.style.display = "";
+        }
+
+        if (next_up_display && green_amount_main_clock > -0) {
           //next_up_display.style.backgroundColor =
-          //  "rgb(0, " + green_amount + ", 0)";
+          //  "rgb(0, " + green_amount_main_clock + ", 0)";
           document.getElementById("container").style.backgroundColor =
-            "rgb(0, " + green_amount + ", 0)";
-          green_amount--;
+            "rgb(0, " + green_amount_main_clock + ", 0)";
+          green_amount_main_clock--;
         }
 
         let next_up_time = document.getElementById("next_up_time");
 
         if (set_table && clock.innerText == next_up_time.innerText) {
           //move on to the next swimmer
-          green_amount = 255;
+          green_amount_main_clock = 255;
           const first_row = set_table.children[1].children[0];
           if (!first_row) return 0;
           let parent_element = first_row.parentElement;
@@ -308,6 +357,8 @@
           //if (!next_first_row) return 0;
           SetNextDisplayFromRow(next_first_row);
         }
+
+        fitText(clock);
       }
 
       function SetNextDisplayFromRow(row) {
@@ -531,6 +582,15 @@
         set_display.id = "set_display";
         message_display.appendChild(set_display);
 
+        split_display = document.createElement("div");
+        split_display.id = "split_display";
+        split_display.style.display = "none";
+        message_display.appendChild(split_display);
+
+        let split = document.createElement("p");
+        split.id = "split";
+        split_display.appendChild(split);
+
         displaying_sendoffs = true;
       }
 
@@ -547,7 +607,50 @@
         }
       }
 
-      function processSplit(split) {}
+      function processSplit(split) {
+        const set_display = document.getElementById("set_display");
+        const split_display = document.getElementById("split_display");
+        const split_p = document.getElementById("split");
+        split_p.innerHTML =
+          '<span style="text-decoration: underline">Split:</span><br />' +
+          split;
+        green_amount_split = 255;
+
+        set_display.style.display = "none";
+        split_display.style.display = "";
+
+        time_to_stop_displaying_split = Date.now() + 10000;
+      }
+
+      function fitText(element) {
+        let RESIZE = false;
+        let div = element.parentElement;
+
+        let text_size = 3;
+
+        if (element.old_height == undefined || element.old_width == undefined)
+          RESIZE = true;
+        else if (
+          element.old_height != div.clientHeight ||
+          element.old_width != div.clientWidth
+        )
+          RESIZE = true;
+
+        if (RESIZE) {
+          element.style.fontSize = text_size + "px";
+          while (
+            div.clientHeight > element.clientHeight &&
+            div.clientWidth > element.clientWidth
+          ) {
+            element.style.fontSize = text_size + "px";
+            text_size++;
+          }
+
+          element.old_height = div.clientHeight;
+          element.old_width = div.clientWidth;
+        }
+      }
+      function resizeClockText() {}
     </script>
   </body>
 </html>
