@@ -358,7 +358,7 @@
           SetNextDisplayFromRow(next_first_row);
         }
 
-        fitText();
+        fitText(clock);
       }
 
       function SetNextDisplayFromRow(row) {
@@ -622,32 +622,32 @@
         time_to_stop_displaying_split = Date.now() + 10000;
       }
 
-      function fitText() {
+      function fitText(element) {
         let RESIZE = false;
-        let div = clock.parentElement;
+        let div = element.parentElement;
 
         let text_size = 3;
 
-        if (clock.old_height == undefined || clock.old_width == undefined)
+        if (element.old_height == undefined || element.old_width == undefined)
           RESIZE = true;
         else if (
-          clock.old_height != div.clientHeight ||
-          clock.old_width != div.clientWidth
+          element.old_height != div.clientHeight ||
+          element.old_width != div.clientWidth
         )
           RESIZE = true;
 
         if (RESIZE) {
-          clock.style.fontSize = text_size + "px";
+          element.style.fontSize = text_size + "px";
           while (
-            div.clientHeight > clock.clientHeight &&
-            div.clientWidth > clock.clientWidth
+            div.clientHeight > element.clientHeight &&
+            div.clientWidth > element.clientWidth
           ) {
-            clock.style.fontSize = text_size + "px";
+            element.style.fontSize = text_size + "px";
             text_size++;
           }
 
-          clock.old_height = div.clientHeight;
-          clock.old_width = div.clientWidth;
+          element.old_height = div.clientHeight;
+          element.old_width = div.clientWidth;
         }
       }
       function resizeClockText() {}
