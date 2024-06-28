@@ -880,6 +880,7 @@
         let milis = split.getMilliseconds();
         milis = roundToTenth(milis);
         milis < 10 ? (milis = "0" + milis) : (milis = milis + "");
+        if (milis == "100") debugger;
         split = `${checkTime(split.getSeconds())}.${milis}`;
         return split;
       }
@@ -905,15 +906,16 @@
               "lane" + lane_number + "_split"
             );
             split_p.innerText = split;
+
+            socket.send(
+              JSON.stringify({
+                action: "split",
+                split: split,
+                lane_to_send_to: lane_number,
+                roomKey: roomKey,
+              })
+            );
           }
-          //socket.send(
-          //  JSON.stringify({
-          //    action: "split",
-          //    split: split,
-          //    lane_to_send_to: lane_number,
-          //    roomKey: roomKey,
-          //  })
-          //);
         }, 1);
       }
 
