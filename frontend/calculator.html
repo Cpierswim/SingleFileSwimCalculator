@@ -12,9 +12,18 @@
     <style>
       #Main_Clock {
         color: greenyellow;
-        font-size: 25.5vw;
+        font-size: 12vw;
         font-weight: 600;
         font-family: "Noto Sans Mono", "Courier New", Courier, monospace;
+        line-height: 90%;
+      }
+
+      #clock_display {
+        height: 40%;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       #container {
@@ -58,7 +67,7 @@
 
       #message_display {
         width: 100vw;
-        height: 50vh;
+        height: 60%;
         display: flex;
         flex-direction: row;
         border-top: 2px;
@@ -149,7 +158,7 @@
     </div>
 
     <script>
-      const SKIP_FULLSCREEN = 1;
+      const SKIP_FULLSCREEN = 0;
       let socket = undefined;
       let clock;
       let time_delta;
@@ -234,6 +243,7 @@
         }
 
         var main_screen = document.getElementById("container");
+        main_screen.classList.add("black_background");
         requestFullScreen(main_screen);
 
         requestScreenLock();
@@ -241,12 +251,16 @@
         //Update the display to the clock - will need to refactor later
         removeInitialButtons();
 
+        let clock_div = document.createElement("div");
+        clock_div.id = "clock_display";
+        main_screen.appendChild(clock_div);
+
         clock = document.createElement("div");
         clock.id = "Main_Clock";
         clock.className = "Main_Clock";
         clock.innerText = "00:00";
-        main_screen.classList.add("black_background");
-        main_screen.appendChild(clock);
+        clock.addEventListener("resize", resizeClockText);
+        clock_div.appendChild(clock);
 
         //start the clock
         //await getTimeDelta();
@@ -343,6 +357,8 @@
           //if (!next_first_row) return 0;
           SetNextDisplayFromRow(next_first_row);
         }
+
+        fitText();
       }
 
       function SetNextDisplayFromRow(row) {
@@ -605,6 +621,36 @@
 
         time_to_stop_displaying_split = Date.now() + 10000;
       }
+
+      function fitText() {
+        let RESIZE = false;
+        let div = clock.parentElement;
+
+        let text_size = 3;
+
+        if (clock.old_height == undefined || clock.old_width == undefined)
+          RESIZE = true;
+        else if (
+          clock.old_height != div.clientHeight ||
+          clock.old_width != div.clientWidth
+        )
+          RESIZE = true;
+
+        if (RESIZE) {
+          clock.style.fontSize = text_size + "px";
+          while (
+            div.clientHeight > clock.clientHeight &&
+            div.clientWidth > clock.clientWidth
+          ) {
+            clock.style.fontSize = text_size + "px";
+            text_size++;
+          }
+
+          clock.old_height = div.clientHeight;
+          clock.old_width = div.clientWidth;
+        }
+      }
+      function resizeClockText() {}
     </script>
   </body>
 </html>
