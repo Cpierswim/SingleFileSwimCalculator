@@ -110,6 +110,7 @@
         gap: 0.25vw;
         color: white;
         flex-wrap: wrap;
+        padding: 3px;
       }
 
       /* For the clock part */
@@ -333,6 +334,7 @@
             room_code_p.innerHTML =
               '<span style="text-decoration: underline">Room Code</span><br />---';
             room_code_div.appendChild(room_code_p);
+            fitText(room_code_p);
           };
           const addClockDiv = () => {
             const clock_container = document.createElement("div");
@@ -578,6 +580,7 @@
           }
         });
         fitText(clock);
+        fitText(document.getElementById("room_code_text"));
       }
 
       function requestFullScreen(div_to_fullscreen) {
