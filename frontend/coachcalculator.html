@@ -563,7 +563,7 @@
         )}`;
 
         const lanes = Object.keys(LANES);
-        lanes.sort((a, b) => a - b);
+        keys.sort((a, b) => parseInt(a) - parseInt(b));
 
         lanes.forEach((lane_number) => {
           if (LANES[lane_number].connected) {
@@ -694,7 +694,7 @@
         while (splits_display.children.length > 0)
           splits_display.children[0].remove();
         let lanes = Object.keys(LANES);
-        lanes.sort((a, b) => a - b);
+        keys.sort((a, b) => parseInt(a) - parseInt(b));
         lanes.forEach((lane) => {
           lanes_display.appendChild(LANES[lane].lane_panel);
           splits_display.appendChild(LANES[lane].split_panel);
@@ -738,7 +738,7 @@
           connections_screen.removeChild(connections_screen.firstChild);
         }
 
-        keys.sort((a, b) => a - b);
+        keys.sort((a, b) => parseInt(a) - parseInt(b));
 
         keys.forEach((key) => {
           let lane = key;

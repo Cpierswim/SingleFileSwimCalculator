@@ -63,6 +63,23 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-direction: column;
+      }
+
+      .split {
+        font-size: 7vw;
+        color: white;
+        font-weight: 600;
+        width: 100%;
+        height: 49%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+      }
+
+      .split_text {
+        line-height: 90%;
       }
 
       #message_display {
@@ -139,12 +156,6 @@
         border-bottom-color: white;
         border-bottom-width: 2px;
       }
-
-      #split {
-        font-size: 7vw;
-        color: white;
-        font-weight: 600;
-      }
     </style>
   </head>
   <body onbeforeunload="return closeWebSocket()">
@@ -168,8 +179,7 @@
       let next_up_display;
       let split_display;
       let green_amount_main_clock = 0;
-      let green_amount_split = 0;
-      let time_to_stop_displaying_split = Date.now();
+      let amount_of_time_to_display_splits = 10000;
 
       function closeWebSocket() {
         socket.close();
@@ -319,18 +329,41 @@
         )}`;
         const set_table = document.getElementById("set_table");
 
-        if (green_amount_split > -1) {
-          split_display.style.backgroundColor =
-            "rgb(0, " + green_amount_split + ", 0)";
-          green_amount_split--;
-        }
-
-        if (Date.now() >= time_to_stop_displaying_split) {
-          set_display.style.display = "";
-          split_display.style.display = "none";
-        } else {
+        if (split_display.children.length > 0) {
           set_display.style.display = "none";
           split_display.style.display = "";
+          for (let i = 0; i < split_display.children.length; i++) {
+            if (
+              split_display.children[i].time_to_stop_displaying_split <
+              Date.now()
+            ) {
+              split_display.removeChild(split_display.children[i]);
+            } else {
+              fitText(split_display.children[i].children[0]);
+            }
+          }
+          for (i = 0; i < split_display.children.length && i < 2; i++) {
+            if (split_display.children[i].green_amount > -1) {
+              split_display.children[i].style.backgroundColor =
+                "rgb(0, " + split_display.children[i].green_amount + ", 0)";
+              split_display.children[i].green_amount--;
+              split_display.children[i].style.display = "";
+              split_display.children[i].time_to_stop_displaying_split =
+                Date.now() + amount_of_time_to_display_splits;
+            }
+          }
+          if (split_display.children.length == 1) {
+            split_display.style.backgroundColor =
+              "rgb(0, " + (split_display.children[0].green_amount + 1) + ", 0)";
+          } else {
+            split_display.style.backgroundColor = "";
+          }
+          //for (i = 2; i < split_display.children.length; i++) {
+          //  split_display.children[i].style.display = "none";
+          //}
+        } else {
+          set_display.style.display = "";
+          split_display.style.display = "none";
         }
 
         if (next_up_display && green_amount_main_clock > -0) {
@@ -395,7 +428,7 @@
             type: "swimmer",
           };
           socket.send(JSON.stringify(set_connection_type_data));
-          setInterval(newGetTimeDelta, 10000);
+          setInterval(newGetTimeDelta, 120000);
 
           connection_messages_display.innerHTML +=
             "<br />Attempting to connect to room";
@@ -586,10 +619,6 @@
         split_display.style.display = "none";
         message_display.appendChild(split_display);
 
-        let split = document.createElement("p");
-        split.id = "split";
-        split_display.appendChild(split);
-
         displaying_sendoffs = true;
       }
 
@@ -609,16 +638,29 @@
       function processSplit(split) {
         const set_display = document.getElementById("set_display");
         const split_display = document.getElementById("split_display");
-        const split_p = document.getElementById("split");
-        split_p.innerHTML =
-          '<span style="text-decoration: underline">Split:</span><br />' +
-          split;
-        green_amount_split = 255;
-
-        set_display.style.display = "none";
         split_display.style.display = "";
+        set_display.style.display = "none"; //should not need these
+        let split_div = document.createElement("div");
+        split_div.classList.add("split");
+        split_div.green_amount = 255;
+        split_div.time_to_stop_displaying_split =
+          Date.now() + amount_of_time_to_display_splits;
+        split_display.appendChild(split_div);
+        if (split_display.children.length >= 2) {
+          split_div.style.display = "none";
+        }
 
-        time_to_stop_displaying_split = Date.now() + 10000;
+        let split_text = document.createElement("div");
+        split_text.classList.add("split_text");
+        split_text.innerText = split;
+        split_div.appendChild(split_text);
+
+        //let number_display = "";
+        //if (split_display.children.length > 0) {
+        //  number_display = " " + (split_display.children.length + 1);
+        //}
+        //split_div.innerHTML = `<span style="text-decoration: underline">Split:${number_display}</span>&nbsp&nbsp&nbsp${split}`;
+        //split_div.innerText = split;
       }
 
       function fitText(element) {
