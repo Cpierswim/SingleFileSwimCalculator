@@ -271,12 +271,29 @@
         max-height: 45%;
       }
 
+      .controls_panel {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+      }
+
       .split_button {
         width: 15vw;
         height: 15vh;
       }
 
       #splits_display {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        width: 100%;
+        height: 100%;
+      }
+
+      #stopwatch_display {
         display: flex;
         flex-wrap: wrap;
         justify-content: flex-start;
@@ -296,6 +313,21 @@
         display: flex;
         align-items: center;
         justify-content: center;
+      }
+
+      #controls_top_part {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+
+      #controls_lower_part {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        align-items: center;
+        flex-grow: 4;
       }
     </style>
   </head>
@@ -318,6 +350,7 @@
       let roomKey;
       let lanes_display;
       let last_orientation = screen.orientation.type;
+      let current_mode = 1;
 
       function closeWebSocket() {
         socket.close();
@@ -468,35 +501,24 @@
             controls_div.classList.add("control_lane");
             lower_div.appendChild(controls_div);
 
-            const pick_set_button = document.createElement("button");
-            pick_set_button.id = "pick_set_button";
-            pick_set_button.type = "button";
-            pick_set_button.classList.add("btn");
-            pick_set_button.classList.add("btn-primary");
-            pick_set_button.classList.add("nearly_full_width");
-            pick_set_button.innerText = "Pick Set";
-            pick_set_button.disabled = true;
-            controls_div.appendChild(pick_set_button);
+            const controls_top_part = document.createElement("div");
+            controls_top_part.id = "controls_top_part";
+            controls_div.appendChild(controls_top_part);
 
-            const start_on_top_button = document.createElement("button");
-            start_on_top_button.id = "start_on_top_button";
-            start_on_top_button.type = "button";
-            start_on_top_button.classList.add("btn");
-            start_on_top_button.classList.add("btn-success");
-            start_on_top_button.classList.add("nearly_full_width");
-            start_on_top_button.innerText = "Start Set on next :00";
-            start_on_top_button.disabled = true;
-            controls_div.appendChild(start_on_top_button);
+            const controls_lower_part = document.createElement("div");
+            controls_lower_part.id = "controls_lower_part";
+            controls_div.appendChild(controls_lower_part);
 
-            const switch_mode_button = document.createElement("button");
-            switch_mode_button.id = "switch_mode_button";
-            switch_mode_button.type = "button";
-            switch_mode_button.classList.add("btn");
-            switch_mode_button.classList.add("btn-success");
-            switch_mode_button.classList.add("nearly_full_width");
-            switch_mode_button.innerText = "Enable Lane Time Edit Mode";
-            switch_mode_button.disabled = true;
-            controls_div.appendChild(switch_mode_button);
+            const send_off_mode_button = document.createElement("button");
+            send_off_mode_button.id = "send_off_mode_button";
+            send_off_mode_button.type = "button";
+            send_off_mode_button.classList.add("btn");
+            send_off_mode_button.classList.add("btn-primary");
+            send_off_mode_button.classList.add("nearly_full_width");
+            send_off_mode_button.innerText = "Switch to Sendoff Mode";
+            send_off_mode_button.style.display = "none";
+            send_off_mode_button.addEventListener("click", switchToSendoffMode);
+            controls_top_part.appendChild(send_off_mode_button);
 
             const split_mode_button = document.createElement("button");
             split_mode_button.id = "split_mode_button";
@@ -507,19 +529,68 @@
             split_mode_button.innerText = "Switch to Split Mode";
             split_mode_button.disabled = true;
             split_mode_button.addEventListener("click", switchToSplitMode);
-            controls_div.appendChild(split_mode_button);
+            controls_top_part.appendChild(split_mode_button);
 
-            const send_off_mode_button = document.createElement("button");
-            send_off_mode_button.id = "send_off_mode_button";
-            send_off_mode_button.type = "button";
-            send_off_mode_button.classList.add("btn");
-            send_off_mode_button.classList.add("btn-success");
-            send_off_mode_button.classList.add("nearly_full_width");
-            send_off_mode_button.innerText = "Switch to Sendoff Mode";
-            send_off_mode_button.disabled = true;
-            send_off_mode_button.style.display = "none";
-            send_off_mode_button.addEventListener("click", switchToSendoffMode);
-            controls_div.appendChild(send_off_mode_button);
+            const stopwatch_mode_button = document.createElement("button");
+            stopwatch_mode_button.id = "stopwatch_mode_button";
+            stopwatch_mode_button.type = "button";
+            stopwatch_mode_button.classList.add("btn");
+            stopwatch_mode_button.classList.add("btn-primary");
+            stopwatch_mode_button.classList.add("nearly_full_width");
+            stopwatch_mode_button.innerText = "Switch to Stopwatch Mode";
+            stopwatch_mode_button.disabled = true;
+            stopwatch_mode_button.style.display = "none";
+            stopwatch_mode_button.addEventListener(
+              "click",
+              switchToStopwatchMode
+            );
+            controls_top_part.appendChild(stopwatch_mode_button);
+
+            const sendoff_controls_panel = document.createElement("div");
+            sendoff_controls_panel.id = "sendoff_controls_panel";
+            const split_controls_panel = document.createElement("div");
+            split_controls_panel.id = "split_controls_panel";
+            const stopwatch_controls_panel = document.createElement("div");
+            stopwatch_controls_panel.id = "stopwatch_controls_panel";
+            sendoff_controls_panel.classList.add("controls_panel");
+            split_controls_panel.classList.add("controls_panel");
+            stopwatch_controls_panel.classList.add("controls_panel");
+            split_controls_panel.style.display = "none";
+            stopwatch_controls_panel.style.display = "none";
+
+            controls_lower_part.appendChild(sendoff_controls_panel);
+            controls_lower_part.appendChild(split_controls_panel);
+            controls_lower_part.appendChild(stopwatch_controls_panel);
+
+            const pick_set_button = document.createElement("button");
+            pick_set_button.id = "pick_set_button";
+            pick_set_button.type = "button";
+            pick_set_button.classList.add("btn");
+            pick_set_button.classList.add("btn-primary");
+            pick_set_button.classList.add("nearly_full_width");
+            pick_set_button.innerText = "Pick Set";
+            pick_set_button.disabled = true;
+            sendoff_controls_panel.appendChild(pick_set_button);
+
+            const start_on_top_button = document.createElement("button");
+            start_on_top_button.id = "start_on_top_button";
+            start_on_top_button.type = "button";
+            start_on_top_button.classList.add("btn");
+            start_on_top_button.classList.add("btn-success");
+            start_on_top_button.classList.add("nearly_full_width");
+            start_on_top_button.innerText = "Start Set on next :00";
+            start_on_top_button.disabled = true;
+            sendoff_controls_panel.appendChild(start_on_top_button);
+
+            const switch_mode_button = document.createElement("button");
+            switch_mode_button.id = "switch_mode_button";
+            switch_mode_button.type = "button";
+            switch_mode_button.classList.add("btn");
+            switch_mode_button.classList.add("btn-success");
+            switch_mode_button.classList.add("nearly_full_width");
+            switch_mode_button.innerText = "Enable Lane Time Edit Mode";
+            switch_mode_button.disabled = true;
+            sendoff_controls_panel.appendChild(switch_mode_button);
 
             const pause_all_lanes_button = document.createElement("button");
             pause_all_lanes_button.id = "pause_all_lanes_button";
@@ -529,7 +600,7 @@
             pause_all_lanes_button.classList.add("nearly_full_width");
             pause_all_lanes_button.innerText = "Pause All Lanes";
             pause_all_lanes_button.disabled = true;
-            controls_div.appendChild(pause_all_lanes_button);
+            sendoff_controls_panel.appendChild(pause_all_lanes_button);
 
             const stop_all_lanes_button = document.createElement("button");
             stop_all_lanes_button.id = "stop_all_lanes_button";
@@ -539,7 +610,7 @@
             stop_all_lanes_button.classList.add("nearly_full_width");
             stop_all_lanes_button.innerText = "Stop All Lanes";
             stop_all_lanes_button.disabled = true;
-            controls_div.appendChild(stop_all_lanes_button);
+            sendoff_controls_panel.appendChild(stop_all_lanes_button);
           };
           const add_initial_empty_lanes_display = () => {
             lanes_display = document.createElement("div");
@@ -567,9 +638,18 @@
             splits_display.style.display = "none";
             lower_div.appendChild(splits_display);
           };
+          const add_initial_empty_stopwatch_display = () => {
+            const lower_div = document.getElementById("lower_div");
+
+            const stopwatch_display = document.createElement("div");
+            stopwatch_display.id = "stopwatch_display";
+            stopwatch_display.style.display = "none";
+            lower_div.appendChild(stopwatch_display);
+          };
           add_controls_div();
           add_initial_empty_lanes_display();
           add_initial_empty_splits_display();
+          add_initial_empty_stopwatch_display();
         };
 
         clearScreenOfBeginningControls();
@@ -739,17 +819,22 @@
         UpdateLaneConnections();
         LANES[lane].lane_panel = createLaneTable(lane);
         LANES[lane].split_panel = createSplitTable(lane);
+        LANES[lane].stopwatch_panel = createStopWatchTable(lane);
         const lanes_display = document.getElementById("lanes_display");
         while (lanes_display.children.length > 0)
           lanes_display.children[0].remove();
         const splits_display = document.getElementById("splits_display");
         while (splits_display.children.length > 0)
           splits_display.children[0].remove();
+        const stopwatch_display = document.getElementById("stopwatch_display");
+        while (stopwatch_display.children.length > 0)
+          stopwatch_display.children;
         let lanes = Object.keys(LANES);
         lanes.sort((a, b) => parseInt(a) - parseInt(b));
         lanes.forEach((lane) => {
           lanes_display.appendChild(LANES[lane].lane_panel);
           splits_display.appendChild(LANES[lane].split_panel);
+          stopwatch_display.appendChild(LANES[lane].stopwatch_panel);
         });
       }
 
@@ -761,6 +846,8 @@
         LANES[lane].lane_panel.classList.add("disconnected_lane");
         LANES[lane].split_panel.classList.remove("connectedLane");
         LANES[lane].split_panel.classList.add("disconnected_lane");
+        LANES[lane].stopwatch_panel.classList.remove("connectedLane");
+        LANES[lane].stopwatch_panel.classList.add("disconnected_lane");
       }
 
       function newSyncClock(data) {
@@ -1209,9 +1296,47 @@
         split_p.classList.add("split");
         lane_split_panel.appendChild(split_p);
 
-        LANES[lane_number].split_p = split_p;
-
         return lane_split_panel;
+      }
+
+      function createStopWatchTable(lane_number) {
+        const lane_stopwatch_panel = document.createElement("div");
+        lane_stopwatch_panel.id = "lane" + lane_number + "_stopwatch_panel";
+        let active_lane = LANES[lane_number].connected;
+        active_lane
+          ? lane_stopwatch_panel.classList.add("active_lane")
+          : lane_stopwatch_panel.classList.add("disconnected_lane");
+        lane_stopwatch_panel.classList.add("lane_split_panel");
+
+        const lane_label = document.createElement("h5");
+        lane_label.id = "lane" + lane_number + "_label";
+        lane_label.classList.add("lane_label");
+        lane_label.innerText = "Lane " + lane_number;
+        lane_stopwatch_panel.appendChild(lane_label);
+
+        /*const lane_clock = document.createElement("h3");
+        lane_clock.id = "lane" + lane_number + "clock";
+        lane_clock.classList.add("lane_clock");
+        lane_clock.innerText = LANES[lane_number].lane_clock.getDisplayTime();
+        lane_stopwatch_panel.appendChild(lane_clock);
+
+        const split_button = document.createElement("button");
+        split_button.id = "lane" + lane_number + "_split_button";
+        split_button.classList.add("btn");
+        split_button.classList.add("btn-primary");
+        split_button.classList.add("split_button");
+        split_button.innerText = "Lane " + lane_number + " Split";
+        split_button.addEventListener("mousedown", Split);
+        split_button.addEventListener("touchstart", Split);
+        lane_stopwatch_panel.appendChild(split_button);
+
+        const split_p = document.createElement("p");
+        split_p.id = "lane" + lane_number + "_split";
+        split_p.innerText = "00.00";
+        split_p.classList.add("split");
+        lane_stopwatch_panel.appendChild(split_p);*/
+
+        return lane_stopwatch_panel;
       }
 
       function getLaneClock(lane_panel) {
@@ -1248,33 +1373,50 @@
       }
 
       function switchToSplitMode() {
-        const split_mode_button = document.getElementById("split_mode_button");
+        document.getElementById("send_off_mode_button").style.display = "none";
+        document.getElementById("split_mode_button").style.display = "none";
+        document.getElementById("stopwatch_mode_button").style.display = "";
 
-        const send_off_mode_button = document.getElementById(
-          "send_off_mode_button"
-        );
-        const lanes_display = document.getElementById("lanes_display");
-        const splits_display = document.getElementById("splits_display");
+        document.getElementById("sendoff_controls_panel").style.display =
+          "none";
+        document.getElementById("split_controls_panel").style.display = "";
+        document.getElementById("stopwatch_controls_panel").style.display =
+          "none";
 
-        split_mode_button.style.display = "none";
-        send_off_mode_button.style.display = "inline";
-        lanes_display.style.display = "none";
-        splits_display.style.display = "flex";
+        document.getElementById("lanes_display").style.display = "none";
+        document.getElementById("splits_display").style.display = "";
+        document.getElementById("stopwatch_display").style.display = "none";
       }
 
       function switchToSendoffMode() {
-        const split_mode_button = document.getElementById("split_mode_button");
-        const send_off_mode_button = document.getElementById(
-          "send_off_mode_button"
-        );
-        const lanes_display = document.getElementById("lanes_display");
-        const splits_display = document.getElementById("splits_display");
+        document.getElementById("send_off_mode_button").style.display = "none";
+        document.getElementById("split_mode_button").style.display = "";
+        document.getElementById("stopwatch_mode_button").style.display = "none";
 
-        split_mode_button.style.display = "inline";
-        send_off_mode_button.style.display = "none";
-        lanes_display.style.display = "flex";
-        splits_display.style.display = "none";
-      } //
+        document.getElementById("sendoff_controls_panel").style.display = "";
+        document.getElementById("split_controls_panel").style.display = "none";
+        document.getElementById("stopwatch_controls_panel").style.display =
+          "none";
+
+        document.getElementById("lanes_display").style.display = "";
+        document.getElementById("splits_display").style.display = "none";
+        document.getElementById("stopwatch_display").style.display = "none";
+      }
+
+      function switchToStopwatchMode() {
+        document.getElementById("send_off_mode_button").style.display = "";
+        document.getElementById("split_mode_button").style.display = "none";
+        document.getElementById("stopwatch_mode_button").style.display = "none";
+
+        document.getElementById("sendoff_controls_panel").style.display =
+          "none";
+        document.getElementById("split_controls_panel").style.display = "none";
+        document.getElementById("stopwatch_controls_panel").style.display = "";
+
+        document.getElementById("lanes_display").style.display = "none";
+        document.getElementById("splits_display").style.display = "none";
+        document.getElementById("stopwatch_display").style.display = "";
+      }
 
       function fitText(element, ignore_width = false) {
         if (element.id == "room_code_text_above") {
