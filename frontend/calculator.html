@@ -10,6 +10,12 @@
       rel="stylesheet"
     />
     <style>
+      @media (orientation: portrait) {
+        * {
+          display: none;
+        }
+      }
+
       #Main_Clock {
         color: greenyellow;
         font-size: 12vw;
@@ -167,6 +173,7 @@
         Click Me To Start With Connection
       </button>
     </div>
+    <div id="rotate" style="display: none">Rotate Screen</div>
 
     <script>
       const SKIP_FULLSCREEN = 0;
@@ -180,6 +187,7 @@
       let split_display;
       let green_amount_main_clock = 0;
       let amount_of_time_to_display_splits = 10000;
+      let last_orientation = screen.orientation.type;
 
       function closeWebSocket() {
         socket.close();
@@ -317,6 +325,7 @@
       }
 
       function newSetClock() {
+        checkOrientation();
         if (isNaN(time_delta)) {
           clock.innerText = "00:00";
           return "";
@@ -391,6 +400,23 @@
         }
 
         fitText(clock);
+      }
+
+      function checkOrientation() {
+        if (screen.orientation.type != last_orientation) {
+          last_orientation = screen.orientation.type;
+          setOrientation(last_orientation);
+        }
+      }
+
+      function setOrientation(type) {
+        if (type.includes("portrait")) {
+          document.getElementById("container").style.display = "none";
+          document.getElementById("rotate").style.display = "";
+        } else {
+          document.getElementById("container").style.display = "";
+          document.getElementById("rotate").style.display = "none";
+        }
       }
 
       function SetNextDisplayFromRow(row) {
