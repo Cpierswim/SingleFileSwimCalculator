@@ -305,6 +305,7 @@
         Cick Me To Start App
       </button>
     </div>
+    <div id="rotate" style="display: none">Rotate Screen</div>
 
     <script>
       const SKIP_FULLSCREEN = 1;
@@ -316,6 +317,7 @@
       let additional_time_delta = 0;
       let roomKey;
       let lanes_display;
+      let last_orientation = screen.orientation.type;
 
       function closeWebSocket() {
         socket.close();
@@ -578,6 +580,7 @@
       }
 
       function newSetClock() {
+        checkOrientation();
         if (isNaN(time_delta)) {
           clock.innerText = "00:00";
           return "";
@@ -610,6 +613,26 @@
         fitText(clock, true);
         fitText(document.getElementById("room_code_text"));
         fitText(document.getElementById("room_code_text_above"));
+      }
+
+      function checkOrientation() {
+        if (
+          screen.orientation.type != last_orientation ||
+          screen.orientation.type.includes("portrait")
+        ) {
+          last_orientation = screen.orientation.type;
+          setOrientation(last_orientation);
+        }
+      }
+
+      function setOrientation(type) {
+        if (type.includes("portrait")) {
+          document.getElementById("container").style.display = "none";
+          document.getElementById("rotate").style.display = "";
+        } else {
+          document.getElementById("container").style.display = "";
+          document.getElementById("rotate").style.display = "none";
+        }
       }
 
       function requestFullScreen(div_to_fullscreen) {
