@@ -87,17 +87,35 @@
       }
 
       #room_code {
-        float: left;
         width: 25%;
         height: 100%;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         font-size: 4vh;
         color: white;
         font-weight: 600;
         text-align: center;
-        line-height: 1.6;
+      }
+
+      #room_code_text_above {
+        text-decoration: underline;
+        height: fit-content;
+        white-space: nowrap;
+      }
+
+      #room_code_text {
+        height: fit-content;
+      }
+
+      .wrapper {
+        height: 50%;
+        width: 100%;
+        display: flex;
+        align-content: center;
+        justify-content: center;
+        flex-wrap: wrap;
       }
 
       #connections_div {
@@ -126,17 +144,14 @@
         min-width: 235px;
         justify-content: center;
       }
-      #clock_contining_div {
-        display: flex;
-        align-items: center;
-      }
+
       #clock_text {
         font-weight: 600;
         font-family: monospace;
         font-size: 10vmin;
         line-height: 100%;
         color: lime;
-        padding-top: 1.5vh;
+        height: fit-content;
       }
 
       .active_lane {
@@ -278,7 +293,6 @@
 
       #clock_containing_div {
         height: 100%;
-        width: 80%;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -329,12 +343,26 @@
             room_code_div.id = "room_code";
             upper_div.appendChild(room_code_div);
 
-            const room_code_p = document.createElement("p");
-            room_code_p.id = "room_code_text";
-            room_code_p.innerHTML =
-              '<span style="text-decoration: underline">Room Code</span><br />---';
-            room_code_div.appendChild(room_code_p);
+            const wrapper_one = document.createElement("div");
+            const wrapper_two = document.createElement("div");
+            wrapper_one.classList.add("wrapper");
+            wrapper_two.classList.add("wrapper");
+
+            room_code_div.appendChild(wrapper_one);
+            room_code_div.appendChild(wrapper_two);
+
+            const room_code_p = document.createElement("div");
+            room_code_p.id = "room_code_text_above";
+            room_code_p.innerHTML = "Room Code";
+            wrapper_one.appendChild(room_code_p);
+
+            const room_code_lower = document.createElement("div");
+            room_code_lower.id = "room_code_text";
+            room_code_lower.innerText = "---";
+            wrapper_two.appendChild(room_code_lower);
+
             fitText(room_code_p);
+            fitText(room_code_lower);
           };
           const addClockDiv = () => {
             const clock_container = document.createElement("div");
@@ -375,7 +403,7 @@
               clock_conatining_div.id = "clock_containing_div";
               clock_container.appendChild(clock_conatining_div);
 
-              const clock_p = document.createElement("p");
+              const clock_p = document.createElement("dv");
               clock_p.id = "clock_text";
               clock_p.innerHTML = "00:00";
               clock_conatining_div.appendChild(clock_p);
@@ -579,8 +607,9 @@
             split_clock.innerText = display_time;
           }
         });
-        fitText(clock);
+        fitText(clock, true);
         fitText(document.getElementById("room_code_text"));
+        fitText(document.getElementById("room_code_text_above"));
       }
 
       function requestFullScreen(div_to_fullscreen) {
@@ -1222,10 +1251,10 @@
         send_off_mode_button.style.display = "none";
         lanes_display.style.display = "flex";
         splits_display.style.display = "none";
-      }
+      } //
 
-      function fitText(element) {
-        if (element.id == "room_code_text") {
+      function fitText(element, ignore_width = false) {
+        if (element.id == "room_code_text_above") {
           let stop = 1;
         }
         let RESIZE = false;
@@ -1233,26 +1262,42 @@
 
         let text_size = 3;
 
-        if (element.old_height == undefined || element.old_width == undefined)
-          RESIZE = true;
-        else if (
-          element.old_height != div.clientHeight ||
-          element.old_width != div.clientWidth
-        )
-          RESIZE = true;
+        if (!ignore_width) {
+          if (element.old_height == undefined || element.old_width == undefined)
+            RESIZE = true;
+          else if (
+            element.old_height != div.clientHeight ||
+            element.old_width != div.clientWidth
+          )
+            RESIZE = true;
 
-        if (RESIZE) {
-          element.style.fontSize = text_size + "px";
-          while (
-            div.clientHeight > element.clientHeight &&
-            div.clientWidth > element.clientWidth
-          ) {
+          if (RESIZE) {
             element.style.fontSize = text_size + "px";
-            text_size++;
-          }
+            while (
+              div.clientHeight > element.clientHeight &&
+              div.clientWidth > element.clientWidth
+            ) {
+              element.style.fontSize = text_size + "px";
+              text_size++;
+            }
 
-          element.old_height = div.clientHeight;
-          element.old_width = div.clientWidth;
+            element.old_height = div.clientHeight;
+            element.old_width = div.clientWidth;
+          }
+        } else {
+          if (element.old_height == undefined) RESIZE = true;
+          else if (element.old_height != div.clientHeight) RESIZE = true;
+
+          if (RESIZE) {
+            element.style.fontSize = text_size + "px";
+            while (div.clientHeight > element.clientHeight) {
+              element.style.fontSize = text_size + "px";
+              text_size++;
+            }
+
+            element.old_height = div.clientHeight;
+            element.old_width = div.clientWidth;
+          }
         }
       }
     </script>
