@@ -9,11 +9,21 @@
       href="https://fonts.googleapis.com/css?family=Noto Sans Mono"
       rel="stylesheet"
     />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
     <style>
-      @media (orientation: portrait) {
-        * {
-          display: none;
-        }
+      #rotate {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+        justify-content: center;
+        align-items: center;
+        font-size: 12vh;
+        font-weight: bolder;
       }
 
       #Main_Clock {
@@ -25,7 +35,7 @@
       }
 
       #clock_display {
-        height: 40%;
+        height: 40vh;
         width: 100%;
         display: flex;
         align-items: center;
@@ -33,17 +43,17 @@
       }
 
       #container {
-        width: 100vw;
-        height: 100vh;
+        min-width: 100vw;
+        min-height: 100vh;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: space-evenly;
       }
 
       #next_up_display {
         width: 50%;
-        height: 100%;
+        height: 60vh;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -52,7 +62,7 @@
 
       #set_display {
         width: 50%;
-        height: 100%;
+        height: 60vh;
         overflow: auto;
         border-left-style: solid;
         border-left-color: white;
@@ -61,7 +71,7 @@
 
       #split_display {
         width: 50%;
-        height: 100%;
+        height: 60vh;
         overflow: auto;
         border-left-style: solid;
         border-left-color: white;
@@ -90,7 +100,7 @@
 
       #message_display {
         width: 100vw;
-        height: 60%;
+        height: 60vh;
         display: flex;
         flex-direction: row;
         border-top: 2px;
@@ -165,15 +175,27 @@
     </style>
   </head>
   <body onbeforeunload="return closeWebSocket()">
-    <div class="container" id="container">
-      <button type="button" onclick="startApp(0)" id="fullscreenbutton">
+    <div id="container">
+      <button
+        type="button"
+        class="btn btn-primary"
+        onclick="startApp(0)"
+        id="fullscreenbutton"
+      >
         Cick Me To Just Start Clock
       </button>
-      <button type="button" onclick="startApp(1)" id="withconnectionbutton">
+      <button
+        type="button"
+        class="btn btn-primary"
+        onclick="startApp(1)"
+        id="withconnectionbutton"
+      >
         Click Me To Start With Connection
       </button>
     </div>
-    <div id="rotate" style="display: none">Rotate Screen</div>
+    <div id="rotate" style="display: none">
+      <p style="text-align: center">Rotate Screen</p>
+    </div>
 
     <script>
       const SKIP_FULLSCREEN = 0;
@@ -188,6 +210,10 @@
       let green_amount_main_clock = 0;
       let amount_of_time_to_display_splits = 10000;
       let last_orientation = screen.orientation.type;
+      let temp = setInterval(() => {
+        checkOrientation();
+      }, 10);
+      let ignore_rotate_screen = true;
 
       function closeWebSocket() {
         socket.close();
@@ -197,15 +223,33 @@
         if (button_clicked === 0) {
           setupClock();
         } else {
+          ignore_rotate_screen = false;
           removeInitialButtons();
+
+          let container = document.getElementById("container");
+          container.style.flexDirection = "row";
+
+          const code_div = document.createElement("div");
+          container.appendChild(code_div);
 
           let room_code_label = document.createElement("label");
           room_code_label.htmlFor = "room_code_input";
           room_code_label.innerText = "Room Code: ";
           room_code_label.id = "room_code_label";
+          code_div.appendChild(room_code_label);
 
           let room_code_input = document.createElement("input");
           room_code_input.id = "room_code_input";
+          code_div.appendChild(room_code_input);
+
+          let lane_selector_div = document.createElement("div");
+          container.appendChild(lane_selector_div);
+
+          let lane_label = document.createElement("label");
+          lane_label.htmlFor = "lane_selector";
+          lane_label.innerText = "Select your lane: ";
+          lane_label.id = "lane_label";
+          lane_selector_div.appendChild(lane_label);
 
           let lane_selector = document.createElement("input");
           lane_selector.type = "number";
@@ -213,33 +257,28 @@
           lane_selector.min = 1;
           lane_selector.max = 10;
           lane_selector.value = 1;
-
-          let lane_label = document.createElement("label");
-          lane_label.htmlFor = "lane_selector";
-          lane_label.innerText = "Select your lane: ";
-          lane_label.id = "lane_label";
+          lane_selector_div.appendChild(lane_selector);
 
           let connect_button = document.createElement("button");
           connect_button.id = "connect_button";
           connect_button.type = "button";
+          connect_button.classList.add("btn");
+          connect_button.classList.add("btn-primary");
           connect_button.innerText = "Connect";
           connect_button.addEventListener("click", ConnectToCoach);
 
           let connection_messages_display = document.createElement("p");
           connection_messages_display.id = "connection_messages_display";
+          connection_messages_display.innerText = "Connection messages...";
 
-          let container = document.getElementById("container");
-
-          container.appendChild(room_code_label);
-          container.appendChild(room_code_input);
-          container.appendChild(lane_label);
-          container.appendChild(lane_selector);
           container.appendChild(connect_button);
           container.appendChild(connection_messages_display);
         }
       }
 
       async function setupClock() {
+        let container = document.getElementById("container");
+        container.style.flexDirection = "";
         if (!socket) {
           socket = new WebSocket(
             "wss://mjim68pp6h.execute-api.us-east-2.amazonaws.com/production/"
@@ -284,6 +323,7 @@
         newGetTimeDelta();
 
         setInterval(newSetClock, 10);
+        clearInterval(temp);
       }
 
       function removeInitialButtons() {
@@ -337,8 +377,9 @@
           display_time.getSeconds()
         )}`;
         const set_table = document.getElementById("set_table");
+        let set_display = document.getElementById("set_display");
 
-        if (split_display.children.length > 0) {
+        if (split_display && split_display.children.length > 0) {
           set_display.style.display = "none";
           split_display.style.display = "";
           for (let i = 0; i < split_display.children.length; i++) {
@@ -371,8 +412,10 @@
           //  split_display.children[i].style.display = "none";
           //}
         } else {
-          set_display.style.display = "";
-          split_display.style.display = "none";
+          if (set_display) {
+            set_display.style.display = "";
+            split_display.style.display = "none";
+          }
         }
 
         if (next_up_display && green_amount_main_clock > -0) {
@@ -403,9 +446,14 @@
       }
 
       function checkOrientation() {
-        if (screen.orientation.type != last_orientation) {
-          last_orientation = screen.orientation.type;
-          setOrientation(last_orientation);
+        if (!ignore_rotate_screen) {
+          if (
+            screen.orientation.type != last_orientation ||
+            screen.orientation.type.includes("portrait")
+          ) {
+            last_orientation = screen.orientation.type;
+            setOrientation(last_orientation);
+          }
         }
       }
 

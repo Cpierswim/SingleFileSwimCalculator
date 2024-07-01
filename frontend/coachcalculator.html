@@ -828,7 +828,7 @@
           splits_display.children[0].remove();
         const stopwatch_display = document.getElementById("stopwatch_display");
         while (stopwatch_display.children.length > 0)
-          stopwatch_display.children;
+          stopwatch_display.children[0].remove();
         let lanes = Object.keys(LANES);
         lanes.sort((a, b) => parseInt(a) - parseInt(b));
         lanes.forEach((lane) => {
