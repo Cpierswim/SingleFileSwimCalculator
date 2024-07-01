@@ -172,6 +172,15 @@
         border-bottom-color: white;
         border-bottom-width: 2px;
       }
+
+      #stopwatch_modal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: red;
+      }
     </style>
   </head>
   <body onbeforeunload="return closeWebSocket()">
@@ -198,7 +207,7 @@
     </div>
 
     <script>
-      const SKIP_FULLSCREEN = 0;
+      const SKIP_FULLSCREEN = 1;
       let socket = undefined;
       let clock;
       let time_delta;
@@ -764,6 +773,13 @@
           element.old_height = div.clientHeight;
           element.old_width = div.clientWidth;
         }
+      }
+
+      function stopwatchTimeRecieved(data) {
+        const container = document.getElementById("container");
+
+        const stopwatch_modal = document.createElement("stopwatch_modal");
+        stopwatch_modal.id = "stopwatch_modal";
       }
     </script>
   </body>
