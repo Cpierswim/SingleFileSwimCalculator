@@ -180,6 +180,13 @@
         width: 100vw;
         height: 100vh;
         background-color: red;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .stopwatch_display {
+        color: white;
       }
     </style>
   </head>
@@ -452,6 +459,20 @@
         }
 
         fitText(clock);
+
+        if (displaying_modal) {
+          const stopwatch_modal = document.getElementById("stopwatch_modal");
+          if (Date.now() >= stopwatch_modal.time_to_stop_displaying) {
+            stopwatch_modal.parentElement.removeChild(stopwatch_modal);
+            displaying_modal = false;
+          } else {
+            if (stopwatch_modal.green_amount > -1) {
+              stopwatch_modal.style.backgroundColor =
+                "rgb(0, " + stopwatch_modal.green_amount + ", 0)";
+              stopwatch_modal.green_amount--;
+            }
+          }
+        }
       }
 
       function checkOrientation() {
@@ -556,6 +577,9 @@
                 break;
               case "split":
                 processSplit(data.split);
+                break;
+              case "stopwatchinfo":
+                stopwatchTimeRecieved(data);
                 break;
             }
           }
@@ -775,11 +799,23 @@
         }
       }
 
+      let displaying_modal = false;
+
       function stopwatchTimeRecieved(data) {
         const container = document.getElementById("container");
 
-        const stopwatch_modal = document.createElement("stopwatch_modal");
+        const stopwatch_modal = document.createElement("div");
         stopwatch_modal.id = "stopwatch_modal";
+
+        const stopwatch_display = document.createElement("div");
+        stopwatch_display.classList.add("stopwatch_display");
+        stopwatch_display.innerText = data.time;
+        container.appendChild(stopwatch_modal);
+        stopwatch_modal.appendChild(stopwatch_display);
+        fitText(stopwatch_display);
+        displaying_modal = true;
+        stopwatch_modal.time_to_stop_displaying = Date.now() + 20 * 1000;
+        stopwatch_modal.green_amount = 255;
       }
     </script>
   </body>

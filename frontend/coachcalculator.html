@@ -1670,7 +1670,12 @@
         //TODO: send stop time to swimmer
 
         setTimeout(() => {
-          const stopwatch_data = {};
+          const stopwatch_data = {
+            action: "sendStopWatchInfo",
+            roomKey: roomKey,
+            lane_number: lane_number,
+            time: stopwatch_stop_time,
+          };
           socket.send(JSON.stringify(stopwatch_data));
         }, 1);
       }
