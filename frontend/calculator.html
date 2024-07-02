@@ -179,7 +179,7 @@
         top: 0;
         width: 100vw;
         height: 100vh;
-        background-color: red;
+        background-color: black;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -187,6 +187,8 @@
 
       .stopwatch_display {
         color: white;
+        font-family: "Courier New", Courier, monospace;
+        font-weight: 600;
       }
     </style>
   </head>
@@ -224,7 +226,6 @@
       let next_up_display;
       let split_display;
       let green_amount_main_clock = 0;
-      let amount_of_time_to_display_splits = 10000;
       let last_orientation = screen.orientation.type;
       let temp = setInterval(() => {
         checkOrientation();
@@ -414,8 +415,6 @@
                 "rgb(0, " + split_display.children[i].green_amount + ", 0)";
               split_display.children[i].green_amount--;
               split_display.children[i].style.display = "";
-              split_display.children[i].time_to_stop_displaying_split =
-                Date.now() + amount_of_time_to_display_splits;
             }
           }
           if (split_display.children.length == 1) {
@@ -576,7 +575,7 @@
                 addNewSendoffs(data.message);
                 break;
               case "split":
-                processSplit(data.split);
+                processSplit(data);
                 break;
               case "stopwatchinfo":
                 stopwatchTimeRecieved(data);
@@ -742,7 +741,8 @@
         }
       }
 
-      function processSplit(split) {
+      function processSplit(data) {
+        let split = data.split;
         const set_display = document.getElementById("set_display");
         const split_display = document.getElementById("split_display");
         split_display.style.display = "";
@@ -751,7 +751,7 @@
         split_div.classList.add("split");
         split_div.green_amount = 255;
         split_div.time_to_stop_displaying_split =
-          Date.now() + amount_of_time_to_display_splits;
+          Date.now() + parseInt(data.mills_to_display_splits);
         split_display.appendChild(split_div);
         if (split_display.children.length >= 2) {
           split_div.style.display = "none";
@@ -804,6 +804,11 @@
       function stopwatchTimeRecieved(data) {
         const container = document.getElementById("container");
 
+        let existing_modal = document.getElementById("stopwatch_modal");
+        if (existing_modal) {
+          existing_modal.remove();
+        }
+
         const stopwatch_modal = document.createElement("div");
         stopwatch_modal.id = "stopwatch_modal";
 
@@ -814,7 +819,8 @@
         stopwatch_modal.appendChild(stopwatch_display);
         fitText(stopwatch_display);
         displaying_modal = true;
-        stopwatch_modal.time_to_stop_displaying = Date.now() + 20 * 1000;
+        stopwatch_modal.time_to_stop_displaying =
+          Date.now() + parseInt(data.mills_to_display_stopwatch);
         stopwatch_modal.green_amount = 255;
       }
     </script>

@@ -382,6 +382,29 @@
 
     <script>
       const SKIP_FULLSCREEN = 1;
+      if (!localStorage.getItem("mills_to_update_clock"))
+        localStorage.setItem("mills_to_update_clock", 10);
+      const MILLS_TO_UPDATE_CLOCK = parseInt(
+        localStorage.getItem("mills_to_update_clock")
+      );
+
+      if (!localStorage.getItem("mills_to_sync_with_server"))
+        localStorage.setItem("mills_to_sync_with_server", 2 * 60 * 1000);
+      const MILLS_TO_SYNC_WITH_SERVER = parseInt(
+        localStorage.getItem("mills_to_sync_with_server")
+      );
+
+      if (!localStorage.getItem("mills_to_display_splits"))
+        localStorage.setItem("mills_to_display_splits", 10 * 1000);
+      const MILLS_TO_DISPLAY_SPLITS = parseInt(
+        localStorage.getItem("mills_to_display_splits")
+      );
+
+      if (!localStorage.getItem("mills_to_display_stopwatch"))
+        localStorage.setItem("mills_to_display_stopwatch", 20 * 1000);
+      const MILLS_TO_DISPLAY_STOPWATCH = parseInt(
+        localStorage.getItem("mills_to_display_stopwatch")
+      );
 
       let socket = undefined;
       const LANES = {};
@@ -742,7 +765,7 @@
         clearScreenOfBeginningControls();
         buildUpperDisplay();
         buildLowerDisplay();
-        setInterval(newSetClock, 10);
+        setInterval(newSetClock, MILLS_TO_UPDATE_CLOCK);
         OpenForConnections();
       }
 
@@ -851,7 +874,7 @@
           let data = { action: "createRoom" };
           socket.send(JSON.stringify(data));
 
-          setInterval(newGetTimeDelta, 120000);
+          setInterval(newGetTimeDelta, MILLS_TO_SYNC_WITH_SERVER);
         };
 
         socket.onerror = (error) => {
@@ -1178,6 +1201,7 @@
                 split: split,
                 lane_to_send_to: lane_number,
                 roomKey: roomKey,
+                mills_to_display_splits: MILLS_TO_DISPLAY_SPLITS,
               })
             );
           }
@@ -1675,6 +1699,7 @@
             roomKey: roomKey,
             lane_number: lane_number,
             time: stopwatch_stop_time,
+            mills_to_display_stopwatch: MILLS_TO_DISPLAY_STOPWATCH,
           };
           socket.send(JSON.stringify(stopwatch_data));
         }, 1);

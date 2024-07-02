@@ -39,6 +39,7 @@ def lambda_handler(event, context):
    
     lane_to_send_to = body["lane_to_send_to"]
     split = body["split"]
+    mills_to_display_splits = body["mills_to_display_splits"]
     connected_lanes = room_data["connected_lanes"]
 
     lane_to_send_to = str(lane_to_send_to)
@@ -48,9 +49,11 @@ def lambda_handler(event, context):
     print("Sending message to lane " + lane_to_send_to + " connectionID: " + connection_id)
     message_to_send = {
         "type": "split",
-        "split": split
+        "split": split,
+        "mills_to_display_splits": mills_to_display_splits
     }
     print("Split " + split + " sent")
+    print("Sending message: " + json.dumps(message_to_send))
     client.post_to_connection(
         Data=json.dumps(message_to_send).encode('utf-8'),
         ConnectionId=connection_id
