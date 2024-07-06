@@ -370,7 +370,9 @@
         }
       }
 
-      function _handleInternalServerError() {}
+      function _handleInternalServerError() {
+        debugger;
+      }
 
       function dealWithTimeStamp(data) {
         let current_time = Date.now();
@@ -561,6 +563,7 @@
         };
 
         socket.onerror = (error) => {
+          debugger;
           connection_messages_display.innerHTML += "<br />Error in connection";
         };
 
@@ -619,6 +622,7 @@
       }
 
       function _processError(data) {
+        debugger;
         let connection_messages_display = document.getElementById(
           "connection_messages_display"
         );

@@ -91,6 +91,17 @@
         height: 100%;
       }
 
+      #video_display {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 0.25vw;
+        overflow: auto;
+        height: 100%;
+      }
+
       #room_code {
         width: 25%;
         height: 100%;
@@ -420,6 +431,34 @@
         padding-top: 10px;
         padding-right: 8px;
       }
+
+      #video_display {
+        color: white;
+      }
+
+      .category_div {
+        width: 100%;
+        background-color: green;
+      }
+
+      .video_spanner {
+        width: 100%;
+        background-color: red;
+        display: flex;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        flex-direction: row;
+      }
+
+      .video_spacer {
+        width: 20%;
+        background-color: blue;
+      }
+
+      .video_link {
+        width: 80%;
+        background-color: purple;
+      }
     </style>
   </head>
   <body onbeforeunload="return closeWebSocket()">
@@ -665,7 +704,7 @@
 
               const options_div = document.createElement("div");
               options_div.id = "options_div";
-              options_div.addEventListener("click", testListener);
+              options_div.addEventListener("click", ignoreClick);
 
               controls_top_part.appendChild(options_div);
               options_div.style.display = "none";
@@ -1164,6 +1203,7 @@
         };
 
         socket.onerror = (error) => {
+          debugger;
           let connections_div = document.getElementById("connections_div");
           connections_div.innerHTML = "Connection Error";
         };
@@ -1190,6 +1230,9 @@
                 case "timestamp":
                   dealWithTimeStamp(data);
                   break;
+                case "coachVideoList":
+                  dealWithCoachVideoList(data.coachVideos);
+                  break;
               }
             }
           }
@@ -1201,7 +1244,9 @@
         socket.send(JSON.stringify(data));
       }
 
-      function _processServerError(data) {}
+      function _processServerError(data) {
+        debugger;
+      }
 
       function _processRoomCreation(data) {
         let room_code_text = document.getElementById("room_code_text");
@@ -1931,6 +1976,12 @@
         document.getElementById("stopwatch_display").style.display = "none";
         document.getElementById("video_display").style.display = "";
         document.getElementById("app_settings_display").style.display = "none";
+
+        let set_connection_type_data = {
+          action: "getCoachVideos",
+          coachID: COACH_ID,
+        };
+        socket.send(JSON.stringify(set_connection_type_data));
       }
 
       function switchToAppSettings() {
@@ -2173,7 +2224,7 @@
         });
       }
 
-      function testListener(e) {
+      function ignoreClick(e) {
         e.stopPropagation();
       }
 
@@ -2189,6 +2240,52 @@
       function removeModal() {
         let modal = document.getElementById("modal");
         if (modal) modal.remove();
+      }
+
+      function dealWithCoachVideoList(data) {
+        debugger;
+        const video_display = document.getElementById("video_display");
+        const categories = Object.keys(data);
+        categories.sort((a, b) => parseInt(a) - parseInt(b));
+
+        categories.forEach((category) => {
+          const category_div = document.createElement("div");
+          category_div.id = category + "_category";
+          category_div.classList.add("lane_display_container");
+          video_display.appendChild(category_div);
+
+          const category_label = document.createElement("p");
+          category_label.innerText = category.toLocaleUpperCase();
+          category_div.appendChild(category_label);
+
+          const videos = Object.keys(data[category]);
+          videos.sort((a, b) => parseInt(a) - parseInt(b));
+
+          videos.forEach((video) => {
+            //const video_spanner = document.createElement("div");
+            //video_spanner.classList.add("video_spanner");
+            //category_div.appendChild(video_spanner);
+
+            //const video_spacer = document.createElement("div");
+            //video_spacer.classList.add("video_spacer");
+            //video_spanner.appendChild(video_spacer);
+
+            const video_link = document.createElement("button");
+            video_link.type = "button";
+            video_link.innerText = data[category][video].title;
+            video_link.video_title = data[category][video].title;
+            video_link.video_id = data[category][video].id;
+            video_link.classList.add("btn");
+            video_link.classList.add("btn-primary");
+            video_link.classList.add("nearly_full_width");
+            video_link.addEventListener("click", videoLinkClicked);
+            category_div.appendChild(video_link);
+          });
+        });
+      }
+
+      function videoLinkClicked(e) {
+        debugger;
       }
     </script>
   </body>
