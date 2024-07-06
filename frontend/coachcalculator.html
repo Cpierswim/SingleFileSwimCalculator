@@ -306,10 +306,13 @@
       .controls_panel {
         display: flex;
         flex-direction: column;
-        justify-content: space-evenly;
+        /*justify-content: space-evenly;*/
+        justify-content: flex-start;
         align-items: center;
         width: 100%;
         height: 100%;
+        padding-left: 4px;
+        padding-right: 4px;
       }
 
       .split_button {
@@ -351,6 +354,9 @@
         width: 100%;
         display: flex;
         justify-content: center;
+        align-items: center;
+        padding-left: 4px;
+        padding-right: 4px;
       }
 
       #controls_lower_part {
@@ -370,6 +376,50 @@
       .big_split_button {
         width: 100%;
       }
+
+      #options_div {
+        position: absolute;
+        width: 25vw;
+        min-width: 275px;
+        background-color: darkblue;
+        z-index: 2;
+        border-radius: 50px;
+        padding: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-evenly;
+        align-items: center;
+        top: 10vh;
+        box-shadow: 0px 0px 13px 13px darkblue;
+      }
+
+      .control_button {
+        margin-top: 4vh;
+      }
+
+      .aggressive_shadow {
+        box-shadow: 0px 13px 13px black;
+      }
+
+      #app_settings_display {
+        height: 100%;
+        width: 100%;
+        background-color: rebeccapurple;
+      }
+
+      .app_setting_label {
+        color: white;
+        text-align: right;
+      }
+
+      #app_settings_table {
+        width: 48%;
+      }
+
+      td {
+        padding-top: 10px;
+        padding-right: 8px;
+      }
     </style>
   </head>
   <body onbeforeunload="return closeWebSocket()">
@@ -382,6 +432,41 @@
 
     <script>
       const SKIP_FULLSCREEN = 1;
+      const MILLS_TO_DISPLAY_SPLITS_DEFAULT = 10 * 1000;
+      const MILLS_TO_DISPLAY_STOPWATCH_DEFAULT = 20 * 1000;
+      if (!localStorage.getItem("mills_to_update_clock"))
+        localStorage.setItem("mills_to_update_clock", 10);
+      const MILLS_TO_UPDATE_CLOCK = parseInt(
+        localStorage.getItem("mills_to_update_clock")
+      );
+
+      if (!localStorage.getItem("mills_to_sync_with_server"))
+        localStorage.setItem("mills_to_sync_with_server", 2 * 60 * 1000);
+      const MILLS_TO_SYNC_WITH_SERVER = parseInt(
+        localStorage.getItem("mills_to_sync_with_server")
+      );
+
+      if (!localStorage.getItem("mills_to_display_splits"))
+        localStorage.setItem(
+          "mills_to_display_splits",
+          MILLS_TO_DISPLAY_SPLITS_DEFAULT
+        );
+      let MILLS_TO_DISPLAY_SPLITS = parseInt(
+        localStorage.getItem("mills_to_display_splits")
+      );
+
+      if (!localStorage.getItem("mills_to_display_stopwatch"))
+        localStorage.setItem(
+          "mills_to_display_stopwatch",
+          MILLS_TO_DISPLAY_STOPWATCH_DEFAULT
+        );
+      let MILLS_TO_DISPLAY_STOPWATCH = parseInt(
+        localStorage.getItem("mills_to_display_stopwatch")
+      );
+
+      if (!localStorage.getItem("coach_id"))
+        localStorage.setItem("coach_id", createCoachID());
+      const COACH_ID = localStorage.getItem("coach_id");
 
       let socket = undefined;
       const LANES = {};
@@ -394,6 +479,22 @@
       let current_mode = 1;
       let last_touch = 0;
 
+      function createCoachID() {
+        debugger;
+        let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        letters += letters.toLowerCase();
+        letters += "1234567890";
+        letters += "-_!$?&*";
+
+        let id = "";
+
+        while (id.length < 20) {
+          id += letters.charAt(Math.floor(Math.random() * letters.length));
+        }
+
+        return id;
+      }
+
       function closeWebSocket() {
         socket.close();
       }
@@ -405,7 +506,6 @@
         requestScreenLock();
 
         const clearScreenOfBeginningControls = () => {
-          //Update the display to the clock - will need to refactor later
           const full_screen_button =
             document.getElementById("fullscreenbutton");
           full_screen_button.remove();
@@ -551,42 +651,100 @@
             controls_lower_part.id = "controls_lower_part";
             controls_div.appendChild(controls_lower_part);
 
-            const send_off_mode_button = document.createElement("button");
-            send_off_mode_button.id = "send_off_mode_button";
-            send_off_mode_button.type = "button";
-            send_off_mode_button.classList.add("btn");
-            send_off_mode_button.classList.add("btn-primary");
-            send_off_mode_button.classList.add("nearly_full_width");
-            send_off_mode_button.innerText = "Switch to Sendoff Mode";
-            send_off_mode_button.style.display = "none";
-            send_off_mode_button.addEventListener("click", switchToSendoffMode);
-            controls_top_part.appendChild(send_off_mode_button);
+            function add_options_selector() {
+              let options_button = document.createElement("button");
+              options_button.id = "options_button";
+              options_button.classList.add("btn");
+              options_button.classList.add("btn-primary");
+              options_button.classList.add("nearly_full_width");
+              options_button.style.marginTop = "1vh";
+              options_button.innerText = "Options";
+              options_button.addEventListener("click", optionsButtonClicked);
+              options_button.disabled = true;
+              controls_top_part.appendChild(options_button);
 
-            const split_mode_button = document.createElement("button");
-            split_mode_button.id = "split_mode_button";
-            split_mode_button.type = "button";
-            split_mode_button.classList.add("btn");
-            split_mode_button.classList.add("btn-primary");
-            split_mode_button.classList.add("nearly_full_width");
-            split_mode_button.innerText = "Switch to Split Mode";
-            split_mode_button.disabled = true;
-            split_mode_button.addEventListener("click", switchToSplitMode);
-            controls_top_part.appendChild(split_mode_button);
+              const options_div = document.createElement("div");
+              options_div.id = "options_div";
+              options_div.addEventListener("click", testListener);
 
-            const stopwatch_mode_button = document.createElement("button");
-            stopwatch_mode_button.id = "stopwatch_mode_button";
-            stopwatch_mode_button.type = "button";
-            stopwatch_mode_button.classList.add("btn");
-            stopwatch_mode_button.classList.add("btn-primary");
-            stopwatch_mode_button.classList.add("nearly_full_width");
-            stopwatch_mode_button.innerText = "Switch to Stopwatch Mode";
-            stopwatch_mode_button.disabled = true;
-            stopwatch_mode_button.style.display = "none";
-            stopwatch_mode_button.addEventListener(
-              "click",
-              switchToStopwatchMode
-            );
-            controls_top_part.appendChild(stopwatch_mode_button);
+              controls_top_part.appendChild(options_div);
+              options_div.style.display = "none";
+              options_div.style.left =
+                options_div.parentElement.offsetWidth + "px";
+
+              const send_off_mode_button = document.createElement("button");
+              send_off_mode_button.id = "send_off_mode_button";
+              send_off_mode_button.type = "button";
+              send_off_mode_button.classList.add("btn");
+              send_off_mode_button.classList.add("btn-primary");
+              send_off_mode_button.classList.add("nearly_full_width");
+              send_off_mode_button.classList.add("aggressive_shadow");
+              send_off_mode_button.innerText = "Switch to Sendoff Mode";
+              send_off_mode_button.addEventListener(
+                "click",
+                switchToSendoffMode
+              );
+              options_div.appendChild(send_off_mode_button);
+
+              const split_mode_button = document.createElement("button");
+              split_mode_button.id = "split_mode_button";
+              split_mode_button.type = "button";
+              split_mode_button.classList.add("btn");
+              split_mode_button.classList.add("btn-primary");
+              split_mode_button.classList.add("nearly_full_width");
+              split_mode_button.classList.add("control_button");
+              split_mode_button.classList.add("aggressive_shadow");
+              split_mode_button.innerText = "Switch to Split Mode";
+              split_mode_button.disabled = true;
+              split_mode_button.addEventListener("click", switchToSplitMode);
+              options_div.appendChild(split_mode_button);
+
+              const stopwatch_mode_button = document.createElement("button");
+              stopwatch_mode_button.id = "stopwatch_mode_button";
+              stopwatch_mode_button.type = "button";
+              stopwatch_mode_button.classList.add("btn");
+              stopwatch_mode_button.classList.add("btn-primary");
+              stopwatch_mode_button.classList.add("nearly_full_width");
+              stopwatch_mode_button.classList.add("control_button");
+              stopwatch_mode_button.classList.add("aggressive_shadow");
+              stopwatch_mode_button.innerText = "Switch to Stopwatch Mode";
+              stopwatch_mode_button.disabled = true;
+              stopwatch_mode_button.addEventListener(
+                "click",
+                switchToStopwatchMode
+              );
+              options_div.appendChild(stopwatch_mode_button);
+
+              const video_mode_button = document.createElement("button");
+              video_mode_button.id = "video_mode_button";
+              video_mode_button.type = "button";
+              video_mode_button.classList.add("btn");
+              video_mode_button.classList.add("btn-primary");
+              video_mode_button.classList.add("nearly_full_width");
+              video_mode_button.classList.add("control_button");
+              video_mode_button.classList.add("aggressive_shadow");
+              video_mode_button.innerText = "Switch to Video Mode";
+              video_mode_button.disabled = true;
+              video_mode_button.addEventListener("click", switchToVideoMode);
+              options_div.appendChild(video_mode_button);
+
+              const app_settings_button = document.createElement("button");
+              app_settings_button.id = "app_settings_button";
+              app_settings_button.type = "button";
+              app_settings_button.classList.add("btn");
+              app_settings_button.classList.add("btn-primary");
+              app_settings_button.classList.add("nearly_full_width");
+              app_settings_button.classList.add("control_button");
+              app_settings_button.classList.add("aggressive_shadow");
+              app_settings_button.innerText = "App Settings";
+              app_settings_button.disabled = true;
+              app_settings_button.addEventListener(
+                "click",
+                switchToAppSettings
+              );
+              options_div.appendChild(app_settings_button);
+            }
+            add_options_selector();
 
             const sendoff_controls_panel = document.createElement("div");
             sendoff_controls_panel.id = "sendoff_controls_panel";
@@ -599,10 +757,18 @@
             stopwatch_controls_panel.classList.add("controls_panel");
             split_controls_panel.style.display = "none";
             stopwatch_controls_panel.style.display = "none";
+            const video_controls_panel = document.createElement("div");
+            video_controls_panel.id = "video_controls_panel";
+            video_controls_panel.classList.add("controls_panel");
+            const app_settings_controls_panel = document.createElement("div");
+            app_settings_controls_panel.id = "app_settings_controls_panel";
+            app_settings_controls_panel.classList.add("controls_panel");
 
             controls_lower_part.appendChild(sendoff_controls_panel);
             controls_lower_part.appendChild(split_controls_panel);
             controls_lower_part.appendChild(stopwatch_controls_panel);
+            controls_lower_part.appendChild(video_controls_panel);
+            controls_lower_part.appendChild(app_settings_controls_panel);
 
             const pick_set_button = document.createElement("button");
             pick_set_button.id = "pick_set_button";
@@ -610,6 +776,7 @@
             pick_set_button.classList.add("btn");
             pick_set_button.classList.add("btn-primary");
             pick_set_button.classList.add("nearly_full_width");
+            pick_set_button.classList.add("control_button");
             pick_set_button.innerText = "Pick Set";
             pick_set_button.disabled = true;
             sendoff_controls_panel.appendChild(pick_set_button);
@@ -620,6 +787,7 @@
             start_on_top_button.classList.add("btn");
             start_on_top_button.classList.add("btn-success");
             start_on_top_button.classList.add("nearly_full_width");
+            start_on_top_button.classList.add("control_button");
             start_on_top_button.innerText = "Start Set on next :00";
             start_on_top_button.disabled = true;
             sendoff_controls_panel.appendChild(start_on_top_button);
@@ -630,6 +798,7 @@
             switch_mode_button.classList.add("btn");
             switch_mode_button.classList.add("btn-success");
             switch_mode_button.classList.add("nearly_full_width");
+            switch_mode_button.classList.add("control_button");
             switch_mode_button.innerText = "Enable Lane Time Edit Mode";
             switch_mode_button.disabled = true;
             sendoff_controls_panel.appendChild(switch_mode_button);
@@ -640,6 +809,7 @@
             pause_all_lanes_button.classList.add("btn");
             pause_all_lanes_button.classList.add("btn-warning");
             pause_all_lanes_button.classList.add("nearly_full_width");
+            pause_all_lanes_button.classList.add("control_button");
             pause_all_lanes_button.innerText = "Pause All Lanes";
             pause_all_lanes_button.disabled = true;
             sendoff_controls_panel.appendChild(pause_all_lanes_button);
@@ -650,6 +820,7 @@
             stop_all_lanes_button.classList.add("btn");
             stop_all_lanes_button.classList.add("btn-danger");
             stop_all_lanes_button.classList.add("nearly_full_width");
+            stop_all_lanes_button.classList.add("control_button");
             stop_all_lanes_button.innerText = "Stop All Lanes";
             stop_all_lanes_button.disabled = true;
             sendoff_controls_panel.appendChild(stop_all_lanes_button);
@@ -660,6 +831,7 @@
             stopwatch_start_all_lanes_button.classList.add("btn");
             stopwatch_start_all_lanes_button.classList.add("btn-success");
             stopwatch_start_all_lanes_button.classList.add("nearly_full_width");
+            stopwatch_start_all_lanes_button.classList.add("control_button");
             stopwatch_start_all_lanes_button.innerText = "Start All";
             stopwatch_start_all_lanes_button.addEventListener(
               "click",
@@ -675,6 +847,7 @@
             stopwatch_stop_all_lanes_button.classList.add("btn");
             stopwatch_stop_all_lanes_button.classList.add("btn-danger");
             stopwatch_stop_all_lanes_button.classList.add("nearly_full_width");
+            stopwatch_stop_all_lanes_button.classList.add("control_button");
             stopwatch_stop_all_lanes_button.innerText = "Stop All";
             stopwatch_stop_all_lanes_button.addEventListener(
               "click",
@@ -690,6 +863,7 @@
             stopwatch_clear_all_lanes_button.classList.add("btn");
             stopwatch_clear_all_lanes_button.classList.add("btn-primary");
             stopwatch_clear_all_lanes_button.classList.add("nearly_full_width");
+            stopwatch_clear_all_lanes_button.classList.add("control_button");
             stopwatch_clear_all_lanes_button.innerText = "Clear All";
             stopwatch_clear_all_lanes_button.addEventListener(
               "click",
@@ -733,16 +907,151 @@
             stopwatch_display.style.display = "none";
             lower_div.appendChild(stopwatch_display);
           };
+          const add_initial_empty_video_display = () => {
+            const lower_div = document.getElementById("lower_div");
+
+            const video_display = document.createElement("div");
+            video_display.id = "video_display";
+            video_display.style.display = "none";
+            lower_div.appendChild(video_display);
+          };
+          const add__app_settings_display = () => {
+            const lower_div = document.getElementById("lower_div");
+
+            const app_settings_display = document.createElement("div");
+            app_settings_display.id = "app_settings_display";
+            app_settings_display.style.display = "none";
+            lower_div.appendChild(app_settings_display);
+
+            const app_settings_table = document.createElement("table");
+            app_settings_table.id = "app_settings_table";
+            app_settings_display.appendChild(app_settings_table);
+
+            let app_settings_row = document.createElement("tr");
+            app_settings_table.appendChild(app_settings_row);
+
+            let app_settings_data = document.createElement("td");
+            app_settings_data.classList.add("app_setting_label");
+            app_settings_row.appendChild(app_settings_data);
+            const coach_settings_label = document.createElement("label");
+            coach_settings_label.innerText = "Coach ID:";
+            coach_settings_label.id = "coach_settings_label";
+            coach_settings_label.for = "coach_settings_box";
+            app_settings_data.appendChild(coach_settings_label);
+
+            app_settings_data = document.createElement("td");
+            app_settings_row.appendChild(app_settings_data);
+            app_settings_data.colSpan = 2;
+            const coach_settings_box = document.createElement("input");
+            coach_settings_box.type = "text";
+            coach_settings_box.id = "coach_settings_box";
+            coach_settings_box.name = "coach_settings_box";
+            coach_settings_box.value = COACH_ID;
+            coach_settings_box.readOnly = true;
+            coach_settings_box.disabled = true;
+            coach_settings_box.style.width = "100%";
+            app_settings_data.appendChild(coach_settings_box);
+
+            app_settings_row = document.createElement("tr");
+            app_settings_table.appendChild(app_settings_row);
+
+            app_settings_data = document.createElement("td");
+            app_settings_data.classList.add("app_setting_label");
+            app_settings_row.appendChild(app_settings_data);
+            const first_setting_label = document.createElement("label");
+            first_setting_label.innerText = "Seconds to display split:";
+            first_setting_label.id = "split_setting_label";
+            first_setting_label.for = "split_display_setting";
+            app_settings_data.appendChild(first_setting_label);
+
+            app_settings_data = document.createElement("td");
+            app_settings_row.appendChild(app_settings_data);
+            const first_setting_number_input = document.createElement("input");
+            first_setting_number_input.type = "number";
+            first_setting_number_input.id = "split_display_setting";
+            first_setting_number_input.name = "split_display_setting";
+            first_setting_number_input.min = 1;
+            first_setting_number_input.max = 100;
+            first_setting_number_input.value = MILLS_TO_DISPLAY_SPLITS / 1000;
+            first_setting_number_input.addEventListener(
+              "change",
+              displaySplitTimeChanged
+            );
+            app_settings_data.appendChild(first_setting_number_input);
+
+            app_settings_data = document.createElement("td");
+            app_settings_row.appendChild(app_settings_data);
+            const return_splits_to_default_button =
+              document.createElement("button");
+            return_splits_to_default_button.type = "button";
+            return_splits_to_default_button.innerText = "Default";
+            return_splits_to_default_button.classList.add("btn");
+            return_splits_to_default_button.classList.add("btn-primary");
+            return_splits_to_default_button.classList.add("nearly_full_width");
+            return_splits_to_default_button.addEventListener(
+              "click",
+              returnSplitTimeToDefault
+            );
+            app_settings_data.appendChild(return_splits_to_default_button);
+
+            app_settings_row = document.createElement("tr");
+            app_settings_table.appendChild(app_settings_row);
+
+            app_settings_data = document.createElement("td");
+            app_settings_data.classList.add("app_setting_label");
+            app_settings_row.appendChild(app_settings_data);
+            const second_setting_label = document.createElement("label");
+            second_setting_label.innerText =
+              "Seconds to display stopwatch result:";
+            second_setting_label.id = "stopwatch_setting_label";
+            second_setting_label.for = "stopwatch_display_setting";
+            app_settings_data.appendChild(second_setting_label);
+
+            app_settings_data = document.createElement("td");
+            app_settings_row.appendChild(app_settings_data);
+            const stopwatch_display_setting = document.createElement("input");
+            stopwatch_display_setting.type = "number";
+            stopwatch_display_setting.id = "stopwatch_display_setting";
+            stopwatch_display_setting.name = "stopwatch_display_setting";
+            stopwatch_display_setting.min = 1;
+            stopwatch_display_setting.max = 100;
+            stopwatch_display_setting.value = MILLS_TO_DISPLAY_STOPWATCH / 1000;
+            stopwatch_display_setting.addEventListener(
+              "change",
+              displayStopwatchTimeChanged
+            );
+            app_settings_data.appendChild(stopwatch_display_setting);
+
+            app_settings_data = document.createElement("td");
+            app_settings_row.appendChild(app_settings_data);
+            const return_stopwatch_to_default_button =
+              document.createElement("button");
+            return_stopwatch_to_default_button.type = "button";
+            return_stopwatch_to_default_button.innerText = "Default";
+            return_stopwatch_to_default_button.classList.add("btn");
+            return_stopwatch_to_default_button.classList.add("btn-primary");
+            return_stopwatch_to_default_button.classList.add(
+              "nearly_full_width"
+            );
+            return_stopwatch_to_default_button.addEventListener(
+              "click",
+              returnStopwatchTimeToDefault
+            );
+            app_settings_data.appendChild(return_stopwatch_to_default_button);
+          };
+
           add_controls_div();
           add_initial_empty_lanes_display();
           add_initial_empty_splits_display();
           add_initial_empty_stopwatch_display();
+          add_initial_empty_video_display();
+          add__app_settings_display();
         };
 
         clearScreenOfBeginningControls();
         buildUpperDisplay();
         buildLowerDisplay();
-        setInterval(newSetClock, 10);
+        setInterval(newSetClock, MILLS_TO_UPDATE_CLOCK);
         OpenForConnections();
       }
 
@@ -851,7 +1160,7 @@
           let data = { action: "createRoom" };
           socket.send(JSON.stringify(data));
 
-          setInterval(newGetTimeDelta, 120000);
+          setInterval(newGetTimeDelta, MILLS_TO_SYNC_WITH_SERVER);
         };
 
         socket.onerror = (error) => {
@@ -911,7 +1220,6 @@
       }
 
       function _processLaneConnection(laneNumber) {
-        //lane created here
         let lane = parseInt(laneNumber);
         LANES[lane] = {
           connected: true,
@@ -1039,7 +1347,6 @@
 
       function setToZero() {
         let temp = Date.now();
-        //debugger;
 
         let split_clock_text = clock.innerText.split(":");
         let minutes = parseInt(split_clock_text[0]);
@@ -1147,7 +1454,6 @@
         let milis = split.getMilliseconds();
         milis = truncateToHundreth(milis);
         milis < 10 ? (milis = "0" + milis) : (milis = milis + "");
-        if (milis == "100") debugger;
         split = `${checkTime(split.getSeconds())}.${milis}`;
         return split;
       }
@@ -1178,6 +1484,7 @@
                 split: split,
                 lane_to_send_to: lane_number,
                 roomKey: roomKey,
+                mills_to_display_splits: MILLS_TO_DISPLAY_SPLITS,
               })
             );
           }
@@ -1525,50 +1832,125 @@
         }
       }
 
+      function optionsButtonClicked() {
+        options_button_just_clicked = true;
+        let options_div = document.getElementById("options_div");
+        let displaying = options_div.style.display;
+        if (options_div.style.display == "") {
+          options_div.style.display = "none";
+          const modal = document.getElementById("modal");
+          modal.remove();
+        } else {
+          const modal = document.createElement("modal");
+          modal.id = "modal";
+          modal.style.width = "100vw";
+          modal.style.height = "100vh";
+          modal.style.position = "absolute";
+          modal.style.top = "0";
+          modal.style.left = "0";
+          modal.addEventListener("click", clickAnywhere);
+          options_div.style.display = "";
+          const body = document.getElementsByTagName("body");
+          body[0].appendChild(modal);
+        }
+      }
+
       function switchToSplitMode() {
-        document.getElementById("send_off_mode_button").style.display = "none";
-        document.getElementById("split_mode_button").style.display = "none";
-        document.getElementById("stopwatch_mode_button").style.display = "";
+        removeModal();
+        document.getElementById("options_div").style.display = "none";
 
         document.getElementById("sendoff_controls_panel").style.display =
           "none";
         document.getElementById("split_controls_panel").style.display = "";
         document.getElementById("stopwatch_controls_panel").style.display =
           "none";
+        document.getElementById("video_controls_panel").style.display = "none";
+        document.getElementById("app_settings_controls_panel").style.display =
+          "none";
 
         document.getElementById("lanes_display").style.display = "none";
         document.getElementById("splits_display").style.display = "";
         document.getElementById("stopwatch_display").style.display = "none";
+        document.getElementById("video_display").style.display = "none";
+        document.getElementById("app_settings_display").style.display = "none";
       }
 
       function switchToSendoffMode() {
-        document.getElementById("send_off_mode_button").style.display = "none";
-        document.getElementById("split_mode_button").style.display = "";
-        document.getElementById("stopwatch_mode_button").style.display = "none";
+        removeModal();
+        document.getElementById("options_div").style.display = "none";
 
         document.getElementById("sendoff_controls_panel").style.display = "";
         document.getElementById("split_controls_panel").style.display = "none";
         document.getElementById("stopwatch_controls_panel").style.display =
           "none";
+        document.getElementById("video_controls_panel").style.display = "none";
+        document.getElementById("app_settings_controls_panel").style.display =
+          "none";
 
         document.getElementById("lanes_display").style.display = "";
         document.getElementById("splits_display").style.display = "none";
         document.getElementById("stopwatch_display").style.display = "none";
+        document.getElementById("video_display").style.display = "none";
+        document.getElementById("app_settings_display").style.display = "none";
       }
 
       function switchToStopwatchMode() {
-        document.getElementById("send_off_mode_button").style.display = "";
-        document.getElementById("split_mode_button").style.display = "none";
-        document.getElementById("stopwatch_mode_button").style.display = "none";
+        removeModal();
+        document.getElementById("options_div").style.display = "none";
 
         document.getElementById("sendoff_controls_panel").style.display =
           "none";
         document.getElementById("split_controls_panel").style.display = "none";
         document.getElementById("stopwatch_controls_panel").style.display = "";
+        document.getElementById("video_controls_panel").style.display = "none";
+        document.getElementById("app_settings_controls_panel").style.display =
+          "none";
 
         document.getElementById("lanes_display").style.display = "none";
         document.getElementById("splits_display").style.display = "none";
         document.getElementById("stopwatch_display").style.display = "";
+        document.getElementById("video_display").style.display = "none";
+        document.getElementById("app_settings_display").style.display = "none";
+      }
+
+      function switchToVideoMode() {
+        removeModal();
+        document.getElementById("options_div").style.display = "none";
+
+        document.getElementById("sendoff_controls_panel").style.display =
+          "none";
+        document.getElementById("split_controls_panel").style.display = "none";
+        document.getElementById("stopwatch_controls_panel").style.display =
+          "none";
+        document.getElementById("video_controls_panel").style.display = "";
+        document.getElementById("app_settings_controls_panel").style.display =
+          "none";
+
+        document.getElementById("lanes_display").style.display = "none";
+        document.getElementById("splits_display").style.display = "none";
+        document.getElementById("stopwatch_display").style.display = "none";
+        document.getElementById("video_display").style.display = "";
+        document.getElementById("app_settings_display").style.display = "none";
+      }
+
+      function switchToAppSettings() {
+        removeModal();
+        document.getElementById("options_div").style.display = "none";
+
+        document.getElementById("sendoff_controls_panel").style.display =
+          "none";
+        document.getElementById("split_controls_panel").style.display = "none";
+        document.getElementById("stopwatch_controls_panel").style.display =
+          "none";
+        document.getElementById("video_controls_panel").style.display = "none";
+        document.getElementById("app_settings_controls_panel").style.display =
+          "";
+
+        document.getElementById("lanes_display").style.display = "none";
+        document.getElementById("splits_display").style.display = "none";
+        document.getElementById("stopwatch_display").style.display = "none";
+        document.getElementById("video_display").style.display = "none";
+        document.getElementById("app_settings_display").style.display = "";
       }
 
       function fitText(element, ignore_width = false) {
@@ -1620,7 +2002,6 @@
       }
 
       function startStopWatchClicked(e) {
-        //debugger;
         e.srcElement.style.display = "none";
         e.srcElement.parentElement.parentElement.children[2].children[1].style.display =
           "";
@@ -1675,6 +2056,7 @@
             roomKey: roomKey,
             lane_number: lane_number,
             time: stopwatch_stop_time,
+            mills_to_display_stopwatch: MILLS_TO_DISPLAY_STOPWATCH,
           };
           socket.send(JSON.stringify(stopwatch_data));
         }, 1);
@@ -1746,6 +2128,67 @@
             panel.children[2].children[1].click();
           }
         }
+      }
+
+      function displaySplitTimeChanged(e) {
+        let temp = e.target.value;
+        temp = parseInt(temp) * 1000;
+        MILLS_TO_DISPLAY_SPLITS = temp;
+        localStorage.removeItem("mills_to_display_splits");
+        localStorage.setItem(
+          "mills_to_display_splits",
+          MILLS_TO_DISPLAY_SPLITS
+        );
+      }
+
+      function displayStopwatchTimeChanged(e) {
+        let temp = e.target.value;
+        temp = parseInt(temp) * 1000;
+        MILLS_TO_DISPLAY_STOPWATCH = temp;
+        localStorage.removeItem("mills_to_display_stopwatch");
+        localStorage.setItem(
+          "mills_to_display_stopwatch",
+          MILLS_TO_DISPLAY_STOPWATCH
+        );
+      }
+
+      function returnSplitTimeToDefault(e) {
+        let split_display_setting = document.getElementById(
+          "split_display_setting"
+        );
+        split_display_setting.value = MILLS_TO_DISPLAY_SPLITS_DEFAULT / 1000;
+        displaySplitTimeChanged({
+          target: { value: split_display_setting.value },
+        });
+      }
+
+      function returnStopwatchTimeToDefault(e) {
+        let stopwatch_display_setting = document.getElementById(
+          "stopwatch_display_setting"
+        );
+        stopwatch_display_setting.value =
+          MILLS_TO_DISPLAY_STOPWATCH_DEFAULT / 1000;
+        displayStopwatchTimeChanged({
+          target: { value: stopwatch_display_setting.value },
+        });
+      }
+
+      function testListener(e) {
+        e.stopPropagation();
+      }
+
+      function clickAnywhere(e) {
+        let options_div = document.getElementById("options_div");
+        if (options_div.style.display == "") {
+          options_div.style.display = "none";
+          removeModal();
+        }
+        options_button_just_clicked = false;
+      }
+
+      function removeModal() {
+        let modal = document.getElementById("modal");
+        if (modal) modal.remove();
       }
     </script>
   </body>

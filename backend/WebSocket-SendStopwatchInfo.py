@@ -40,14 +40,17 @@ def lambda_handler(event, context):
     print("Connected Lanes:\n" + str(connected_lanes))
    
     lane_number = str(body["lane_number"])
+    mills_to_display_stopwatch = str(body["mills_to_display_stopwatch"])
     connection_id = connected_lanes[lane_number]
 
     print("Sending message to lane " + str(lane_number) + " connectionID: " + str(connection_id))
     message_to_send = {
         "type": "stopwatchinfo",
-        "time": body["time"]
+        "time": body["time"],   
+        "mills_to_display_stopwatch": mills_to_display_stopwatch,
+        
     }
-    print("Sending message:\n" + str(message_to_send))
+    print("Sending message:\n" + json.dumps(message_to_send))
     client.post_to_connection(
         Data=json.dumps(message_to_send).encode('utf-8'),
         ConnectionId=connection_id
