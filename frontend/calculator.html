@@ -15,6 +15,7 @@
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
       crossorigin="anonymous"
     />
+    <script src="https://www.youtube.co/iframe_api"></script>
     <style>
       #rotate {
         display: flex;
@@ -190,6 +191,15 @@
         font-family: "Courier New", Courier, monospace;
         font-weight: 600;
       }
+
+      #youtube_display {
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+        left: 0;
+        top: 0;
+        background-color: black;
+      }
     </style>
   </head>
   <body onbeforeunload="return closeWebSocket()">
@@ -213,6 +223,9 @@
     </div>
     <div id="rotate" style="display: none">
       <p style="text-align: center">Rotate Screen</p>
+    </div>
+    <div id="youtube_display" style="display: none">
+      <div id="player"></div>
     </div>
 
     <script>
@@ -580,6 +593,9 @@
               case "stopwatchinfo":
                 stopwatchTimeRecieved(data);
                 break;
+              case "youtube_data":
+                youtubeDataRecieved(data);
+                break;
             }
           }
         };
@@ -822,6 +838,41 @@
         stopwatch_modal.time_to_stop_displaying =
           Date.now() + parseInt(data.mills_to_display_stopwatch);
         stopwatch_modal.green_amount = 255;
+      }
+
+      let youtube_player;
+      function youtubeDataRecieved() {
+        console.log("api is loaded");
+        let player_div = document.getElementById("youtube_display");
+        youtube_display.style.display = "";
+        youtube_display.style.zIndex = "33";
+        let height = player_div.offsetHeight.toString();
+        let width = player_div.offsetWidth.toString();
+
+        youtube_player = new YT.Player("player", {
+          height: player_div.offsetHeight.toString(),
+          width: player_div.offsetWidth.toString(),
+          videoId: "Vy0yv4hITKw",
+          loop: 1,
+          playerVars: {
+            playsinline: 0,
+            controls: 0,
+            disablekb: 1,
+            enablejsapi: 1,
+            fs: 0,
+            iv_load_policy: 3,
+            loop: 1,
+            origin: window.location.hostname,
+            rel: 0,
+          },
+          events: {
+            onReady: onPlayerReady,
+          },
+        });
+      }
+
+      function onPlayerReady() {
+        youtube_player.playVideo();
       }
     </script>
   </body>
