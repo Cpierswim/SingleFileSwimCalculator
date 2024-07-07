@@ -16,10 +16,18 @@
       rel="stylesheet"
     />
     <style>
-      #container {
+      .after_container {
         width: 100vw;
         height: 100vh;
         display: block;
+      }
+
+      .pre_container {
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
 
       .black_background {
@@ -146,8 +154,6 @@
         flex-wrap: wrap;
         padding: 3px;
       }
-
-      /* For the clock part */
 
       #clock_container {
         height: 100%;
@@ -498,8 +504,13 @@
     <script src="https://www.youtube.co/iframe_api"></script>
   </head>
   <body onbeforeunload="return closeWebSocket()">
-    <div id="container">
-      <button type="button" onclick="startApp()" id="fullscreenbutton">
+    <div id="container" class="pre_container">
+      <button
+        type="button"
+        onclick="startApp()"
+        id="fullscreenbutton"
+        class="btn btn-primary"
+      >
         Cick Me To Start App
       </button>
     </div>
@@ -554,7 +565,8 @@
       let current_mode = 1;
       let last_touch = 0;
       let player;
-
+    </script>
+    <script>
       function createCoachID() {
         debugger;
         let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -577,6 +589,8 @@
 
       async function startApp() {
         var main_screen = document.getElementById("container");
+        main_screen.classList.remove("pre_container");
+        main_screen.classList.add("after_container");
         main_screen.classList.add("black_background");
         requestFullScreen(main_screen);
         requestScreenLock();
