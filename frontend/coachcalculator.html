@@ -459,7 +459,43 @@
         width: 80%;
         background-color: purple;
       }
+
+      #video_player_panel {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #video_player_control_panel {
+        width: 100%;
+        height: 10%;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: space-evenly;
+        align-items: center;
+      }
+
+      #video_player {
+        width: 100%;
+        height: 90%;
+      }
+
+      #player_blocker {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      #wrapper {
+        width: 100%;
+        height: 90%;
+        position: relative;
+      }
     </style>
+    <script src="https://www.youtube.co/iframe_api"></script>
   </head>
   <body onbeforeunload="return closeWebSocket()">
     <div id="container">
@@ -1901,6 +1937,7 @@
       }
 
       function switchToSplitMode() {
+        removeVideoPlayerPanel();
         removeModal();
         document.getElementById("options_div").style.display = "none";
 
@@ -1921,6 +1958,7 @@
       }
 
       function switchToSendoffMode() {
+        removeVideoPlayerPanel();
         removeModal();
         document.getElementById("options_div").style.display = "none";
 
@@ -1940,6 +1978,7 @@
       }
 
       function switchToStopwatchMode() {
+        removeVideoPlayerPanel();
         removeModal();
         document.getElementById("options_div").style.display = "none";
 
@@ -1959,6 +1998,7 @@
       }
 
       function switchToVideoMode() {
+        removeVideoPlayerPanel();
         removeModal();
         document.getElementById("options_div").style.display = "none";
 
@@ -1985,6 +2025,7 @@
       }
 
       function switchToAppSettings() {
+        removeVideoPlayerPanel();
         removeModal();
         document.getElementById("options_div").style.display = "none";
 
@@ -2243,8 +2284,8 @@
       }
 
       function dealWithCoachVideoList(data) {
-        debugger;
         const video_display = document.getElementById("video_display");
+        while (video_display.firstChild) video_display.firstChild.remove();
         const categories = Object.keys(data);
         categories.sort((a, b) => parseInt(a) - parseInt(b));
 
@@ -2262,14 +2303,6 @@
           videos.sort((a, b) => parseInt(a) - parseInt(b));
 
           videos.forEach((video) => {
-            //const video_spanner = document.createElement("div");
-            //video_spanner.classList.add("video_spanner");
-            //category_div.appendChild(video_spanner);
-
-            //const video_spacer = document.createElement("div");
-            //video_spacer.classList.add("video_spacer");
-            //video_spanner.appendChild(video_spacer);
-
             const video_link = document.createElement("button");
             video_link.type = "button";
             video_link.innerText = data[category][video].title;
@@ -2284,8 +2317,148 @@
         });
       }
 
+      let player;
       function videoLinkClicked(e) {
-        debugger;
+        const video_id = e.target.video_id;
+
+        const lower_div = document.getElementById("lower_div");
+        const video_display = document.getElementById("video_display");
+        video_display.style.display = "none";
+
+        const video_player_panel = document.createElement("div");
+        video_player_panel.id = "video_player_panel";
+        lower_div.appendChild(video_player_panel);
+
+        const video_player_control_panel = document.createElement("div");
+        video_player_control_panel.id = "video_player_control_panel";
+        video_player_panel.appendChild(video_player_control_panel);
+
+        const play_video_button = document.createElement("button");
+        play_video_button.type = "button";
+        play_video_button.innerText = "Play";
+        play_video_button.classList.add("btn");
+        play_video_button.classList.add("btn-success");
+        play_video_button.addEventListener("click", playYoutubeVideoClicked);
+        video_player_control_panel.appendChild(play_video_button);
+
+        const pause_video_button = document.createElement("button");
+        pause_video_button.type = "button";
+        pause_video_button.innerText = "Pause";
+        pause_video_button.classList.add("btn");
+        pause_video_button.classList.add("btn-warning");
+        pause_video_button.addEventListener("click", pauseYoutubeVideoClicked);
+        video_player_control_panel.appendChild(pause_video_button);
+
+        const stop_video_button = document.createElement("button");
+        stop_video_button.type = "button";
+        stop_video_button.innerText = "Stop";
+        stop_video_button.classList.add("btn");
+        stop_video_button.classList.add("btn-danger");
+        stop_video_button.addEventListener("click", stopYoutubeVideoClicked);
+        video_player_control_panel.appendChild(stop_video_button);
+
+        const restart_video_button = document.createElement("button");
+        restart_video_button.type = "button";
+        restart_video_button.innerText = "Restart";
+        restart_video_button.classList.add("btn");
+        restart_video_button.classList.add("btn-success");
+        restart_video_button.addEventListener(
+          "click",
+          restartYoutubeVideoClicked
+        );
+        video_player_control_panel.appendChild(restart_video_button);
+
+        const return_to_video_list_button = document.createElement("button");
+        return_to_video_list_button.type = "button";
+        return_to_video_list_button.innerText = "Return to Video List";
+        return_to_video_list_button.classList.add("btn");
+        return_to_video_list_button.classList.add("btn-primary");
+        return_to_video_list_button.addEventListener(
+          "click",
+          returnToVideoListClicked
+        );
+        video_player_control_panel.appendChild(return_to_video_list_button);
+
+        const wrapper = document.createElement("div");
+        wrapper.id = "wrapper";
+        video_player_panel.appendChild(wrapper);
+
+        const video_player = document.createElement("div");
+        video_player.id = "video_player";
+        wrapper.appendChild(video_player);
+
+        player = new YT.Player("video_player", {
+          height: "390",
+          width: "640",
+          videoId: video_id,
+          playlist: video_id,
+          loop: 1,
+          playerVars: {
+            playsinline: 0,
+            controls: 0,
+            disablekb: 1,
+            enablejsapi: 1,
+            fs: 0,
+            iv_load_policy: 3,
+            loop: 1,
+            origin: window.location.hostname,
+            rel: 0,
+          },
+          events: {
+            onReady: onPlayerReady,
+            onStateChange: onPlayerStateChange,
+          },
+        });
+
+        const player_blocker = document.createElement("div");
+        player_blocker.id = "player_blocker";
+        wrapper.appendChild(player_blocker);
+      }
+
+      function onYouTubeIframeAPIReady() {}
+
+      function onPlayerStateChange(e) {
+        if (e.data == YT.PlayerState.ENDED) player.playVideo();
+        stop_video_just_clicked = false;
+      }
+
+      function onPlayerReady() {
+        player.mute();
+      }
+
+      function playYoutubeVideoClicked(e) {
+        player.playVideo();
+      }
+
+      function pauseYoutubeVideoClicked(e) {
+        player.pauseVideo();
+      }
+
+      function restartYoutubeVideoClicked(e) {
+        player.stopVideo();
+        player.playVideo();
+      }
+
+      stop_video_just_clicked = false;
+      function stopYoutubeVideoClicked(e) {
+        player.stopVideo();
+        stop_video_just_clicked = true;
+      }
+
+      function returnToVideoListClicked(e) {
+        player.stopVideo();
+        const video_player_panel =
+          document.getElementById("video_player_panel");
+        video_player_panel.remove();
+
+        const video_display = document.getElementById("video_display");
+        video_display.style.display = "";
+      }
+
+      function removeVideoPlayerPanel() {
+        const video_player_panel =
+          document.getElementById("video_player_panel");
+        if (video_player_panel) video_player_panel.remove();
       }
     </script>
   </body>
