@@ -199,6 +199,22 @@
         left: 0;
         top: 0;
         background-color: black;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #video_player {
+        width: 100%;
+        height: 90%;
+      }
+
+      #modal {
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+        top: 0;
+        left: 0;
       }
     </style>
   </head>
@@ -225,7 +241,7 @@
       <p style="text-align: center">Rotate Screen</p>
     </div>
     <div id="youtube_display" style="display: none">
-      <div id="player"></div>
+      <div id="video_player"></div>
     </div>
 
     <script>
@@ -370,7 +386,9 @@
         }
       }
 
-      function _handleInternalServerError() {}
+      function _handleInternalServerError() {
+        debugger;
+      }
 
       function dealWithTimeStamp(data) {
         let current_time = Date.now();
@@ -561,6 +579,7 @@
         };
 
         socket.onerror = (error) => {
+          debugger;
           connection_messages_display.innerHTML += "<br />Error in connection";
         };
 
@@ -593,8 +612,8 @@
               case "stopwatchinfo":
                 stopwatchTimeRecieved(data);
                 break;
-              case "youtube_data":
-                youtubeDataRecieved(data);
+              case "videoEvent":
+                youtubeDataRecieved(data.videoAction);
                 break;
             }
           }
@@ -619,6 +638,7 @@
       }
 
       function _processError(data) {
+        debugger;
         let connection_messages_display = document.getElementById(
           "connection_messages_display"
         );
@@ -840,39 +860,69 @@
         stopwatch_modal.green_amount = 255;
       }
 
-      let youtube_player;
-      function youtubeDataRecieved() {
-        console.log("api is loaded");
-        let player_div = document.getElementById("youtube_display");
-        youtube_display.style.display = "";
-        youtube_display.style.zIndex = "33";
-        let height = player_div.offsetHeight.toString();
-        let width = player_div.offsetWidth.toString();
+      let player;
+      function youtubeDataRecieved(video_event) {
+        if (video_event.event == "load") {
+          let player_div = document.getElementById("video_player");
 
-        youtube_player = new YT.Player("player", {
-          height: player_div.offsetHeight.toString(),
-          width: player_div.offsetWidth.toString(),
-          videoId: "Vy0yv4hITKw",
-          loop: 1,
-          playerVars: {
-            playsinline: 0,
-            controls: 0,
-            disablekb: 1,
-            enablejsapi: 1,
-            fs: 0,
-            iv_load_policy: 3,
+          player = new YT.Player("video_player", {
+            height: "390",
+            width: "640",
+            videoId: video_event.video_id,
+            playlist: video_event.video_id,
             loop: 1,
-            origin: window.location.hostname,
-            rel: 0,
-          },
-          events: {
-            onReady: onPlayerReady,
-          },
-        });
+            playerVars: {
+              playsinline: 0,
+              controls: 0,
+              disablekb: 1,
+              enablejsapi: 1,
+              fs: 0,
+              iv_load_policy: 3,
+              loop: 1,
+              origin: window.location.hostname,
+              rel: 0,
+            },
+            events: {
+              onReady: onPlayerReady,
+              onStateChange: onPlayerStateChange,
+            },
+          });
+
+          //youtube_display.style.display = "";
+          //youtube_display.style.zIndex = "33";
+
+          let youtube_display = document.getElementById("youtube_display");
+          youtube_display.style.display = "";
+          let modal = document.createElement("div");
+          modal.id = "modal";
+          youtube_display.appendChild(modal);
+        } else if (video_event.event == "play") {
+          player.playVideo();
+        } else if (video_event.event == "pause") {
+          player.pauseVideo();
+        } else if (video_event.event == "restart") {
+          player.stopVideo();
+          player.playVideo();
+        } else if (video_event.event == "stop") {
+          player.stopVideo();
+        } else if (video_event.event == "exit_video_mode") {
+          while (youtube_display.children.length > 0) {
+            youtube_display.children[0].remove();
+            youtube_display.style.display = "none";
+          }
+          let video_player = document.createElement("div");
+          video_player.id = "video_player";
+          youtube_display.appendChild(video_player);
+          player = undefined;
+        }
       }
 
       function onPlayerReady() {
-        youtube_player.playVideo();
+        player.mute();
+      }
+
+      function onPlayerStateChange(e) {
+        if (e.data == YT.PlayerState.ENDED) player.playVideo();
       }
     </script>
   </body>
