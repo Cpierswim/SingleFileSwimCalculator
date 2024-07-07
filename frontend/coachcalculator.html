@@ -553,13 +553,14 @@
       let last_orientation = screen.orientation.type;
       let current_mode = 1;
       let last_touch = 0;
+      let player;
 
       function createCoachID() {
         debugger;
         let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         letters += letters.toLowerCase();
         letters += "1234567890";
-        letters += "-_!$?&*";
+        letters += "-_";
 
         let id = "";
 
@@ -1326,6 +1327,7 @@
           splits_display.appendChild(LANES[lane].split_panel);
           stopwatch_display.appendChild(LANES[lane].stopwatch_panel);
         });
+        syncClocks();
       }
 
       function _processLaneDisconnect(laneNumber) {
@@ -2014,8 +2016,14 @@
         document.getElementById("lanes_display").style.display = "none";
         document.getElementById("splits_display").style.display = "none";
         document.getElementById("stopwatch_display").style.display = "none";
-        document.getElementById("video_display").style.display = "";
+        let video_display = document.getElementById("video_display");
+        video_display.style.display = "";
         document.getElementById("app_settings_display").style.display = "none";
+
+        const message = document.createElement("p");
+        message.style.color = "white";
+        message.innerText = "Loading videos...";
+        video_display.appendChild(message);
 
         let set_connection_type_data = {
           action: "getCoachVideos",
@@ -2317,7 +2325,6 @@
         });
       }
 
-      let player;
       function videoLinkClicked(e) {
         const video_id = e.target.video_id;
 
@@ -2439,7 +2446,6 @@
         player.playVideo();
       }
 
-      stop_video_just_clicked = false;
       function stopYoutubeVideoClicked(e) {
         player.stopVideo();
         stop_video_just_clicked = true;
