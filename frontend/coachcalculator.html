@@ -2408,6 +2408,14 @@
         video_player.id = "video_player";
         wrapper.appendChild(video_player);
 
+        let video_action_data = {
+          action: "sendVideoEvent",
+          event: "load",
+          roomKey: roomKey,
+          video_id: video_id,
+        };
+        socket.send(JSON.stringify(video_action_data));
+
         player = new YT.Player("video_player", {
           height: "390",
           width: "640",
@@ -2440,7 +2448,6 @@
 
       function onPlayerStateChange(e) {
         if (e.data == YT.PlayerState.ENDED) player.playVideo();
-        stop_video_just_clicked = false;
       }
 
       function onPlayerReady() {
@@ -2448,25 +2455,54 @@
       }
 
       function playYoutubeVideoClicked(e) {
+        let video_action_data = {
+          action: "sendVideoEvent",
+          roomKey: roomKey,
+          event: "play",
+        };
+        socket.send(JSON.stringify(video_action_data));
         player.playVideo();
       }
 
       function pauseYoutubeVideoClicked(e) {
+        let video_action_data = {
+          action: "sendVideoEvent",
+          roomKey: roomKey,
+          event: "pause",
+        };
+        socket.send(JSON.stringify(video_action_data));
         player.pauseVideo();
       }
 
       function restartYoutubeVideoClicked(e) {
+        let video_action_data = {
+          action: "sendVideoEvent",
+          roomKey: roomKey,
+          event: "restart",
+        };
+        socket.send(JSON.stringify(video_action_data));
         player.stopVideo();
         player.playVideo();
       }
 
       function stopYoutubeVideoClicked(e) {
+        let video_action_data = {
+          action: "sendVideoEvent",
+          roomKey: roomKey,
+          event: "stop",
+        };
+        socket.send(JSON.stringify(video_action_data));
         player.stopVideo();
-        stop_video_just_clicked = true;
       }
 
       function returnToVideoListClicked(e) {
         player.stopVideo();
+        let video_action_data = {
+          action: "sendVideoEvent",
+          roomKey: roomKey,
+          event: "exit_video_mode",
+        };
+        socket.send(JSON.stringify(video_action_data));
         const video_player_panel =
           document.getElementById("video_player_panel");
         video_player_panel.remove();
@@ -2476,6 +2512,12 @@
       }
 
       function removeVideoPlayerPanel() {
+        let video_action_data = {
+          action: "sendVideoEvent",
+          roomKey: roomKey,
+          event: "exit_video_mode",
+        };
+        socket.send(JSON.stringify(video_action_data));
         const video_player_panel =
           document.getElementById("video_player_panel");
         if (video_player_panel) video_player_panel.remove();
