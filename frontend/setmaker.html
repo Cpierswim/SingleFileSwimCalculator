@@ -24,8 +24,8 @@
         justify-content: start;
         align-items: flex-end;
         flex-grow: 0;
-        padding-left: max(1vw, 20px);
-        padding-right: max(1vw, 20px);
+        padding-left: max(2vw, 15px);
+        padding-right: max(2vw, 15px);
         margin-top: 0.5vh;
       }
       .tab {
@@ -33,13 +33,14 @@
         border-style: solid;
         border-width: 1px;
         border-color: black;
-        border-top-left-radius: 4px;
-        border-top-right-radius: 4px;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        border-bottom-width: 0px;
         min-width: 3vw;
         padding: 4px;
         padding-left: 12px;
         padding-right: 12px;
-        cursor: default;
+        cursor: pointer;
         flex-grow: 0;
         flex-shrink: 1;
         flex-basis: auto;
@@ -49,7 +50,7 @@
         user-select: none; /* Standard syntax */
       }
       .tab:hover {
-        background-color: white;
+        background-color: rgb(232, 232, 232);
       }
       .tab:active:hover {
         background-color: gray;
@@ -72,11 +73,13 @@
       }
       .active_tab {
         background-color: rgb(232, 232, 232) !important;
+        cursor: default !important;
       }
       .hide {
         display: none !important;
       }
     </style>
+    <link rel="icon" href="../temp/stopwatch.svg" />
   </head>
   <body>
     <div id="full_screen">
