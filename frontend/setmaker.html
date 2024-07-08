@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Set Maker</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
     <style>
       html,
       body {
@@ -18,7 +24,7 @@
         flex-direction: column;
         flex-wrap: nowrap;
       }
-      #tabs {
+      .tab_row {
         display: flex;
         flex-wrap: nowrap;
         justify-content: start;
@@ -48,12 +54,15 @@
         -webkit-user-select: none; /* Safari */
         -ms-user-select: none; /* IE 10 and IE 11 */
         user-select: none; /* Standard syntax */
+        transition: background-color 0.2s;
+        width: fit-content;
       }
       .tab:hover {
         background-color: rgb(232, 232, 232);
       }
       .tab:active:hover {
         background-color: gray;
+        transition: none;
       }
       .display {
         border-width: 3px;
@@ -78,19 +87,259 @@
       .hide {
         display: none !important;
       }
+      .sub_display {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        margin-right: 0.75vw;
+        margin-left: 0.75vw;
+        margin-bottom: 1px;
+      }
+      .sub_container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        width: 100%;
+      }
+      .sub_display_display {
+        border-style: solid;
+        border-width: 2px;
+        border-radius: 20px;
+        flex-direction: column;
+      }
+
+      .button_row {
+        background-color: rgb(232, 232, 232);
+        padding-left: 3vw;
+        padding-right: 3vw;
+        border-left-style: solid;
+        border-left-width: 2px;
+        border-right-width: 2px;
+        border-right-style: solid;
+        padding-bottom: 4px;
+      }
+
+      .sub_button_row {
+        margin-top: 4px;
+        padding-left: 1vw;
+        padding-right: 1vw;
+        padding-top: 12px;
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-evenly;
+      }
+      .repeat_container {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+      }
+      .repeat_flow {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: center;
+        padding-left: 4px;
+        flex: 1 1 auto;
+      }
+      .right_side {
+        flex: 1 1 auto;
+      }
+      input[type="number"] {
+        text-align: center;
+        font-size: 3vh;
+        width: 4vw;
+        min-width: 52px;
+      }
     </style>
     <link rel="icon" href="../temp/stopwatch.svg" />
   </head>
   <body>
     <div id="full_screen">
-      <div id="tabs">
+      <div class="tab_row">
         <div class="tab active_tab">Set Maker</div>
         <div class="tab">Practice Set Up</div>
         <div class="tab">Video Set Up</div>
       </div>
-      <div id="set_display" class="display"></div>
+      <div id="set_display" class="display">
+        <!--
+        <div class="sub_display">
+          <div class="tab_row">
+            <div class="tab active_tab">Set 1</div>
+          </div>
+          <div class="display sub_display_display"></div>
+        </div>
+        -->
+      </div>
       <div id="practice_display" class="display hide"></div>
       <div id="video_display" class="display hide"></div>
+      <div class="button_row">
+        <div class="btn btn-primary" onclick="addSet(this, 1)">Add Set</div>
+      </div>
     </div>
   </body>
+
+  <script>
+    const COLOR_LIST = {
+      1: "rgb(255, 160, 122)",
+      2: "rgb(255, 215, 0)",
+      3: "rgb(147, 112, 219)",
+      4: "rgb(152, 251, 152)",
+      5: "rgb(176, 196, 222)",
+      6: "rgb(245, 245, 220)",
+      7: "rgb(47, 79, 79)",
+      8: "rgb(255, 218, 185)",
+      9: "rgb(255, 182, 193)",
+      10: "rgb(189, 183, 107)",
+    };
+    function addSet(e, sub_set_count) {
+      const sub_display_div = document.createElement("div");
+      sub_display_div.classList.add("sub_display");
+
+      const sub_container = document.createElement("div");
+      sub_container.classList.add("sub_container");
+      sub_display_div.appendChild(sub_container);
+
+      const repeat_container = document.createElement("div");
+      repeat_container.classList.add("repeat_container");
+      sub_container.appendChild(repeat_container);
+
+      const right_side = document.createElement("div");
+      right_side.classList.add("right_side");
+      sub_container.appendChild(right_side);
+
+      const tab_row = document.createElement("div");
+      tab_row.classList.add("tab_row");
+      right_side.appendChild(tab_row);
+
+      const first_tab = document.createElement("div");
+      first_tab.classList.add("tab");
+      first_tab.classList.add("active_tab");
+      let sub_text = "";
+      for (let i = 0; i < sub_set_count; i++) sub_text += "Sub";
+      first_tab.innerText = sub_text + "Set";
+      tab_row.appendChild(first_tab);
+
+      const sub_display_display_div = document.createElement("div");
+      sub_display_display_div.classList.add("sub_display");
+      sub_display_display_div.classList.add("sub_display_display");
+      sub_display_display_div.style.backgroundColor =
+        COLOR_LIST[sub_set_count % Object.keys(COLOR_LIST).length];
+      right_side.appendChild(sub_display_display_div);
+
+      const sub_button_row = document.createElement("div");
+      sub_button_row.classList.add("sub_button_row");
+      sub_display_display_div.appendChild(sub_button_row);
+
+      const add_element_button = document.createElement("button");
+      add_element_button.type = "button";
+      add_element_button.classList.add("btn");
+      add_element_button.classList.add("btn-primary");
+      add_element_button.innerText = "Add Element";
+      add_element_button.addEventListener("click", addElement);
+      sub_button_row.appendChild(add_element_button);
+
+      const add_set_repeat_button = document.createElement("button");
+      add_set_repeat_button.type = "button";
+      add_set_repeat_button.classList.add("btn");
+      add_set_repeat_button.classList.add("btn-primary");
+      add_set_repeat_button.innerText = "Add Set Repeat";
+      add_set_repeat_button.addEventListener("click", addSetRepeat);
+      sub_button_row.appendChild(add_set_repeat_button);
+
+      const sub_button = document.createElement("button");
+      sub_button.type = "button";
+      sub_button.classList.add("btn");
+      sub_button.classList.add("btn-primary");
+      sub_button.innerText = "Add Subset";
+      let new_subset_count = sub_set_count + 1;
+      sub_button.addEventListener("click", (e) => {
+        addSet(e, new_subset_count);
+      });
+      sub_button_row.appendChild(sub_button);
+
+      const remove_sub_button = document.createElement("button");
+      remove_sub_button.type = "button";
+      remove_sub_button.classList.add("btn");
+      remove_sub_button.classList.add("btn-danger");
+      remove_sub_button.innerText = "Remove Subset";
+      remove_sub_button.addEventListener("click", removeSubSet);
+
+      sub_button_row.appendChild(remove_sub_button);
+
+      if (e.innerText == "Add Set")
+        e.parentElement.parentElement.children[1].appendChild(sub_container);
+      else e.target.parentElement.parentElement.appendChild(sub_container);
+    }
+
+    function tabRowResized(e) {
+      let element = e[0].target;
+      let spacer = element.parentElement.parentElement.children[0].children[0];
+      if (spacer) spacer.style.height = element.offsetHeight + "px";
+      //debugger;
+    }
+
+    function addSetRepeat(e) {
+      //debugger;
+      //e.target.disabled = true;
+      let sender = e.target;
+
+      sender.innerText = "Remove Set Repeat";
+      sender.removeEventListener("click", addSetRepeat);
+      sender.addEventListener("click", removeSetRepeat);
+      sender.classList.remove("btn-primary");
+      sender.classList.add("btn-danger");
+      let repeat_container =
+        sender.parentElement.parentElement.parentElement.parentElement
+          .children[0];
+
+      if (repeat_container.children.length == 0) {
+        const repeat_container_spacer = document.createElement("div");
+        let tab_row =
+          sender.parentElement.parentElement.parentElement.children[0];
+        repeat_container_spacer.style.height = tab_row.offsetHeight + "px";
+        new ResizeObserver(tabRowResized).observe(tab_row);
+        repeat_container.appendChild(repeat_container_spacer);
+
+        const repeat_flow = document.createElement("div");
+        repeat_flow.classList.add("repeat_flow");
+        repeat_container.appendChild(repeat_flow);
+
+        const repeat_input = document.createElement("input");
+        repeat_input.type = "number";
+        repeat_input.min = 1;
+        repeat_input.max = 99;
+        repeat_input.value = 1;
+        repeat_flow.appendChild(repeat_input);
+
+        const bracket_div = document.createElement("div");
+        bracket_div.innerText = "X";
+        repeat_flow.appendChild(bracket_div);
+      } else {
+        repeat_container.style.display = "";
+      }
+    }
+
+    function removeSetRepeat(event) {
+      let repeat_container_two =
+        event.target.parentElement.parentElement.parentElement.parentElement
+          .children[0];
+
+      event.target.removeEventListener("click", removeSetRepeat);
+      event.target.addEventListener("click", addSetRepeat);
+      event.target.innerText = "Add Set Repeat";
+      event.target.classList.remove("btn-danger");
+      event.target.classList.add("btn-primary");
+
+      repeat_container_two.style.display = "none";
+    }
+
+    function removeSubSet(e) {
+      //debugger;
+      let sub_container =
+        e.target.parentElement.parentElement.parentElement.parentElement;
+      sub_container.remove();
+    }
+
+    function addElement() {}
+  </script>
 </html>
