@@ -180,6 +180,12 @@
         flex-wrap: nowrap;
         margin-top: 2px;
       }
+      .element_bottom_part {
+        display: flex;
+        flex-wrap: nowrap;
+        padding-left: 5.5vw;
+        margin-top: 0.25vh;
+      }
       .element_repeat {
         text-align: center;
         font-size: 2.25vh;
@@ -287,6 +293,34 @@
         background-color: darkblue;
         color: white;
       }
+      .type_display {
+        align-self: center;
+        background-color: lightblue;
+        border-style: solid;
+        border-color: darkblue;
+        border-width: 1px;
+        padding-left: 6px;
+        padding-right: 3px;
+        border-top-left-radius: 0.375rem;
+        border-bottom-left-radius: 0.375rem;
+        display: flex;
+        align-items: center;
+        height: 100%;
+        justify-content: flex-end;
+        width: 5.5vw;
+        user-select: none;
+      }
+      .multi-description {
+        flex: 1 1 auto;
+        margin-right: 0.25vw;
+        border-top-right-radius: 0.375rem;
+        border-bottom-right-radius: 0.375rem;
+        border-left-style: none;
+      }
+      .description_wrapper {
+        display: flex;
+        flex: 1 1 auto;
+      }
     </style>
     <link rel="icon" href="../temp/stopwatch.svg" />
   </head>
@@ -318,6 +352,11 @@
       8: "rgb(255, 218, 185)",
       9: "rgb(255, 182, 193)",
       10: "rgb(189, 183, 107)",
+    };
+    const MULTI_DESCRIPTION_TYPE = {
+      BY_ROUND: 1,
+      SPLIT_EVENLY: 2,
+      REPEAT_ONE_AT_A_TIME: 3,
     };
     let mouse = false;
     document
@@ -567,7 +606,7 @@
       delete_sendoff_button.classList.add("middle_button");
       delete_sendoff_button.innerText = "-";
       delete_sendoff_button.addEventListener("click", removeLastSendoff);
-      delete_sendoff_button.disabled = true;
+      delete_sendoff_button.style.visibility = "hidden";
       element_top_part.appendChild(delete_sendoff_button);
 
       const multi_description_button = document.createElement("button");
@@ -575,6 +614,7 @@
       multi_description_button.classList.add("btn-primary");
       multi_description_button.classList.add("middle_button");
       multi_description_button.innerText = "✱";
+      multi_description_button.addEventListener("click", changeToMultiType);
       element_top_part.appendChild(multi_description_button);
 
       const delete_element_button = document.createElement("button");
@@ -583,6 +623,7 @@
       delete_element_button.classList.add("btn-danger");
       delete_element_button.classList.add("extreme_bold");
       delete_element_button.innerText = "x";
+      delete_element_button.addEventListener("click", deleteElement);
       element_top_part.appendChild(delete_element_button);
 
       const element_bottom_part = document.createElement("div");
@@ -652,7 +693,8 @@
       first_sendoff.type = "text";
       sendoff_wrapper.appendChild(first_sendoff);
 
-      element_row.children[element_row.children.length - 3].disabled = false;
+      element_row.children[element_row.children.length - 3].style.visibility =
+        "";
     }
 
     function removeLastSendoff(e) {
@@ -693,6 +735,367 @@
           this.children[0].style.marginRight = "4px";
         }
       } catch {}
+    }
+
+    function deleteElement(e) {
+      this.parentElement.parentElement.remove();
+    }
+
+    function changeToMultiType(e) {
+      if (this.innerText != "✱") return "";
+      const upper_row = this.parentElement;
+      upper_row.parentElement.multi_description_type =
+        MULTI_DESCRIPTION_TYPE.SPLIT_EVENLY;
+      const lower_row = this.parentElement.parentElement.children[1];
+
+      //description box
+      upper_row.children[0].addEventListener("change", elementRepeatChanged);
+      upper_row.children[3].style.visibility = "hidden";
+      for (let i = 4; i < upper_row.children.length - 5; i++)
+        upper_row.children[i].style.display = "none";
+      //upper_row.children[upper_row.children.length - 6].style.visibility = "hidden";
+      upper_row.children[upper_row.children.length - 5].style.visibility =
+        "hidden";
+      upper_row.children[upper_row.children.length - 4].style.visibility =
+        "hidden";
+      upper_row.children[upper_row.children.length - 3].style.visibility =
+        "hidden";
+      upper_row.children[upper_row.children.length - 2].innerText =
+        "Change type";
+      upper_row.children[upper_row.children.length - 2].removeEventListener(
+        "click",
+        addSendOff
+      );
+      upper_row.children[upper_row.children.length - 1].innerText =
+        "Add Description";
+      upper_row.children[upper_row.children.length - 1].classList.remove(
+        "btn-danger"
+      );
+      upper_row.children[upper_row.children.length - 1].classList.remove(
+        "extreme_bold"
+      );
+      upper_row.children[upper_row.children.length - 1].classList.add(
+        "btn-success"
+      );
+      upper_row.children[upper_row.children.length - 1].removeEventListener(
+        "click",
+        deleteElement
+      );
+      upper_row.children[upper_row.children.length - 1].addEventListener(
+        "click",
+        addDescriptionClicked
+      );
+
+      const description_wrapper = document.createElement("div");
+      description_wrapper.classList.add("description_wrapper");
+      lower_row.appendChild(description_wrapper);
+
+      const type_display = document.createElement("div");
+      type_display.classList.add("type_display");
+      if (upper_row.children[0].value == 1) type_display.innerText = "1:";
+      else type_display.innerText = "1-" + upper_row.children[0].value + ":";
+      description_wrapper.appendChild(type_display);
+
+      const temp = document.createElement("input");
+      temp.classList.add("multi-description");
+      temp.type = "text";
+      description_wrapper.appendChild(temp);
+
+      const sendoff_wrapper = document.createElement("div");
+      sendoff_wrapper.classList.add("sendoff_wrapper");
+      lower_row.appendChild(sendoff_wrapper);
+
+      const sendoff_letter = document.createElement("div");
+      sendoff_letter.classList.add("sendoff_letter");
+
+      sendoff_letter.innerText = "A:";
+      sendoff_wrapper.appendChild(sendoff_letter);
+
+      const first_sendoff = document.createElement("input");
+      first_sendoff.classList.add("sendoff");
+      first_sendoff.placeholder = "time";
+      first_sendoff.type = "text";
+      sendoff_wrapper.appendChild(first_sendoff);
+
+      const add_sendoff_button = document.createElement("button");
+      add_sendoff_button.type = "button";
+      add_sendoff_button.classList.add("btn");
+      add_sendoff_button.classList.add("btn-success");
+      add_sendoff_button.classList.add("extreme_bold");
+      add_sendoff_button.innerText = "+";
+      add_sendoff_button.addEventListener("click", addDescriptionSendoff);
+      lower_row.appendChild(add_sendoff_button);
+
+      const delete_sendoff_button = document.createElement("button");
+      delete_sendoff_button.type = "button";
+      delete_sendoff_button.classList.add("btn");
+      delete_sendoff_button.classList.add("btn-danger");
+      delete_sendoff_button.classList.add("extreme_bold");
+      delete_sendoff_button.classList.add("middle_button");
+      delete_sendoff_button.innerText = "-";
+      delete_sendoff_button.addEventListener("click", removeDescriptionSendoff);
+      delete_sendoff_button.style.visibility = "hidden";
+      lower_row.appendChild(delete_sendoff_button);
+
+      const delete_element_button = document.createElement("button");
+      delete_element_button.type = "button";
+      delete_element_button.classList.add("btn");
+      delete_element_button.classList.add("btn-danger");
+      delete_element_button.classList.add("extreme_bold");
+      delete_element_button.innerText = "x";
+      delete_element_button.addEventListener("click", deleteDescription);
+      lower_row.appendChild(delete_element_button);
+    }
+
+    function elementRepeatChanged(e) {
+      let value = parseInt(this.value);
+      if (
+        parseInt(this.value) <
+        this.parentElement.parentElement.children.length - 1
+      )
+        this.value = this.parentElement.parentElement.children.length - 1;
+      redoDescriptionSpread(this.parentElement.parentElement);
+    }
+
+    function redoDescriptionSpread(element_row) {
+      //debugger;
+
+      const number_of_descriptions = element_row.children.length - 1;
+      const repeats = parseInt(element_row.children[0].children[0].value);
+      if (
+        element_row.multi_description_type ==
+        MULTI_DESCRIPTION_TYPE.SPLIT_EVENLY
+      ) {
+        let step = repeats / number_of_descriptions;
+        step = Math.trunc(step);
+        if (step < 1) step = 1;
+        let remainder = repeats - number_of_descriptions * step;
+        if (remainder < 0) remainder = 0;
+        let first_number = 1;
+        let last_number = 1 + step - 1;
+        for (let i = 1; i < element_row.children.length; i++) {
+          let remainder_used = false;
+          if (remainder > 0) {
+            last_number++;
+            remainder--;
+            remainder_used = true;
+          }
+          if (first_number != last_number)
+            if (first_number > last_number)
+              element_row.children[i].children[0].children[0].innerText = "?:";
+            else {
+              element_row.children[i].children[0].children[0].innerText =
+                first_number + "-" + last_number + ":";
+            }
+          else
+            element_row.children[i].children[0].children[0].innerText =
+              first_number + ":";
+
+          first_number = first_number + step;
+          last_number = last_number + step;
+          if (remainder_used) {
+            first_number++;
+          }
+          if (first_number > repeats) first_number = last_number + 1;
+        }
+      }
+    }
+
+    function addDescriptionClicked(e) {
+      const element_row = this.parentElement.parentElement;
+      const upper_row = element_row.children[0];
+
+      const lower_row = document.createElement("div");
+      lower_row.classList.add("element_bottom_part");
+      element_row.appendChild(lower_row);
+
+      //debugger;
+      const description_wrapper = document.createElement("div");
+      description_wrapper.classList.add("description_wrapper");
+      lower_row.appendChild(description_wrapper);
+
+      const type_display = document.createElement("div");
+      type_display.classList.add("type_display");
+      if (upper_row.children[0].value == 1) type_display.innerText = "1:";
+      else type_display.innerText = "1-" + upper_row.children[0].value + ":";
+      description_wrapper.appendChild(type_display);
+
+      const temp = document.createElement("input");
+      temp.classList.add("multi-description");
+      temp.type = "text";
+      description_wrapper.appendChild(temp);
+
+      const sendoff_wrapper = document.createElement("div");
+      sendoff_wrapper.classList.add("sendoff_wrapper");
+      lower_row.appendChild(sendoff_wrapper);
+
+      const sendoff_letter = document.createElement("div");
+      sendoff_letter.classList.add("sendoff_letter");
+
+      sendoff_letter.innerText = "A:";
+      sendoff_wrapper.appendChild(sendoff_letter);
+
+      const first_sendoff = document.createElement("input");
+      first_sendoff.classList.add("sendoff");
+      first_sendoff.placeholder = "time";
+      first_sendoff.type = "text";
+      sendoff_wrapper.appendChild(first_sendoff);
+
+      const add_sendoff_button = document.createElement("button");
+      add_sendoff_button.type = "button";
+      add_sendoff_button.classList.add("btn");
+      add_sendoff_button.classList.add("btn-success");
+      add_sendoff_button.classList.add("extreme_bold");
+      add_sendoff_button.innerText = "+";
+      add_sendoff_button.addEventListener("click", addDescriptionSendoff);
+      lower_row.appendChild(add_sendoff_button);
+
+      const delete_sendoff_button = document.createElement("button");
+      delete_sendoff_button.type = "button";
+      delete_sendoff_button.classList.add("btn");
+      delete_sendoff_button.classList.add("btn-danger");
+      delete_sendoff_button.classList.add("extreme_bold");
+      delete_sendoff_button.classList.add("middle_button");
+      delete_sendoff_button.innerText = "-";
+      delete_sendoff_button.addEventListener("click", removeDescriptionSendoff);
+      delete_sendoff_button.style.visibility = "hidden";
+      lower_row.appendChild(delete_sendoff_button);
+
+      const delete_element_button = document.createElement("button");
+      delete_element_button.type = "button";
+      delete_element_button.classList.add("btn");
+      delete_element_button.classList.add("btn-danger");
+      delete_element_button.classList.add("extreme_bold");
+      delete_element_button.innerText = "x";
+      delete_element_button.addEventListener("click", deleteDescription);
+      lower_row.appendChild(delete_element_button);
+
+      redoDescriptionSpread(element_row);
+
+      const last_row_before_this =
+        element_row.children[element_row.children.length - 2];
+      let number_of_clicks = last_row_before_this.children.length - 5;
+      for (let i = 0; i < number_of_clicks; i++) {
+        add_sendoff_button.click();
+      }
+    }
+
+    function addDescriptionSendoff(e) {
+      let element_row = e.target.parentElement;
+
+      let letter = String.fromCharCode(
+        element_row.children.length - 4 + 64 + 1
+      ).toUpperCase();
+
+      const sendoff_wrapper = document.createElement("div");
+      sendoff_wrapper.classList.add("sendoff_wrapper");
+      element_row.insertBefore(
+        sendoff_wrapper,
+        element_row.children[element_row.children.length - 3]
+      );
+
+      const sendoff_letter = document.createElement("div");
+      sendoff_letter.classList.add("sendoff_letter");
+      sendoff_letter.innerText = letter + ":";
+      sendoff_wrapper.appendChild(sendoff_letter);
+
+      /*const sendoff_number_wrapper = document.createElement("div");
+      sendoff_number_wrapper.classList.add("inner_sendoff_number");
+      sendoff_number_wrapper.addEventListener("mousemove", displayCustomUpDown);
+      sendoff_number_wrapper.addEventListener(
+        "mouseenter",
+        displayCustomUpDown
+      );
+      sendoff_wrapper.appendChild(sendoff_number_wrapper);
+
+      const sendoff_custom_number = document.createElement("div");
+      sendoff_custom_number.classList.add("sendoff_custom_number");
+      if (element_row.children.length == 10)
+        sendoff_custom_number.innerText = element_row.children[0].value + " x";
+      else
+        sendoff_custom_number.innerText =
+          element_row.children[
+            element_row.children.length - 6
+          ].children[1].children[0].innerText.split(" ")[0] + " x";
+      sendoff_number_wrapper.appendChild(sendoff_custom_number);
+
+      const custom_arrow_wrapper = document.createElement("div");
+      custom_arrow_wrapper.classList.add("custom_arrow_wrapper");
+      if (mouseExists) custom_arrow_wrapper.style.display = "none";
+      sendoff_number_wrapper.appendChild(custom_arrow_wrapper);
+
+      const custom_up = document.createElement("div");
+      custom_up.classList.add("custom_up_down");
+      custom_up.innerText = "▲";
+      custom_up.addEventListener("click", customUpClicked);
+      custom_arrow_wrapper.appendChild(custom_up);
+
+      const custom_down = document.createElement("div");
+      custom_down.classList.add("custom_up_down");
+      custom_down.innerText = "▼";
+      custom_down.addEventListener("click", customDownClicked);
+      custom_arrow_wrapper.appendChild(custom_down);*/
+
+      const first_sendoff = document.createElement("input");
+      first_sendoff.classList.add("sendoff");
+      first_sendoff.placeholder = "time";
+      first_sendoff.type = "text";
+      sendoff_wrapper.appendChild(first_sendoff);
+
+      element_row.children[element_row.children.length - 2].style.visibility =
+        "";
+    }
+
+    function removeDescriptionSendoff(e) {
+      this.parentElement.children[
+        this.parentElement.children.length - 4
+      ].remove();
+    }
+
+    function deleteDescription(e) {
+      const element_row = this.parentElement.parentElement;
+      this.parentElement.remove();
+      if (element_row.children.length == 1) {
+        const upper_row = element_row.children[0];
+        upper_row.children[0].removeEventListener(
+          "change",
+          elementRepeatChanged
+        );
+        upper_row.children[3].style.visibility = "";
+
+        for (let i = 4; i < upper_row.children.length; i++) {
+          upper_row.children[i].style.visibility = "";
+          upper_row.children[i].style.display = "";
+        }
+
+        upper_row.children[upper_row.children.length - 2].innerText = "✱";
+        upper_row.children[upper_row.children.length - 2].addEventListener(
+          "click",
+          addSendOff
+        );
+        upper_row.children[upper_row.children.length - 2].removeEventListener(
+          "click",
+          addDescriptionSendoff
+        );
+        upper_row.children[upper_row.children.length - 1].innerText = "x";
+        upper_row.children[upper_row.children.length - 1].classList.add(
+          "btn-danger"
+        );
+        upper_row.children[upper_row.children.length - 1].classList.add(
+          "extreme_bold"
+        );
+        upper_row.children[upper_row.children.length - 1].classList.remove(
+          "btn-success"
+        );
+        upper_row.children[upper_row.children.length - 1].addEventListener(
+          "click",
+          deleteElement
+        );
+        upper_row.children[upper_row.children.length - 1].removeEventListener(
+          "click",
+          addDescriptionClicked
+        );
+      }
     }
   </script>
 </html>
