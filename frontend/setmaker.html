@@ -1096,9 +1096,11 @@
           "click",
           addDescriptionClicked
         );
-      }
 
-      redoDescriptionSpread(element_row);
+        const element_bottom_part = document.createElement("div");
+        element_bottom_part.classList.add("element_bottom_part");
+        element_row.appendChild(element_bottom_part);
+      } else redoDescriptionSpread(element_row);
     }
 
     function changeAllSendoffsToMainCount(e) {
