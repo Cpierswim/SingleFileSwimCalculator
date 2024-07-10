@@ -11,20 +11,9 @@
       crossorigin="anonymous"
     />
     <style>
-      /*input::-webkit-outer-spin-button,
-      input::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-      }
-
-      input[type="number"] {
-        -moz-appearance: textfield;
-      }*/
-
       input:focus {
         outline: none;
       }
-
       html,
       body {
         height: 100%;
@@ -122,7 +111,6 @@
         flex-direction: column;
         padding-bottom: 8px;
       }
-
       .button_row {
         background-color: rgb(232, 232, 232);
         padding-left: 3vw;
@@ -133,7 +121,6 @@
         border-right-style: solid;
         padding-bottom: 4px;
       }
-
       .sub_button_row {
         margin-top: 4px;
         padding-left: 1vw;
@@ -232,7 +219,6 @@
         text-align: center;
         border-width: 1px;
       }
-
       .middle_button {
         margin-left: 1px;
         margin-right: 1px;
@@ -707,6 +693,9 @@
         e.target.parentElement.children[
           e.target.parentElement.children.length - 5
         ].disabled = true;
+
+      if (this.parentElement.children.length == 9)
+        this.style.visibility = "hidden";
     }
 
     function customUpClicked(e) {
@@ -1050,6 +1039,8 @@
       this.parentElement.children[
         this.parentElement.children.length - 4
       ].remove();
+      if (this.parentElement.children.length == 5)
+        this.style.visibility = "hidden";
     }
 
     function deleteDescription(e) {
