@@ -538,6 +538,7 @@
       element_repeat.min = 1;
       element_repeat.max = 99;
       element_repeat.value = 1;
+      element_repeat.addEventListener("change", changeAllSendoffsToMainCount);
       element_top_part.appendChild(element_repeat);
 
       const element_times = document.createElement("div");
@@ -736,6 +737,11 @@
       upper_row.parentElement.multi_description_type =
         MULTI_DESCRIPTION_TYPE.SPLIT_EVENLY;
       const lower_row = this.parentElement.parentElement.children[1];
+
+      upper_row.children[0].removeEventListener(
+        "change",
+        changeAllSendoffsToMainCount
+      );
 
       //description box
       upper_row.children[0].addEventListener("change", elementRepeatChanged);
@@ -1052,6 +1058,10 @@
           "change",
           elementRepeatChanged
         );
+        upper_row.children[0].addEventListener(
+          "change",
+          changeAllSendoffsToMainCount
+        );
         upper_row.children[3].style.visibility = "";
 
         for (let i = 4; i < upper_row.children.length; i++) {
@@ -1089,6 +1099,14 @@
       }
 
       redoDescriptionSpread(element_row);
+    }
+
+    function changeAllSendoffsToMainCount(e) {
+      let reps = this.value;
+      for (let i = this.parentElement.children.length - 5; i > 4; i--) {
+        let sendoff_wrapper = this.parentElement.children[i];
+        sendoff_wrapper.children[1].children[0].innerText = reps + " x";
+      }
     }
   </script>
 </html>
