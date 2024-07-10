@@ -11,6 +11,20 @@
       crossorigin="anonymous"
     />
     <style>
+      /*input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      input[type="number"] {
+        -moz-appearance: textfield;
+      }*/
+
+      input:focus {
+        outline: none;
+      }
+
       html,
       body {
         height: 100%;
@@ -18,7 +32,8 @@
         font-size: 2vh;
       }
       #full_screen {
-        width: 100%;
+        min-width: 100%;
+        width: fit-content;
         height: 100%;
         display: flex;
         flex-direction: column;
@@ -92,7 +107,6 @@
         flex-direction: row;
         flex-wrap: nowrap;
         margin-right: 0.75vw;
-        margin-left: 0.75vw;
         margin-bottom: 1px;
       }
       .sub_container {
@@ -106,6 +120,7 @@
         border-width: 2px;
         border-radius: 20px;
         flex-direction: column;
+        padding-bottom: 8px;
       }
 
       .button_row {
@@ -138,17 +153,139 @@
         flex-wrap: nowrap;
         align-items: center;
         justify-content: center;
-        padding-left: 4px;
+        padding-left: 8px;
         flex: 1 1 auto;
       }
       .right_side {
         flex: 1 1 auto;
       }
-      input[type="number"] {
+      .set_repeat {
         text-align: center;
         font-size: 3vh;
         width: 4vw;
         min-width: 52px;
+        border-radius: 0.375rem;
+      }
+      .element_row {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        width: 100%;
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+      .element_top_part {
+        width: 100%;
+        display: flex;
+        flex-wrap: nowrap;
+        margin-top: 2px;
+      }
+      .element_repeat {
+        text-align: center;
+        font-size: 2.25vh;
+        width: 4vw;
+        min-width: 52px;
+        border-radius: 0.375rem;
+      }
+      .extreme_bold {
+        font-weight: 900;
+      }
+      .by {
+        align-self: center;
+        margin-right: 0.2vw;
+        margin-left: 0.2vw;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+      .distance {
+        text-align: center;
+        font-size: 2.25vh;
+        border-radius: 0.375rem;
+      }
+      .distance::-webkit-inner-spin-button,
+      .distance::-webkit-outer-spin-button {
+        appearance: initial;
+        -webkit-appearance: none;
+        margin: 0;
+        -moz-appearance: textfield;
+      }
+      .single_description {
+        margin-left: 0.25vw;
+        margin-right: 0.25vw;
+        flex: 1 1 auto;
+        border-radius: 0.375rem;
+      }
+      .sendoff {
+        width: 5vw;
+        margin-right: 0.25vw;
+        height: 100%;
+        border-top-right-radius: 0.375rem;
+        border-bottom-right-radius: 0.375rem;
+        padding: 0px;
+        text-align: center;
+        border-width: 1px;
+      }
+
+      .middle_button {
+        margin-left: 1px;
+        margin-right: 1px;
+      }
+      .sendoff_wrapper {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+      }
+      .sendoff_letter {
+        background-color: lightblue;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        border-color: darkblue;
+        border-width: 1px;
+        border-style: solid;
+        padding-left: 6px;
+        padding-right: 3px;
+        border-top-left-radius: 0.375rem;
+        border-bottom-left-radius: 0.375rem;
+        border-right-style: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+      .inner_sendoff_number {
+        height: 100%;
+        border-top-width: 1px;
+        background-color: lightcyan;
+        border-top-color: darkblue;
+        border-top-style: solid;
+        border-bottom-style: solid;
+        border-bottom-color: darkblue;
+        border-bottom-width: 1px;
+        border-left: none;
+        border-right: none;
+        width: 3vw;
+        border-left-style: solid;
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        width: fit-content;
+        border-left-width: 1px;
+      }
+      .sendoff_custom_number {
+        white-space: nowrap;
+        user-select: none;
+      }
+      .custom_arrow_wrapper {
+        font-size: 0.7em;
+      }
+      .custom_up_down {
+        cursor: default;
+        user-select: none;
+      }
+      .custom_up_down:hover {
+        background-color: darkblue;
+        color: white;
       }
     </style>
     <link rel="icon" href="../temp/stopwatch.svg" />
@@ -160,16 +297,7 @@
         <div class="tab">Practice Set Up</div>
         <div class="tab">Video Set Up</div>
       </div>
-      <div id="set_display" class="display">
-        <!--
-        <div class="sub_display">
-          <div class="tab_row">
-            <div class="tab active_tab">Set 1</div>
-          </div>
-          <div class="display sub_display_display"></div>
-        </div>
-        -->
-      </div>
+      <div id="set_display" class="display"></div>
       <div id="practice_display" class="display hide"></div>
       <div id="video_display" class="display hide"></div>
       <div class="button_row">
@@ -191,6 +319,30 @@
       9: "rgb(255, 182, 193)",
       10: "rgb(189, 183, 107)",
     };
+    let mouse = false;
+    document
+      .getElementById("full_screen")
+      .addEventListener("mousemove", mouseExists);
+
+    function mouseExists(e) {
+      mouse = true;
+      let target = e.target;
+
+      if (
+        target.classList[0] != "inner_sendoff_number" &&
+        target.classList[0] != "sendoff_custom_number" &&
+        target.classList[0] != "custom_up_down" &&
+        target.classList[0] != "inner_sendoff_number"
+      ) {
+        let wrappers = document.getElementsByClassName("custom_arrow_wrapper");
+        for (let i = 0; i < wrappers.length; i++) {
+          wrappers[i].style.display = "none";
+          wrappers[i].parentElement.children[0].style.marginLeft = "";
+          wrappers[i].parentElement.children[0].style.marginRight = "";
+        }
+      }
+    }
+
     function addSet(e, sub_set_count) {
       const sub_display_div = document.createElement("div");
       sub_display_div.classList.add("sub_display");
@@ -215,9 +367,8 @@
       first_tab.classList.add("tab");
       first_tab.classList.add("active_tab");
       let sub_text = "";
-      for (let i = 0; i < sub_set_count; i++) sub_text += "Sub";
+      for (let i = 0; i < sub_set_count - 1; i++) sub_text += "Sub";
       first_tab.innerText = sub_text + "Set";
-      tab_row.appendChild(first_tab);
 
       const sub_display_display_div = document.createElement("div");
       sub_display_display_div.classList.add("sub_display");
@@ -261,7 +412,11 @@
       remove_sub_button.type = "button";
       remove_sub_button.classList.add("btn");
       remove_sub_button.classList.add("btn-danger");
-      remove_sub_button.innerText = "Remove Subset";
+      let remove_sub_text = "";
+      for (let i = 0; i < sub_set_count - 1; i++) remove_sub_text += "Sub";
+      first_tab.innerText = sub_text + "Set";
+      remove_sub_button.innerText = "Remove " + remove_sub_text + "Set";
+      remove_sub_button.innerText = "Remove this Set";
       remove_sub_button.addEventListener("click", removeSubSet);
 
       sub_button_row.appendChild(remove_sub_button);
@@ -269,18 +424,18 @@
       if (e.innerText == "Add Set")
         e.parentElement.parentElement.children[1].appendChild(sub_container);
       else e.target.parentElement.parentElement.appendChild(sub_container);
+
+      add_set_repeat_button.style.display = "none";
+      add_set_repeat_button.click();
     }
 
     function tabRowResized(e) {
       let element = e[0].target;
       let spacer = element.parentElement.parentElement.children[0].children[0];
       if (spacer) spacer.style.height = element.offsetHeight + "px";
-      //debugger;
     }
 
     function addSetRepeat(e) {
-      //debugger;
-      //e.target.disabled = true;
       let sender = e.target;
 
       sender.innerText = "Remove Set Repeat";
@@ -305,6 +460,7 @@
         repeat_container.appendChild(repeat_flow);
 
         const repeat_input = document.createElement("input");
+        repeat_input.classList.add("set_repeat");
         repeat_input.type = "number";
         repeat_input.min = 1;
         repeat_input.max = 99;
@@ -312,6 +468,7 @@
         repeat_flow.appendChild(repeat_input);
 
         const bracket_div = document.createElement("div");
+        bracket_div.classList.add("by");
         bracket_div.innerText = "X";
         repeat_flow.appendChild(bracket_div);
       } else {
@@ -334,12 +491,208 @@
     }
 
     function removeSubSet(e) {
-      //debugger;
       let sub_container =
         e.target.parentElement.parentElement.parentElement.parentElement;
       sub_container.remove();
     }
 
-    function addElement() {}
+    function addElement(e) {
+      let display = e.target.parentElement.parentElement;
+
+      const element_row = document.createElement("div");
+      element_row.classList.add("element_row");
+      display.appendChild(element_row);
+
+      const element_top_part = document.createElement("div");
+      element_top_part.classList.add("element_top_part");
+      element_row.appendChild(element_top_part);
+
+      const element_repeat = document.createElement("input");
+      element_repeat.classList.add("element_repeat");
+      element_repeat.type = "number";
+      element_repeat.min = 1;
+      element_repeat.max = 99;
+      element_repeat.value = 1;
+      element_top_part.appendChild(element_repeat);
+
+      const element_times = document.createElement("div");
+      element_times.classList.add("by");
+      element_times.innerText = "X";
+      element_top_part.appendChild(element_times);
+
+      const element_distance = document.createElement("input");
+      element_distance.classList.add("distance");
+      element_distance.type = "number";
+      element_distance.min = 1;
+      element_distance.max = 9999;
+      element_distance.value = 100;
+      element_top_part.appendChild(element_distance);
+
+      const element_description = document.createElement("input");
+      element_description.type = "text";
+      element_description.classList.add("single_description");
+      element_description.placeholder = "   description";
+      element_top_part.appendChild(element_description);
+
+      const sendoff_wrapper = document.createElement("div");
+      sendoff_wrapper.classList.add("sendoff_wrapper");
+      element_top_part.appendChild(sendoff_wrapper);
+
+      const sendoff_letter = document.createElement("div");
+      sendoff_letter.classList.add("sendoff_letter");
+
+      sendoff_letter.innerText = "A:";
+      sendoff_wrapper.appendChild(sendoff_letter);
+
+      const first_sendoff = document.createElement("input");
+      first_sendoff.classList.add("sendoff");
+      first_sendoff.placeholder = "time";
+      first_sendoff.type = "text";
+      sendoff_wrapper.appendChild(first_sendoff);
+
+      const add_sendoff_button = document.createElement("button");
+      add_sendoff_button.type = "button";
+      add_sendoff_button.classList.add("btn");
+      add_sendoff_button.classList.add("btn-success");
+      add_sendoff_button.classList.add("extreme_bold");
+      add_sendoff_button.innerText = "+";
+      add_sendoff_button.addEventListener("click", addSendOff);
+      element_top_part.appendChild(add_sendoff_button);
+
+      const delete_sendoff_button = document.createElement("button");
+      delete_sendoff_button.type = "button";
+      delete_sendoff_button.classList.add("btn");
+      delete_sendoff_button.classList.add("btn-danger");
+      delete_sendoff_button.classList.add("extreme_bold");
+      delete_sendoff_button.classList.add("middle_button");
+      delete_sendoff_button.innerText = "-";
+      delete_sendoff_button.addEventListener("click", removeLastSendoff);
+      delete_sendoff_button.disabled = true;
+      element_top_part.appendChild(delete_sendoff_button);
+
+      const multi_description_button = document.createElement("button");
+      multi_description_button.classList.add("btn");
+      multi_description_button.classList.add("btn-primary");
+      multi_description_button.classList.add("middle_button");
+      multi_description_button.innerText = "✱";
+      element_top_part.appendChild(multi_description_button);
+
+      const delete_element_button = document.createElement("button");
+      delete_element_button.type = "button";
+      delete_element_button.classList.add("btn");
+      delete_element_button.classList.add("btn-danger");
+      delete_element_button.classList.add("extreme_bold");
+      delete_element_button.innerText = "x";
+      element_top_part.appendChild(delete_element_button);
+
+      const element_bottom_part = document.createElement("div");
+      element_bottom_part.classList.add("element_bottom_part");
+      element_row.appendChild(element_bottom_part);
+    }
+
+    function addSendOff(e) {
+      let element_row = e.target.parentElement;
+
+      let letter = String.fromCharCode(
+        element_row.children.length - 8 + 64 + 1
+      ).toUpperCase();
+
+      const sendoff_wrapper = document.createElement("div");
+      sendoff_wrapper.classList.add("sendoff_wrapper");
+      element_row.insertBefore(
+        sendoff_wrapper,
+        element_row.children[element_row.children.length - 4]
+      );
+
+      const sendoff_letter = document.createElement("div");
+      sendoff_letter.classList.add("sendoff_letter");
+      sendoff_letter.innerText = letter + ":";
+      sendoff_wrapper.appendChild(sendoff_letter);
+
+      const sendoff_number_wrapper = document.createElement("div");
+      sendoff_number_wrapper.classList.add("inner_sendoff_number");
+      sendoff_number_wrapper.addEventListener("mousemove", displayCustomUpDown);
+      sendoff_number_wrapper.addEventListener(
+        "mouseenter",
+        displayCustomUpDown
+      );
+      sendoff_wrapper.appendChild(sendoff_number_wrapper);
+
+      const sendoff_custom_number = document.createElement("div");
+      sendoff_custom_number.classList.add("sendoff_custom_number");
+      if (element_row.children.length == 10)
+        sendoff_custom_number.innerText = element_row.children[0].value + " x";
+      else
+        sendoff_custom_number.innerText =
+          element_row.children[
+            element_row.children.length - 6
+          ].children[1].children[0].innerText.split(" ")[0] + " x";
+      sendoff_number_wrapper.appendChild(sendoff_custom_number);
+
+      const custom_arrow_wrapper = document.createElement("div");
+      custom_arrow_wrapper.classList.add("custom_arrow_wrapper");
+      if (mouseExists) custom_arrow_wrapper.style.display = "none";
+      sendoff_number_wrapper.appendChild(custom_arrow_wrapper);
+
+      const custom_up = document.createElement("div");
+      custom_up.classList.add("custom_up_down");
+      custom_up.innerText = "▲";
+      custom_up.addEventListener("click", customUpClicked);
+      custom_arrow_wrapper.appendChild(custom_up);
+
+      const custom_down = document.createElement("div");
+      custom_down.classList.add("custom_up_down");
+      custom_down.innerText = "▼";
+      custom_down.addEventListener("click", customDownClicked);
+      custom_arrow_wrapper.appendChild(custom_down);
+
+      const first_sendoff = document.createElement("input");
+      first_sendoff.classList.add("sendoff");
+      first_sendoff.placeholder = "time";
+      first_sendoff.type = "text";
+      sendoff_wrapper.appendChild(first_sendoff);
+
+      element_row.children[element_row.children.length - 3].disabled = false;
+    }
+
+    function removeLastSendoff(e) {
+      if (e.target.parentElement.children.length > 9)
+        e.target.parentElement.children[
+          e.target.parentElement.children.length - 5
+        ].remove();
+
+      if (e.target.parentElement.children.length == 9)
+        e.target.parentElement.children[
+          e.target.parentElement.children.length - 5
+        ].disabled = true;
+    }
+
+    function customUpClicked(e) {
+      let number_display = e.target.parentElement.parentElement.children[0];
+      let number = parseInt(number_display.innerText.split(" ")[0]);
+      if (number < 99) number++;
+      number_display.innerText = number + " x";
+    }
+
+    function customDownClicked(e) {
+      let number_display = e.target.parentElement.parentElement.children[0];
+      let number = parseInt(number_display.innerText.split(" ")[0]);
+      if (number > 1) number--;
+      number_display.innerText = number + " x";
+    }
+
+    function displayCustomUpDown(e) {
+      try {
+        if (this.classList[0] == "sendoff_wrapper") {
+          this.children[1].children[1].style.display = "";
+          this.children[1].children[0].style.marginLeft = "4px";
+          this.children[1].children[0].style.marginRight = "4px";
+        } else {
+          this.children[1].style.display = "";
+          this.children[0].style.marginLeft = "4px";
+          this.children[0].style.marginRight = "4px";
+        }
+      } catch {}
+    }
   </script>
 </html>
