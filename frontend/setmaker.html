@@ -295,6 +295,7 @@
         justify-content: flex-end;
         width: 5.5vw;
         user-select: none;
+        text-align: right;
       }
       .multi-description {
         flex: 1 1 auto;
@@ -302,10 +303,18 @@
         border-top-right-radius: 0.375rem;
         border-bottom-right-radius: 0.375rem;
         border-left-style: none;
+        border-width: 1px;
       }
       .description_wrapper {
         display: flex;
         flex: 1 1 auto;
+      }
+      .element_type_display {
+        flex: 1 1 auto;
+        display: flex;
+        flex-wrap: wrap;
+        align-content: center;
+        justify-content: center;
       }
     </style>
     <link rel="icon" href="../temp/stopwatch.svg" />
@@ -327,7 +336,7 @@
   </body>
 
   <script>
-    const COLOR_LIST = {
+    const COLOR_LIST = Object.freeze({
       1: "rgb(255, 160, 122)",
       2: "rgb(255, 215, 0)",
       3: "rgb(147, 112, 219)",
@@ -338,12 +347,12 @@
       8: "rgb(255, 218, 185)",
       9: "rgb(255, 182, 193)",
       10: "rgb(189, 183, 107)",
-    };
-    const MULTI_DESCRIPTION_TYPE = {
+    });
+    const MULTI_DESCRIPTION_TYPE = Object.freeze({
       BY_ROUND: 1,
       SPLIT_EVENLY: 2,
       REPEAT_ONE_AT_A_TIME: 3,
-    };
+    });
     let mouse = false;
     document
       .getElementById("full_screen")
@@ -490,6 +499,7 @@
         repeat_input.min = 1;
         repeat_input.max = 99;
         repeat_input.value = 1;
+        repeat_input.addEventListener("change", setRepeatChanged);
         repeat_flow.appendChild(repeat_input);
 
         const bracket_div = document.createElement("div");
@@ -745,7 +755,7 @@
 
       //description box
       upper_row.children[0].addEventListener("change", elementRepeatChanged);
-      upper_row.children[3].style.visibility = "hidden";
+      upper_row.children[3].style.display = "none";
       for (let i = 4; i < upper_row.children.length - 5; i++)
         upper_row.children[i].style.display = "none";
       //upper_row.children[upper_row.children.length - 6].style.visibility = "hidden";
@@ -760,6 +770,10 @@
       upper_row.children[upper_row.children.length - 2].removeEventListener(
         "click",
         addSendOff
+      );
+      upper_row.children[upper_row.children.length - 2].addEventListener(
+        "click",
+        changeTypeClicked
       );
       upper_row.children[upper_row.children.length - 1].innerText =
         "Add Description";
@@ -781,14 +795,20 @@
         addDescriptionClicked
       );
 
+      const element_type_display = document.createElement("div");
+      element_type_display.classList.add("element_type_display");
+      element_type_display.innerText = "Do below descriptions once through";
+      upper_row.insertBefore(element_type_display, upper_row.children[3]);
+
       const description_wrapper = document.createElement("div");
       description_wrapper.classList.add("description_wrapper");
       lower_row.appendChild(description_wrapper);
 
-      const type_display = document.createElement("div");
+      const type_display = document.createElement("input");
+      type_display.type = "text";
       type_display.classList.add("type_display");
-      if (upper_row.children[0].value == 1) type_display.innerText = "1:";
-      else type_display.innerText = "1-" + upper_row.children[0].value + ":";
+      if (upper_row.children[0].value == 1) type_display.value = "1:";
+      else type_display.value = "1-" + upper_row.children[0].value + ":";
       description_wrapper.appendChild(type_display);
 
       const temp = document.createElement("input");
@@ -853,8 +873,6 @@
     }
 
     function redoDescriptionSpread(element_row) {
-      //debugger;
-
       const number_of_descriptions = element_row.children.length - 1;
       const repeats = parseInt(element_row.children[0].children[0].value);
       if (
@@ -877,13 +895,13 @@
           }
           if (first_number != last_number)
             if (first_number > last_number)
-              element_row.children[i].children[0].children[0].innerText = "?:";
+              element_row.children[i].children[0].children[0].value = "?:";
             else {
-              element_row.children[i].children[0].children[0].innerText =
+              element_row.children[i].children[0].children[0].value =
                 first_number + "-" + last_number + ":";
             }
           else
-            element_row.children[i].children[0].children[0].innerText =
+            element_row.children[i].children[0].children[0].value =
               first_number + ":";
 
           first_number = first_number + step;
@@ -892,6 +910,34 @@
             first_number++;
           }
           if (first_number > repeats) first_number = last_number + 1;
+        }
+      } else if (
+        element_row.multi_description_type ==
+        MULTI_DESCRIPTION_TYPE.REPEAT_ONE_AT_A_TIME
+      ) {
+        let number_working_on = 1;
+        for (let i = 1; i < number_of_descriptions + 1; i++) {
+          if (number_working_on <= repeats)
+            element_row.children[i].children[0].children[0].value =
+              number_working_on + ":";
+          else element_row.children[i].children[0].children[0].value = "?:";
+          number_working_on++;
+        }
+      } else if (
+        element_row.multi_description_type == MULTI_DESCRIPTION_TYPE.BY_ROUND
+      ) {
+        let set_reps = parseInt(
+          element_row.parentElement.parentElement.parentElement.children[0]
+            .children[1].children[0].value
+        );
+
+        let number_working_on = 1;
+        for (let i = 1; i < number_of_descriptions + 1; i++) {
+          if (number_working_on <= set_reps)
+            element_row.children[i].children[0].children[0].value =
+              "RD " + number_working_on + ":";
+          else element_row.children[i].children[0].children[0].value = "?:";
+          number_working_on++;
         }
       }
     }
@@ -909,10 +955,10 @@
       description_wrapper.classList.add("description_wrapper");
       lower_row.appendChild(description_wrapper);
 
-      const type_display = document.createElement("div");
+      const type_display = document.createElement("input");
       type_display.classList.add("type_display");
-      if (upper_row.children[0].value == 1) type_display.innerText = "1:";
-      else type_display.innerText = "1-" + upper_row.children[0].value + ":";
+      //if (upper_row.children[0].value == 1) type_display.value = "1:";
+      //else type_display.value = "1-" + upper_row.children[0].value + ":";
       description_wrapper.appendChild(type_display);
 
       const temp = document.createElement("input");
@@ -1054,6 +1100,7 @@
       this.parentElement.remove();
       if (element_row.children.length == 1) {
         const upper_row = element_row.children[0];
+        upper_row.children[3].remove();
         upper_row.children[0].removeEventListener(
           "change",
           elementRepeatChanged
@@ -1062,7 +1109,7 @@
           "change",
           changeAllSendoffsToMainCount
         );
-        upper_row.children[3].style.visibility = "";
+        upper_row.children[3].style.display = "";
 
         for (let i = 4; i < upper_row.children.length; i++) {
           upper_row.children[i].style.visibility = "";
@@ -1109,6 +1156,44 @@
         let sendoff_wrapper = this.parentElement.children[i];
         sendoff_wrapper.children[1].children[0].innerText = reps + " x";
       }
+    }
+
+    function changeTypeClicked(e) {
+      const element_row = this.parentElement.parentElement;
+
+      element_row.multi_description_type++;
+      if (
+        element_row.multi_description_type >
+        Object.keys(MULTI_DESCRIPTION_TYPE).length
+      )
+        element_row.multi_description_type = 1;
+
+      let element_type_display = element_row.children[0].children[3];
+      switch (element_row.multi_description_type) {
+        case MULTI_DESCRIPTION_TYPE.BY_ROUND:
+          element_type_display.innerText = "Do below by round";
+          break;
+        case MULTI_DESCRIPTION_TYPE.REPEAT_ONE_AT_A_TIME:
+          element_type_display.innerText =
+            "Repeat below descriptions until exhausted";
+          break;
+        case MULTI_DESCRIPTION_TYPE.SPLIT_EVENLY:
+          element_type_display.innerText = "Do below descriptions once through";
+          break;
+      }
+
+      redoDescriptionSpread(element_row);
+    }
+
+    function setRepeatChanged(e) {
+      let element_row =
+        this.parentElement.parentElement.parentElement.children[1].children[1]
+          .children[1];
+      if (element_row)
+        if (
+          element_row.multi_description_type == MULTI_DESCRIPTION_TYPE.BY_ROUND
+        )
+          redoDescriptionSpread(element_row);
     }
   </script>
 </html>
