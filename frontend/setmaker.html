@@ -584,6 +584,7 @@
       first_sendoff.classList.add("sendoff");
       first_sendoff.placeholder = "time";
       first_sendoff.type = "text";
+      first_sendoff.addEventListener("input", sendoffValueChanged);
       sendoff_wrapper.appendChild(first_sendoff);
 
       const add_sendoff_button = document.createElement("button");
@@ -688,6 +689,7 @@
       first_sendoff.classList.add("sendoff");
       first_sendoff.placeholder = "time";
       first_sendoff.type = "text";
+      first_sendoff.addEventListener("input", sendoffValueChanged);
       sendoff_wrapper.appendChild(first_sendoff);
 
       element_row.children[element_row.children.length - 3].style.visibility =
@@ -830,6 +832,7 @@
       first_sendoff.classList.add("sendoff");
       first_sendoff.placeholder = "time";
       first_sendoff.type = "text";
+      first_sendoff.addEventListener("input", sendoffValueChanged);
       sendoff_wrapper.appendChild(first_sendoff);
 
       const add_sendoff_button = document.createElement("button");
@@ -980,6 +983,7 @@
       first_sendoff.classList.add("sendoff");
       first_sendoff.placeholder = "time";
       first_sendoff.type = "text";
+      first_sendoff.addEventListener("input", sendoffValueChanged);
       sendoff_wrapper.appendChild(first_sendoff);
 
       const add_sendoff_button = document.createElement("button");
@@ -1081,6 +1085,7 @@
       first_sendoff.classList.add("sendoff");
       first_sendoff.placeholder = "time";
       first_sendoff.type = "text";
+      first_sendoff.addEventListener("input", sendoffValueChanged);
       sendoff_wrapper.appendChild(first_sendoff);
 
       element_row.children[element_row.children.length - 2].style.visibility =
@@ -1194,6 +1199,106 @@
           element_row.multi_description_type == MULTI_DESCRIPTION_TYPE.BY_ROUND
         )
           redoDescriptionSpread(element_row);
+    }
+
+    function sendoffValueChanged(e) {
+      let valid = true;
+      let value = this.value.trim();
+      let colon_added = false;
+      const containsOnlyNumbers = (str) => {
+        if (str == "") return true;
+        return /^\d+$/.test(str);
+      };
+
+      if (value != "") {
+        if (value.length > 2 && !value.includes(":")) {
+          value =
+            value.substring(0, value.length - 2) +
+            ":" +
+            value.substring(value.length - 2, value.length);
+          colon_added = true;
+        } else if (value.length > 2 && value.includes(":")) {
+          let split_string = value.split(":");
+          if (split_string.length > 2) valid = false;
+          else {
+            if (split_string[1].length < 2) valid = false;
+            else if (split_string[1].length > 2) {
+              split_string[0] =
+                split_string[0] +
+                split_string[1].substring(0, split_string[1].length - 2);
+              split_string[1] = split_string[1].substring(
+                split_string[1].length - 2,
+                split_string[1].length
+              );
+              value = split_string[0] + ":" + split_string[1];
+              colon_added = true;
+            }
+          }
+        }
+        let split_string = value.split(":");
+        let before_colon = 0;
+        let after_colon = "";
+
+        if (split_string.length > 2) valid = false;
+        else {
+          if (split_string.length == 2) {
+            before_colon = split_string[0];
+            after_colon = split_string[1];
+            if (
+              !containsOnlyNumbers(before_colon) ||
+              !containsOnlyNumbers(after_colon)
+            )
+              valid = false;
+            else {
+              before_colon = parseInt(before_colon);
+              after_colon = parseInt(after_colon);
+            }
+          } else after_colon = parseInt(split_string[0]);
+          if (
+            !typeof before_colon == "number" ||
+            !!typeof after_colon == "number"
+          )
+            valid = false;
+          else {
+            if (
+              before_colon < 0 ||
+              before_colon > 99 ||
+              after_colon < 0 ||
+              after_colon > 59
+            )
+              valid = false;
+          }
+        }
+
+        if (value == "") valid = true;
+        if (value == ":") valid = false;
+        if (value.startsWith(":"))
+          if (after_colon < 10 && split_string[1].length != 2) valid = false;
+        if (valid && containsOnlyNumbers(value)) {
+          value = ":" + value;
+          colon_added = true;
+        }
+      }
+
+      if (!valid) {
+        this.style.backgroundColor = "palevioletred";
+      } else {
+        this.style.backgroundColor = "";
+        if (colon_added) this.value = value;
+      }
+    }
+
+    function newSendoffValueChanged(e) {
+      let valid = false;
+
+      let regex = new RegExp(/[0-9]:[0-5][0-9]|[0-9][0-9]:[0-5][0-9]/gi);
+      let simple_regex = new RegExp(/[0-5]?[0-9]/gi);
+
+      if (regex.test(this.value)) valid = true;
+      if (this.value.length <= 2)
+        if (simple_regex.test(this.value)) valid = true;
+
+      if (!valid) debugger;
     }
   </script>
 </html>
