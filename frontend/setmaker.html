@@ -11,6 +11,9 @@
       crossorigin="anonymous"
     />
     <style>
+      :root {
+        --modal-border-radius: 15px;
+      }
       input:focus {
         outline: none;
       }
@@ -341,7 +344,7 @@
         backdrop-filter: blur(5px);
         display: flex;
         justify-content: center;
-        animation: fadeInAnimation ease 0.2s;
+        animation: fadeInAnimation ease 0.3s;
         animation-iteration-count: 1;
         animation-fill-mode: forwards;
         cursor: not-allowed;
@@ -363,9 +366,12 @@
         padding-right: max(12px, 2vw);
         border-bottom: 2px;
         border-style: solid;
-        border-top-left-radius: 40px;
-        border-top-right-radius: 40px;
+        border-top-left-radius: var(--modal-border-radius);
+        border-top-right-radius: var(--modal-border-radius);
         background-color: white;
+        display: flex;
+        background-color: lightblue;
+        align-items: center;
       }
       .modal_content {
         border-style: solid;
@@ -374,9 +380,40 @@
         padding-left: max(12px, 2vw);
         padding-right: max(12px, 2vw);
         background-color: white;
-        border-bottom-left-radius: 40px;
-        border-bottom-right-radius: 40px;
+        border-bottom-left-radius: var(--modal-border-radius);
+        border-bottom-right-radius: var(--modal-border-radius);
         padding-bottom: 12px;
+      }
+      .close_modal_button {
+        cursor: pointer;
+        border-radius: 50%;
+        width: 25px;
+        height: 25px;
+        line-height: 24px;
+        font-weight: 600;
+        text-align: center;
+        background-color: rgb(73, 162, 192);
+      }
+      .close_modal_button:hover {
+        animation: changeToOverClose ease 0.2s;
+        color: white;
+        background-color: rgba(64, 64, 64, 0.4);
+      }
+      .close_modal_button:active:hover {
+        color: black;
+      }
+      .modal_banner_text {
+        flex: 1 1 auto;
+      }
+      @keyframes changeToOverClose {
+        0% {
+          color: black;
+          background-color: rgb(73, 162, 192);
+        }
+        100% {
+          color: white;
+          background-color: rgba(64, 64, 64, 0.4);
+        }
       }
       @keyframes fadeInAnimation {
         0% {
@@ -429,7 +466,7 @@
         <button
           id="save_to_practice_button"
           class="btn btn-primary main_button"
-          onclick="addSetPractice(this)"
+          onclick="saveSet(this)"
           style="visibility: hidden"
           disabled
         >
@@ -442,7 +479,33 @@
     </div>
     <div id="save_set_modal" class="background_blocker" style="display: none">
       <div class="modal_wrapper">
-        <div class="modal_banner prevent-select">Save Set Individually</div>
+        <div class="modal_banner prevent-select">
+          <div class="modal_banner_text">Save Set Individually</div>
+          <div
+            class="close_modal_button prevent-select"
+            onclick="closeModal(this)"
+          >
+            X
+          </div>
+        </div>
+        <div class="modal_content prevent-select">Content</div>
+      </div>
+    </div>
+    <div
+      id="save_practice_modal"
+      class="background_blocker"
+      style="display: none"
+    >
+      <div class="modal_wrapper">
+        <div class="modal_banner prevent-select">
+          <div class="modal_banner_text">Save Practice</div>
+          <div
+            class="close_modal_button prevent-select"
+            onclick="closeModal(this)"
+          >
+            X
+          </div>
+        </div>
         <div class="modal_content prevent-select">Content</div>
       </div>
     </div>
@@ -1546,6 +1609,14 @@
 
     function saveIndividualSet(e) {
       document.getElementById("save_set_modal").style.display = "";
+    }
+
+    function saveSet(e) {
+      document.getElementById("save_practice_modal").style.display = "";
+    }
+
+    function closeModal(e) {
+      e.parentElement.parentElement.parentElement.style.display = "none";
     }
   </script>
 </html>
