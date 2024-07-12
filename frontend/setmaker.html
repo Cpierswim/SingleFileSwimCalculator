@@ -81,8 +81,6 @@
         border-right-style: solid;
         border-right-width: 2px;
         border-right-color: black;
-        border-top-left-radius: 20px;
-        border-top-right-radius: 20px;
       }
       .active_tab {
         background-color: rgb(232, 232, 232) !important;
@@ -113,13 +111,19 @@
       }
       .button_row {
         background-color: rgb(232, 232, 232);
-        padding-left: 3vw;
-        padding-right: 3vw;
         border-left-style: solid;
         border-left-width: 2px;
         border-right-width: 2px;
         border-right-style: solid;
-        padding-bottom: 4px;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        border-top-width: 2px;
+        border-top-style: solid;
+        padding: 3px;
+        display: flex;
+        flex-wrap: nowrap;
+        padding-left: max(2vw, 15px);
+        padding-right: max(2vw, 15px);
       }
       .sub_button_row {
         margin-top: 4px;
@@ -323,21 +327,123 @@
         width: 5.5vw;
         text-align: right;
       }
+      .main_button {
+        margin-right: 1.5vw;
+      }
+      .background_blocker {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(255, 255, 255, 0.4);
+        -webkit-backdrop-filter: blur(5px);
+        backdrop-filter: blur(5px);
+        display: flex;
+        justify-content: center;
+        animation: fadeInAnimation ease 0.2s;
+        animation-iteration-count: 1;
+        animation-fill-mode: forwards;
+        cursor: not-allowed;
+      }
+      .modal_wrapper {
+        width: 80%;
+        min-width: 80%;
+        max-width: 97%;
+        position: absolute;
+        top: 0;
+        margin-top: min(8%, 8vh);
+        display: flex;
+        flex-direction: column;
+        cursor: default;
+      }
+      .modal_banner {
+        padding: 3px;
+        padding-left: max(12px, 2vw);
+        padding-right: max(12px, 2vw);
+        border-bottom: 2px;
+        border-style: solid;
+        border-top-left-radius: 40px;
+        border-top-right-radius: 40px;
+        background-color: white;
+      }
+      .modal_content {
+        border-style: solid;
+        border-top-style: none;
+        padding-top: 4px;
+        padding-left: max(12px, 2vw);
+        padding-right: max(12px, 2vw);
+        background-color: white;
+        border-bottom-left-radius: 40px;
+        border-bottom-right-radius: 40px;
+        padding-bottom: 12px;
+      }
+      @keyframes fadeInAnimation {
+        0% {
+          opacity: 0;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+      .prevent-select {
+        -webkit-user-select: none; /* Safari */
+        -ms-user-select: none; /* IE 10 and IE 11 */
+        user-select: none; /* Standard syntax */
+      }
     </style>
     <link rel="icon" href="../temp/stopwatch.svg" />
   </head>
   <body>
     <div id="full_screen">
       <div class="tab_row">
-        <div class="tab active_tab">Set Maker</div>
-        <div class="tab">Practice Set Up</div>
-        <div class="tab">Video Set Up</div>
+        <div
+          id="set_tab"
+          class="tab active_tab"
+          onclick="switchToSetMaker(this)"
+        >
+          Set Maker
+        </div>
+        <div id="video_tab" class="tab" onclick="switchToVideoSetUp(this)">
+          Video Set Up
+        </div>
+      </div>
+      <div class="button_row">
+        <button
+          id="add_set_button"
+          class="btn btn-primary main_button"
+          onclick="addSet(this, 1)"
+        >
+          Add Set
+        </button>
+        <button
+          id="save_set_button"
+          type="button"
+          class="btn btn-primary main_button"
+          onclick="saveIndividualSet(this)"
+          style="visibility: hidden"
+          disabled
+        >
+          Save As Indiviual Set
+        </button>
+        <button
+          id="save_to_practice_button"
+          class="btn btn-primary main_button"
+          onclick="addSetPractice(this)"
+          style="visibility: hidden"
+          disabled
+        >
+          Save As Practice
+        </button>
       </div>
       <div id="set_display" class="display"></div>
       <div id="practice_display" class="display hide"></div>
       <div id="video_display" class="display hide"></div>
-      <div class="button_row">
-        <div class="btn btn-primary" onclick="addSet(this, 1)">Add Set</div>
+    </div>
+    <div id="save_set_modal" class="background_blocker" style="display: none">
+      <div class="modal_wrapper">
+        <div class="modal_banner prevent-select">Save Set Individually</div>
+        <div class="modal_content prevent-select">Content</div>
       </div>
     </div>
   </body>
@@ -367,6 +473,10 @@
       .getElementById("full_screen")
       .addEventListener("mousemove", mouseExists);
 
+    document
+      .getElementById("set_tab")
+      .addEventListener("click", switchToSetMaker);
+
     function mouseExists(e) {
       mouse = true;
       let target = e.target;
@@ -387,6 +497,16 @@
     }
 
     function addSet(e, sub_set_count) {
+      let save_set_button = document.getElementById("save_set_button");
+      save_set_button.disabled = false;
+      save_set_button.style.visibility = "";
+
+      let save_to_practice_button = document.getElementById(
+        "save_to_practice_button"
+      );
+      save_to_practice_button.disabled = false;
+      save_to_practice_button.style.visibility = "";
+
       const sub_display_div = document.createElement("div");
       sub_display_div.classList.add("sub_display");
 
@@ -465,7 +585,7 @@
       sub_button_row.appendChild(remove_sub_button);
 
       if (e.innerText == "Add Set")
-        e.parentElement.parentElement.children[1].appendChild(sub_container);
+        e.parentElement.parentElement.children[2].appendChild(sub_container);
       else e.target.parentElement.parentElement.appendChild(sub_container);
 
       add_set_repeat_button.style.display = "none";
@@ -538,6 +658,18 @@
       let sub_container =
         e.target.parentElement.parentElement.parentElement.parentElement;
       sub_container.remove();
+      if (document.getElementById("set_display").children.length == 0) {
+        let save_individually_button =
+          document.getElementById("save_set_button");
+        save_set_button.disabled = true;
+        save_set_button.style.visibility = "hidden";
+
+        let save_to_practice_button = document.getElementById(
+          "save_to_practice_button"
+        );
+        save_to_practice_button.disabled = true;
+        save_to_practice_button.style.visibility = "hidden";
+      }
     }
 
     function addElement(e) {
@@ -1386,6 +1518,34 @@
           return containsOnlyNumbers(temp);
         }
       }
+    }
+
+    function switchToSetMaker(e) {
+      document.getElementById("video_tab").classList.remove("active_tab");
+      document.getElementById("set_tab").classList.add("active_tab");
+
+      document.getElementById("set_display").classList.remove("hide");
+      document.getElementById("video_display").classList.add("hide");
+
+      document.getElementById("add_set_button").style.display = "";
+      document.getElementById("save_set_button").style.display = "";
+      document.getElementById("save_to_practice_button").style.display = "";
+    }
+
+    function switchToVideoSetUp(e) {
+      document.getElementById("set_tab").classList.remove("active_tab");
+      document.getElementById("video_tab").classList.add("active_tab");
+
+      document.getElementById("set_display").classList.add("hide");
+      document.getElementById("video_display").classList.remove("hide");
+
+      document.getElementById("add_set_button").style.display = "none";
+      document.getElementById("save_set_button").style.display = "none";
+      document.getElementById("save_to_practice_button").style.display = "none";
+    }
+
+    function saveIndividualSet(e) {
+      document.getElementById("save_set_modal").style.display = "";
     }
   </script>
 </html>
