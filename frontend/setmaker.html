@@ -972,6 +972,10 @@
             i
           ].children[0].children[0].style.backgroundColor =
             ERROR_BACKGROUND_COLOR;
+        else
+          element_row.children[
+            i
+          ].children[0].children[0].style.backgroundColor = "";
         let description_row = element_row.children[i];
         for (let j = description_row.children.length - 4; j > 1; j--) {
           if (
@@ -983,6 +987,10 @@
               j
             ].children[1].children[0].style.backgroundColor =
               ERROR_BACKGROUND_COLOR;
+          else
+            description_row.children[
+              j
+            ].children[1].children[0].style.backgroundColor = "";
         }
       }
     }
