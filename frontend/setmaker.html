@@ -17,6 +17,9 @@
       input:focus {
         outline: none;
       }
+      textarea:focus {
+        outline: none;
+      }
       html,
       body {
         height: 100%;
@@ -340,8 +343,8 @@
         width: 100vw;
         height: 100vh;
         background-color: rgba(255, 255, 255, 0.4);
-        -webkit-backdrop-filter: blur(5px);
-        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
         display: flex;
         justify-content: center;
         animation: fadeInAnimation ease 0.3s;
@@ -359,6 +362,7 @@
         display: flex;
         flex-direction: column;
         cursor: default;
+        overflow: hidden;
       }
       .modal_banner {
         padding: 3px;
@@ -387,12 +391,13 @@
       .close_modal_button {
         cursor: pointer;
         border-radius: 50%;
-        width: 25px;
-        height: 25px;
-        line-height: 24px;
-        font-weight: 600;
-        text-align: center;
         background-color: rgb(73, 162, 192);
+        height: 3ch;
+        width: 3ch;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
       }
       .close_modal_button:hover {
         animation: changeToOverClose ease 0.2s;
@@ -427,6 +432,61 @@
         -webkit-user-select: none; /* Safari */
         -ms-user-select: none; /* IE 10 and IE 11 */
         user-select: none; /* Standard syntax */
+      }
+      .label_table {
+        display: table;
+        width: 100%;
+      }
+      .table_row {
+        display: table-row;
+        width: 100%;
+      }
+      .table_cell_input {
+        display: table-cell;
+        width: 80%;
+      }
+      .table_cell_label {
+        display: table-cell;
+        text-align: right;
+        padding-right: 8px;
+      }
+      input.paperlike_text_input {
+        border: none;
+        border-bottom: solid;
+        margin-bottom: 8px;
+        border-color: lightgray;
+        width: 100%;
+        padding: 3px;
+        padding-top: 0px;
+      }
+      .description_container {
+        margin-left: max(12px, 2vw);
+        margin-right: max(12px, 2vw);
+        display: flex;
+        margin-bottom: 8px;
+      }
+      .set_description_label {
+        background-color: lightblue;
+        border-width: 1px;
+        border-style: solid;
+        border-top-left-radius: 0.375rem;
+        border-bottom-left-radius: 0.375rem;
+        padding-left: 8px;
+        border-right: none;
+        display: flex;
+        align-content: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        user-select: none;
+        padding-right: 3px;
+      }
+      .set_description_input {
+        border-top-right-radius: 0.375rem;
+        border-bottom-right-radius: 0.375rem;
+        border-width: 1px;
+        flex: 1 1 auto;
+        padding-left: 4px;
+        height: 1px;
       }
     </style>
     <link rel="icon" href="../temp/stopwatch.svg" />
@@ -488,7 +548,58 @@
             X
           </div>
         </div>
-        <div class="modal_content prevent-select">Content</div>
+        <div class="modal_content prevent-select">
+          <div class="label_table">
+            <div class="table_row">
+              <div class="table_cell_label">
+                <label for="set_name">Set Name:</label>
+              </div>
+              <div class="table_cell_input">
+                <input
+                  id="set_name"
+                  name="set_name"
+                  class="paperlike_text_input"
+                  type="text"
+                />
+              </div>
+            </div>
+            <div class="table_row">
+              <div class="table_cell_label">
+                <label for="set_date">Date:</label>
+              </div>
+              <div class="table_cell_input">
+                <input id="set_date" name="set_date" type="date" />
+              </div>
+            </div>
+            <div class="table_row">
+              <div class="table_cell_label">
+                <label for="set_key_words">Keywords:</label>
+              </div>
+              <div class="table_cell_input">
+                <input
+                  id="set_key_words"
+                  name="set_key_words"
+                  class="paperlike_text_input"
+                  type="text"
+                />
+              </div>
+            </div>
+            <div class="table_row">
+              <div class="table_cell_label">
+                <label for="set_short_description">Description:</label>
+              </div>
+              <div class="table_cell_input">
+                <input
+                  id="set_short_description"
+                  name="set_short_description"
+                  type="text"
+                  class="paperlike_text_input"
+                />
+              </div>
+            </div>
+          </div>
+          <input id="set_id" type="hidden" />
+        </div>
       </div>
     </div>
     <div
@@ -539,6 +650,8 @@
     document
       .getElementById("set_tab")
       .addEventListener("click", switchToSetMaker);
+
+    document.getElementById("set_date").valueAsDate = new Date();
 
     function mouseExists(e) {
       mouse = true;
@@ -644,8 +757,15 @@
       remove_sub_button.innerText = "Remove " + remove_sub_text + "Set";
       remove_sub_button.innerText = "Remove this Set";
       remove_sub_button.addEventListener("click", removeSubSet);
-
       sub_button_row.appendChild(remove_sub_button);
+
+      const add_set_descrption_button = document.createElement("button");
+      add_set_descrption_button.type = "button";
+      add_set_descrption_button.classList.add("btn");
+      add_set_descrption_button.classList.add("btn-primary");
+      add_set_descrption_button.innerText = "Add Set Description";
+      add_set_descrption_button.addEventListener("click", addSetDescription);
+      sub_button_row.appendChild(add_set_descrption_button);
 
       if (e.innerText == "Add Set")
         e.parentElement.parentElement.children[2].appendChild(sub_container);
@@ -1617,6 +1737,49 @@
 
     function closeModal(e) {
       e.parentElement.parentElement.parentElement.style.display = "none";
+    }
+
+    function addSetDescription(e) {
+      let sub_display_display = this.parentElement.parentElement;
+
+      if (this.innerText.includes("Add")) {
+        const description_container = document.createElement("div");
+        description_container.classList.add("description_container");
+        if (sub_display_display.children.length > 1)
+          sub_display_display.insertBefore(
+            description_container,
+            sub_display_display.children[1]
+          );
+        else sub_display_display.appendChild(description_container);
+
+        const set_description_label = document.createElement("div");
+        set_description_label.classList.add("set_description_label");
+        set_description_label.innerText = "Set Description:";
+        description_container.appendChild(set_description_label);
+
+        const set_description_input = document.createElement("textarea");
+        //set_description_input.type = "text";
+        set_description_input.addEventListener("keyup", textAreaAdjust);
+        set_description_input.classList.add("set_description_input");
+        description_container.appendChild(set_description_input);
+        //set_description_input.value = " ";
+        //set_description_input.style.height = "1px";
+        //set_description_input.style.height = 14 + this.scrollHeight + "px";
+        textAreaAdjust({ target: set_description_input });
+        this.classList.remove("btn-primary");
+        this.classList.add("btn-danger");
+        this.innerText = "Remove Set Description";
+      } else {
+        sub_display_display.children[1].remove();
+        this.classList.remove("btn-danger");
+        this.classList.add("btn-primary");
+        this.innerText = "Add Set Description";
+      }
+    }
+
+    function textAreaAdjust(e) {
+      e.target.style.height = "1px";
+      e.target.style.height = 14 + e.target.scrollHeight + "px";
     }
   </script>
 </html>
