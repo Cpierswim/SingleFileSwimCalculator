@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Set Maker</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <style>
+      input:focus {
+        outline: none;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-size: 2vh;
+      }
+      #full_screen {
+        min-width: 100%;
+        width: fit-content;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+      }
+      .tab_row {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: start;
+        align-items: flex-end;
+        flex-grow: 0;
+        padding-left: max(2vw, 15px);
+        padding-right: max(2vw, 15px);
+        margin-top: 0.5vh;
+      }
+      .tab {
+        background-color: darkgray;
+        border-style: solid;
+        border-width: 1px;
+        border-color: black;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        border-bottom-width: 0px;
+        min-width: 3vw;
+        padding: 4px;
+        padding-left: 12px;
+        padding-right: 12px;
+        cursor: pointer;
+        flex-grow: 0;
+        flex-shrink: 1;
+        flex-basis: auto;
+        align-self: stretch;
+        -webkit-user-select: none; /* Safari */
+        -ms-user-select: none; /* IE 10 and IE 11 */
+        user-select: none; /* Standard syntax */
+        transition: background-color 0.2s;
+        width: fit-content;
+      }
+      .tab:hover {
+        background-color: rgb(232, 232, 232);
+      }
+      .tab:active:hover {
+        background-color: gray;
+        transition: none;
+      }
+      .display {
+        border-width: 3px;
+        background-color: rgb(232, 232, 232);
+        flex: 1 1 auto;
+        border-top-style: solid;
+        border-top-width: 2px;
+        border-top-color: black;
+        border-left-style: solid;
+        border-left-width: 2px;
+        border-left-color: black;
+        border-right-style: solid;
+        border-right-width: 2px;
+        border-right-color: black;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+      }
+      .active_tab {
+        background-color: rgb(232, 232, 232) !important;
+        cursor: default !important;
+      }
+      .hide {
+        display: none !important;
+      }
+      .sub_display {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        margin-right: 0.75vw;
+        margin-bottom: 1px;
+      }
+      .sub_container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        width: 100%;
+      }
+      .sub_display_display {
+        border-style: solid;
+        border-width: 2px;
+        border-radius: 20px;
+        flex-direction: column;
+        padding-bottom: 8px;
+      }
+      .button_row {
+        background-color: rgb(232, 232, 232);
+        padding-left: 3vw;
+        padding-right: 3vw;
+        border-left-style: solid;
+        border-left-width: 2px;
+        border-right-width: 2px;
+        border-right-style: solid;
+        padding-bottom: 4px;
+      }
+      .sub_button_row {
+        margin-top: 4px;
+        padding-left: 1vw;
+        padding-right: 1vw;
+        padding-top: 12px;
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-evenly;
+      }
+      .repeat_container {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+      }
+      .repeat_flow {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: center;
+        padding-left: 8px;
+        flex: 1 1 auto;
+      }
+      .right_side {
+        flex: 1 1 auto;
+      }
+      .set_repeat {
+        text-align: center;
+        font-size: 3vh;
+        width: 4vw;
+        min-width: 52px;
+        border-radius: 0.375rem;
+      }
+      .element_row {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        width: 100%;
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+      .element_top_part {
+        width: 100%;
+        display: flex;
+        flex-wrap: nowrap;
+        margin-top: 2px;
+      }
+      .element_bottom_part {
+        display: flex;
+        flex-wrap: nowrap;
+        padding-left: 5.5vw;
+        margin-top: 0.25vh;
+      }
+      .element_repeat {
+        text-align: center;
+        font-size: 2.25vh;
+        width: 4vw;
+        min-width: 52px;
+        border-radius: 0.375rem;
+      }
+      .extreme_bold {
+        font-weight: 900;
+      }
+      .by {
+        align-self: center;
+        margin-right: 0.2vw;
+        margin-left: 0.2vw;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+      .distance {
+        text-align: center;
+        font-size: 2.25vh;
+        border-radius: 0.375rem;
+      }
+      .distance::-webkit-inner-spin-button,
+      .distance::-webkit-outer-spin-button {
+        appearance: initial;
+        -webkit-appearance: none;
+        margin: 0;
+        -moz-appearance: textfield;
+      }
+      .single_description {
+        margin-left: 0.25vw;
+        margin-right: 0.25vw;
+        flex: 1 1 auto;
+        border-radius: 0.375rem;
+      }
+      .sendoff {
+        width: 5vw;
+        margin-right: 0.25vw;
+        height: 100%;
+        border-top-right-radius: 0.375rem;
+        border-bottom-right-radius: 0.375rem;
+        padding: 0px;
+        text-align: center;
+        border-width: 1px;
+      }
+      .middle_button {
+        margin-left: 1px;
+        margin-right: 1px;
+      }
+      .sendoff_wrapper {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+      }
+      .sendoff_letter {
+        background-color: lightblue;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        border-color: darkblue;
+        border-width: 1px;
+        border-style: solid;
+        padding-left: 6px;
+        padding-right: 3px;
+        border-top-left-radius: 0.375rem;
+        border-bottom-left-radius: 0.375rem;
+        border-right-style: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+      .inner_sendoff_number {
+        height: 100%;
+        border-top-width: 1px;
+        background-color: lightcyan;
+        border-top-color: darkblue;
+        border-top-style: solid;
+        border-bottom-style: solid;
+        border-bottom-color: darkblue;
+        border-bottom-width: 1px;
+        border-left: none;
+        border-right: none;
+        width: 3vw;
+        border-left-style: solid;
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        width: fit-content;
+        border-left-width: 1px;
+      }
+      .sendoff_custom_number {
+        white-space: nowrap;
+        user-select: none;
+      }
+      .custom_arrow_wrapper {
+        font-size: 0.7em;
+      }
+      .custom_up_down {
+        cursor: default;
+        user-select: none;
+      }
+      .custom_up_down:hover {
+        background-color: darkblue;
+        color: white;
+      }
+      .type_display {
+        align-self: center;
+        background-color: lightblue;
+        border-style: solid;
+        border-color: darkblue;
+        border-width: 1px;
+        padding-left: 6px;
+        padding-right: 3px;
+        border-top-left-radius: 0.375rem;
+        border-bottom-left-radius: 0.375rem;
+        display: flex;
+        align-items: center;
+        height: 100%;
+        justify-content: flex-end;
+        width: 5.5vw;
+        user-select: none;
+        text-align: right;
+      }
+      .multi-description {
+        flex: 1 1 auto;
+        margin-right: 0.25vw;
+        border-top-right-radius: 0.375rem;
+        border-bottom-right-radius: 0.375rem;
+        border-left-style: none;
+        border-width: 1px;
+      }
+      .description_wrapper {
+        display: flex;
+        flex: 1 1 auto;
+      }
+      .element_type_display {
+        flex: 1 1 auto;
+        display: flex;
+        flex-wrap: wrap;
+        align-content: center;
+        justify-content: center;
+      }
+      .custom_description_numbers {
+        height: 100%;
+        background-color: lightblue;
+        border-width: 0px;
+        width: 5.5vw;
+        text-align: right;
+      }
+    </style>
+    <link rel="icon" href="../temp/stopwatch.svg" />
+  </head>
+  <body>
+    <div id="full_screen">
+      <div class="tab_row">
+        <div class="tab active_tab">Set Maker</div>
+        <div class="tab">Practice Set Up</div>
+        <div class="tab">Video Set Up</div>
+      </div>
+      <div id="set_display" class="display"></div>
+      <div id="practice_display" class="display hide"></div>
+      <div id="video_display" class="display hide"></div>
+      <div class="button_row">
+        <div class="btn btn-primary" onclick="addSet(this, 1)">Add Set</div>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    const COLOR_LIST = Object.freeze({
+      1: "rgb(255, 160, 122)",
+      2: "rgb(255, 215, 0)",
+      3: "rgb(147, 112, 219)",
+      4: "rgb(152, 251, 152)",
+      5: "rgb(176, 196, 222)",
+      6: "rgb(245, 245, 220)",
+      7: "rgb(47, 79, 79)",
+      8: "rgb(255, 218, 185)",
+      9: "rgb(255, 182, 193)",
+      10: "rgb(189, 183, 107)",
+    });
+    const MULTI_DESCRIPTION_TYPE = Object.freeze({
+      BY_ROUND: 1,
+      SPLIT_EVENLY: 2,
+      REPEAT_ONE_AT_A_TIME: 3,
+    });
+
+    const ERROR_BACKGROUND_COLOR = "palevioletred";
+    let mouse = false;
+    document
+      .getElementById("full_screen")
+      .addEventListener("mousemove", mouseExists);
+
+    function mouseExists(e) {
+      mouse = true;
+      let target = e.target;
+
+      if (
+        target.classList[0] != "inner_sendoff_number" &&
+        target.classList[0] != "sendoff_custom_number" &&
+        target.classList[0] != "custom_up_down" &&
+        target.classList[0] != "inner_sendoff_number"
+      ) {
+        let wrappers = document.getElementsByClassName("custom_arrow_wrapper");
+        for (let i = 0; i < wrappers.length; i++) {
+          wrappers[i].style.display = "none";
+          wrappers[i].parentElement.children[0].style.marginLeft = "";
+          wrappers[i].parentElement.children[0].style.marginRight = "";
+        }
+      }
+    }
+
+    function addSet(e, sub_set_count) {
+      const sub_display_div = document.createElement("div");
+      sub_display_div.classList.add("sub_display");
+
+      const sub_container = document.createElement("div");
+      sub_container.classList.add("sub_container");
+      sub_display_div.appendChild(sub_container);
+
+      const repeat_container = document.createElement("div");
+      repeat_container.classList.add("repeat_container");
+      sub_container.appendChild(repeat_container);
+
+      const right_side = document.createElement("div");
+      right_side.classList.add("right_side");
+      sub_container.appendChild(right_side);
+
+      const tab_row = document.createElement("div");
+      tab_row.classList.add("tab_row");
+      right_side.appendChild(tab_row);
+
+      const first_tab = document.createElement("div");
+      first_tab.classList.add("tab");
+      first_tab.classList.add("active_tab");
+      let sub_text = "";
+      for (let i = 0; i < sub_set_count - 1; i++) sub_text += "Sub";
+      first_tab.innerText = sub_text + "Set";
+
+      const sub_display_display_div = document.createElement("div");
+      sub_display_display_div.classList.add("sub_display");
+      sub_display_display_div.classList.add("sub_display_display");
+      sub_display_display_div.style.backgroundColor =
+        COLOR_LIST[sub_set_count % Object.keys(COLOR_LIST).length];
+      right_side.appendChild(sub_display_display_div);
+
+      const sub_button_row = document.createElement("div");
+      sub_button_row.classList.add("sub_button_row");
+      sub_display_display_div.appendChild(sub_button_row);
+
+      const add_element_button = document.createElement("button");
+      add_element_button.type = "button";
+      add_element_button.classList.add("btn");
+      add_element_button.classList.add("btn-primary");
+      add_element_button.innerText = "Add Element";
+      add_element_button.addEventListener("click", addElement);
+      sub_button_row.appendChild(add_element_button);
+
+      const add_set_repeat_button = document.createElement("button");
+      add_set_repeat_button.type = "button";
+      add_set_repeat_button.classList.add("btn");
+      add_set_repeat_button.classList.add("btn-primary");
+      add_set_repeat_button.innerText = "Add Set Repeat";
+      add_set_repeat_button.addEventListener("click", addSetRepeat);
+      sub_button_row.appendChild(add_set_repeat_button);
+
+      const sub_button = document.createElement("button");
+      sub_button.type = "button";
+      sub_button.classList.add("btn");
+      sub_button.classList.add("btn-primary");
+      sub_button.innerText = "Add Subset";
+      let new_subset_count = sub_set_count + 1;
+      sub_button.addEventListener("click", (e) => {
+        addSet(e, new_subset_count);
+      });
+      sub_button_row.appendChild(sub_button);
+
+      const remove_sub_button = document.createElement("button");
+      remove_sub_button.type = "button";
+      remove_sub_button.classList.add("btn");
+      remove_sub_button.classList.add("btn-danger");
+      let remove_sub_text = "";
+      for (let i = 0; i < sub_set_count - 1; i++) remove_sub_text += "Sub";
+      first_tab.innerText = sub_text + "Set";
+      remove_sub_button.innerText = "Remove " + remove_sub_text + "Set";
+      remove_sub_button.innerText = "Remove this Set";
+      remove_sub_button.addEventListener("click", removeSubSet);
+
+      sub_button_row.appendChild(remove_sub_button);
+
+      if (e.innerText == "Add Set")
+        e.parentElement.parentElement.children[1].appendChild(sub_container);
+      else e.target.parentElement.parentElement.appendChild(sub_container);
+
+      add_set_repeat_button.style.display = "none";
+      add_set_repeat_button.click();
+    }
+
+    function tabRowResized(e) {
+      let element = e[0].target;
+      let spacer = element.parentElement.parentElement.children[0].children[0];
+      if (spacer) spacer.style.height = element.offsetHeight + "px";
+    }
+
+    function addSetRepeat(e) {
+      let sender = e.target;
+
+      sender.innerText = "Remove Set Repeat";
+      sender.removeEventListener("click", addSetRepeat);
+      sender.addEventListener("click", removeSetRepeat);
+      sender.classList.remove("btn-primary");
+      sender.classList.add("btn-danger");
+      let repeat_container =
+        sender.parentElement.parentElement.parentElement.parentElement
+          .children[0];
+
+      if (repeat_container.children.length == 0) {
+        const repeat_container_spacer = document.createElement("div");
+        let tab_row =
+          sender.parentElement.parentElement.parentElement.children[0];
+        repeat_container_spacer.style.height = tab_row.offsetHeight + "px";
+        new ResizeObserver(tabRowResized).observe(tab_row);
+        repeat_container.appendChild(repeat_container_spacer);
+
+        const repeat_flow = document.createElement("div");
+        repeat_flow.classList.add("repeat_flow");
+        repeat_container.appendChild(repeat_flow);
+
+        const repeat_input = document.createElement("input");
+        repeat_input.classList.add("set_repeat");
+        repeat_input.type = "number";
+        repeat_input.min = 1;
+        repeat_input.max = 99;
+        repeat_input.value = 1;
+        repeat_input.addEventListener("change", setRepeatChanged);
+        repeat_flow.appendChild(repeat_input);
+
+        const bracket_div = document.createElement("div");
+        bracket_div.classList.add("by");
+        bracket_div.innerText = "X";
+        repeat_flow.appendChild(bracket_div);
+      } else {
+        repeat_container.style.display = "";
+      }
+    }
+
+    function removeSetRepeat(event) {
+      let repeat_container_two =
+        event.target.parentElement.parentElement.parentElement.parentElement
+          .children[0];
+
+      event.target.removeEventListener("click", removeSetRepeat);
+      event.target.addEventListener("click", addSetRepeat);
+      event.target.innerText = "Add Set Repeat";
+      event.target.classList.remove("btn-danger");
+      event.target.classList.add("btn-primary");
+
+      repeat_container_two.style.display = "none";
+    }
+
+    function removeSubSet(e) {
+      let sub_container =
+        e.target.parentElement.parentElement.parentElement.parentElement;
+      sub_container.remove();
+    }
+
+    function addElement(e) {
+      let display = e.target.parentElement.parentElement;
+
+      const element_row = document.createElement("div");
+      element_row.classList.add("element_row");
+      display.appendChild(element_row);
+
+      const element_top_part = document.createElement("div");
+      element_top_part.classList.add("element_top_part");
+      element_row.appendChild(element_top_part);
+
+      const element_repeat = document.createElement("input");
+      element_repeat.classList.add("element_repeat");
+      element_repeat.type = "number";
+      element_repeat.min = 1;
+      element_repeat.max = 99;
+      element_repeat.value = 1;
+      element_repeat.addEventListener("change", changeAllSendoffsToMainCount);
+      element_top_part.appendChild(element_repeat);
+
+      const element_times = document.createElement("div");
+      element_times.classList.add("by");
+      element_times.innerText = "X";
+      element_top_part.appendChild(element_times);
+
+      const element_distance = document.createElement("input");
+      element_distance.classList.add("distance");
+      element_distance.type = "number";
+      element_distance.min = 1;
+      element_distance.max = 9999;
+      element_distance.value = 100;
+      element_top_part.appendChild(element_distance);
+
+      const element_description = document.createElement("input");
+      element_description.type = "text";
+      element_description.classList.add("single_description");
+      element_description.placeholder = "   description";
+      element_top_part.appendChild(element_description);
+
+      const sendoff_wrapper = document.createElement("div");
+      sendoff_wrapper.classList.add("sendoff_wrapper");
+      element_top_part.appendChild(sendoff_wrapper);
+
+      const sendoff_letter = document.createElement("div");
+      sendoff_letter.classList.add("sendoff_letter");
+
+      sendoff_letter.innerText = "A:";
+      sendoff_wrapper.appendChild(sendoff_letter);
+
+      const first_sendoff = document.createElement("input");
+      first_sendoff.classList.add("sendoff");
+      first_sendoff.placeholder = "time";
+      first_sendoff.type = "text";
+      first_sendoff.addEventListener("input", sendoffValueChanged);
+      sendoff_wrapper.appendChild(first_sendoff);
+
+      const add_sendoff_button = document.createElement("button");
+      add_sendoff_button.type = "button";
+      add_sendoff_button.classList.add("btn");
+      add_sendoff_button.classList.add("btn-success");
+      add_sendoff_button.classList.add("extreme_bold");
+      add_sendoff_button.innerText = "+";
+      add_sendoff_button.addEventListener("click", addSendOff);
+      element_top_part.appendChild(add_sendoff_button);
+
+      const delete_sendoff_button = document.createElement("button");
+      delete_sendoff_button.type = "button";
+      delete_sendoff_button.classList.add("btn");
+      delete_sendoff_button.classList.add("btn-danger");
+      delete_sendoff_button.classList.add("extreme_bold");
+      delete_sendoff_button.classList.add("middle_button");
+      delete_sendoff_button.innerText = "-";
+      delete_sendoff_button.addEventListener("click", removeLastSendoff);
+      delete_sendoff_button.style.visibility = "hidden";
+      element_top_part.appendChild(delete_sendoff_button);
+
+      const multi_description_button = document.createElement("button");
+      multi_description_button.classList.add("btn");
+      multi_description_button.classList.add("btn-primary");
+      multi_description_button.classList.add("middle_button");
+      multi_description_button.innerText = "✱";
+      multi_description_button.addEventListener("click", changeToMultiType);
+      element_top_part.appendChild(multi_description_button);
+
+      const delete_element_button = document.createElement("button");
+      delete_element_button.type = "button";
+      delete_element_button.classList.add("btn");
+      delete_element_button.classList.add("btn-danger");
+      delete_element_button.classList.add("extreme_bold");
+      delete_element_button.innerText = "x";
+      delete_element_button.addEventListener("click", deleteElement);
+      element_top_part.appendChild(delete_element_button);
+
+      const element_bottom_part = document.createElement("div");
+      element_bottom_part.classList.add("element_bottom_part");
+      element_row.appendChild(element_bottom_part);
+    }
+
+    function addSendOff(e) {
+      let element_row = e.target.parentElement;
+
+      let letter = String.fromCharCode(
+        element_row.children.length - 8 + 64 + 1
+      ).toUpperCase();
+
+      const sendoff_wrapper = document.createElement("div");
+      sendoff_wrapper.classList.add("sendoff_wrapper");
+      element_row.insertBefore(
+        sendoff_wrapper,
+        element_row.children[element_row.children.length - 4]
+      );
+
+      const sendoff_letter = document.createElement("div");
+      sendoff_letter.classList.add("sendoff_letter");
+      sendoff_letter.innerText = letter + ":";
+      sendoff_wrapper.appendChild(sendoff_letter);
+
+      const sendoff_number_wrapper = document.createElement("div");
+      sendoff_number_wrapper.classList.add("inner_sendoff_number");
+      sendoff_number_wrapper.addEventListener("mousemove", displayCustomUpDown);
+      sendoff_number_wrapper.addEventListener(
+        "mouseenter",
+        displayCustomUpDown
+      );
+      sendoff_wrapper.appendChild(sendoff_number_wrapper);
+
+      const sendoff_custom_number = document.createElement("div");
+      sendoff_custom_number.classList.add("sendoff_custom_number");
+      if (element_row.children.length == 10)
+        sendoff_custom_number.innerText = element_row.children[0].value + " x";
+      else
+        sendoff_custom_number.innerText =
+          element_row.children[
+            element_row.children.length - 6
+          ].children[1].children[0].innerText.split(" ")[0] + " x";
+      sendoff_number_wrapper.appendChild(sendoff_custom_number);
+
+      const custom_arrow_wrapper = document.createElement("div");
+      custom_arrow_wrapper.classList.add("custom_arrow_wrapper");
+      if (mouseExists) custom_arrow_wrapper.style.display = "none";
+      sendoff_number_wrapper.appendChild(custom_arrow_wrapper);
+
+      const custom_up = document.createElement("div");
+      custom_up.classList.add("custom_up_down");
+      custom_up.innerText = "▲";
+      custom_up.addEventListener("click", customUpClicked);
+      custom_arrow_wrapper.appendChild(custom_up);
+
+      const custom_down = document.createElement("div");
+      custom_down.classList.add("custom_up_down");
+      custom_down.innerText = "▼";
+      custom_down.addEventListener("click", customDownClicked);
+      custom_arrow_wrapper.appendChild(custom_down);
+
+      const first_sendoff = document.createElement("input");
+      first_sendoff.classList.add("sendoff");
+      first_sendoff.placeholder = "time";
+      first_sendoff.type = "text";
+      first_sendoff.addEventListener("input", sendoffValueChanged);
+      sendoff_wrapper.appendChild(first_sendoff);
+
+      element_row.children[element_row.children.length - 3].style.visibility =
+        "";
+    }
+
+    function removeLastSendoff(e) {
+      if (e.target.parentElement.children.length > 9)
+        e.target.parentElement.children[
+          e.target.parentElement.children.length - 5
+        ].remove();
+
+      if (e.target.parentElement.children.length == 9)
+        e.target.parentElement.children[
+          e.target.parentElement.children.length - 5
+        ].disabled = true;
+
+      if (this.parentElement.children.length == 9)
+        this.style.visibility = "hidden";
+    }
+
+    function customUpClicked(e) {
+      let number_display = e.target.parentElement.parentElement.children[0];
+      let number = parseInt(number_display.innerText.split(" ")[0]);
+      if (number < 99) number++;
+      number_display.innerText = number + " x";
+    }
+
+    function customDownClicked(e) {
+      let number_display = e.target.parentElement.parentElement.children[0];
+      let number = parseInt(number_display.innerText.split(" ")[0]);
+      if (number > 1) number--;
+      number_display.innerText = number + " x";
+    }
+
+    function displayCustomUpDown(e) {
+      try {
+        if (this.classList[0] == "sendoff_wrapper") {
+          this.children[1].children[1].style.display = "";
+          this.children[1].children[0].style.marginLeft = "4px";
+          this.children[1].children[0].style.marginRight = "4px";
+        } else {
+          this.children[1].style.display = "";
+          this.children[0].style.marginLeft = "4px";
+          this.children[0].style.marginRight = "4px";
+        }
+      } catch {}
+    }
+
+    function deleteElement(e) {
+      this.parentElement.parentElement.remove();
+    }
+
+    function changeToMultiType(e) {
+      if (this.innerText != "✱") return "";
+      const upper_row = this.parentElement;
+      upper_row.parentElement.multi_description_type =
+        MULTI_DESCRIPTION_TYPE.SPLIT_EVENLY;
+      const lower_row = this.parentElement.parentElement.children[1];
+
+      upper_row.children[0].removeEventListener(
+        "change",
+        changeAllSendoffsToMainCount
+      );
+
+      //description box
+      upper_row.children[0].addEventListener("change", elementRepeatChanged);
+      upper_row.children[3].style.display = "none";
+      for (let i = 4; i < upper_row.children.length - 5; i++)
+        upper_row.children[i].style.display = "none";
+      //upper_row.children[upper_row.children.length - 6].style.visibility = "hidden";
+      upper_row.children[upper_row.children.length - 5].style.visibility =
+        "hidden";
+      upper_row.children[upper_row.children.length - 4].style.visibility =
+        "hidden";
+      upper_row.children[upper_row.children.length - 3].style.visibility =
+        "hidden";
+      upper_row.children[upper_row.children.length - 2].innerText =
+        "Change type";
+      upper_row.children[upper_row.children.length - 2].removeEventListener(
+        "click",
+        addSendOff
+      );
+      upper_row.children[upper_row.children.length - 2].addEventListener(
+        "click",
+        changeTypeClicked
+      );
+      upper_row.children[upper_row.children.length - 1].innerText =
+        "Add Description";
+      upper_row.children[upper_row.children.length - 1].classList.remove(
+        "btn-danger"
+      );
+      upper_row.children[upper_row.children.length - 1].classList.remove(
+        "extreme_bold"
+      );
+      upper_row.children[upper_row.children.length - 1].classList.add(
+        "btn-success"
+      );
+      upper_row.children[upper_row.children.length - 1].removeEventListener(
+        "click",
+        deleteElement
+      );
+      upper_row.children[upper_row.children.length - 1].addEventListener(
+        "click",
+        addDescriptionClicked
+      );
+
+      const element_type_display = document.createElement("div");
+      element_type_display.classList.add("element_type_display");
+      element_type_display.innerText = "Do below only once through";
+      upper_row.insertBefore(element_type_display, upper_row.children[3]);
+
+      const description_wrapper = document.createElement("div");
+      description_wrapper.classList.add("description_wrapper");
+      lower_row.appendChild(description_wrapper);
+
+      const type_display = document.createElement("input");
+      type_display.type = "text";
+      type_display.classList.add("type_display");
+      type_display.addEventListener("input", recolorOnInvalidInput);
+      if (upper_row.children[0].value == 1) type_display.value = "1:";
+      else type_display.value = "1-" + upper_row.children[0].value + ":";
+      type_display.addEventListener("change", addColon);
+      type_display.addEventListener("input", recolorOnInvalidInput);
+      description_wrapper.appendChild(type_display);
+
+      const temp = document.createElement("input");
+      temp.classList.add("multi-description");
+      temp.type = "text";
+      description_wrapper.appendChild(temp);
+
+      const sendoff_wrapper = document.createElement("div");
+      sendoff_wrapper.classList.add("sendoff_wrapper");
+      lower_row.appendChild(sendoff_wrapper);
+
+      const sendoff_letter = document.createElement("div");
+      sendoff_letter.classList.add("sendoff_letter");
+
+      sendoff_letter.innerText = "A:";
+      sendoff_wrapper.appendChild(sendoff_letter);
+
+      const first_sendoff = document.createElement("input");
+      first_sendoff.classList.add("sendoff");
+      first_sendoff.placeholder = "time";
+      first_sendoff.type = "text";
+      first_sendoff.addEventListener("input", sendoffValueChanged);
+      sendoff_wrapper.appendChild(first_sendoff);
+
+      const add_sendoff_button = document.createElement("button");
+      add_sendoff_button.type = "button";
+      add_sendoff_button.classList.add("btn");
+      add_sendoff_button.classList.add("btn-success");
+      add_sendoff_button.classList.add("extreme_bold");
+      add_sendoff_button.innerText = "+";
+      add_sendoff_button.addEventListener("click", addDescriptionSendoff);
+      lower_row.appendChild(add_sendoff_button);
+
+      const delete_sendoff_button = document.createElement("button");
+      delete_sendoff_button.type = "button";
+      delete_sendoff_button.classList.add("btn");
+      delete_sendoff_button.classList.add("btn-danger");
+      delete_sendoff_button.classList.add("extreme_bold");
+      delete_sendoff_button.classList.add("middle_button");
+      delete_sendoff_button.innerText = "-";
+      delete_sendoff_button.addEventListener("click", removeDescriptionSendoff);
+      delete_sendoff_button.style.visibility = "hidden";
+      lower_row.appendChild(delete_sendoff_button);
+
+      const delete_element_button = document.createElement("button");
+      delete_element_button.type = "button";
+      delete_element_button.classList.add("btn");
+      delete_element_button.classList.add("btn-danger");
+      delete_element_button.classList.add("extreme_bold");
+      delete_element_button.innerText = "x";
+      delete_element_button.addEventListener("click", deleteDescription);
+      lower_row.appendChild(delete_element_button);
+    }
+
+    function elementRepeatChanged(e) {
+      let value = parseInt(this.value);
+      if (
+        parseInt(this.value) <
+        this.parentElement.parentElement.children.length - 1
+      )
+        this.value = this.parentElement.parentElement.children.length - 1;
+      redoDescriptionSpread(this.parentElement.parentElement);
+    }
+
+    function redoDescriptionSpread(element_row) {
+      const number_of_descriptions = element_row.children.length - 1;
+      const repeats = parseInt(element_row.children[0].children[0].value);
+      if (
+        element_row.multi_description_type ==
+        MULTI_DESCRIPTION_TYPE.SPLIT_EVENLY
+      ) {
+        let step = repeats / number_of_descriptions;
+        step = Math.trunc(step);
+        if (step < 1) step = 1;
+        let remainder = repeats - number_of_descriptions * step;
+        if (remainder < 0) remainder = 0;
+        let first_number = 1;
+        let last_number = 1 + step - 1;
+        for (let i = 1; i < element_row.children.length; i++) {
+          let remainder_used = false;
+          if (remainder > 0) {
+            last_number++;
+            remainder--;
+            remainder_used = true;
+          }
+          if (first_number != last_number)
+            if (first_number > last_number)
+              element_row.children[i].children[0].children[0].value = "?:";
+            else {
+              element_row.children[i].children[0].children[0].value =
+                first_number + "-" + last_number + ":";
+            }
+          else
+            element_row.children[i].children[0].children[0].value =
+              first_number + ":";
+
+          first_number = first_number + step;
+          last_number = last_number + step;
+          if (remainder_used) {
+            first_number++;
+          }
+          if (first_number > repeats) first_number = last_number + 1;
+        }
+      } else if (
+        element_row.multi_description_type ==
+        MULTI_DESCRIPTION_TYPE.REPEAT_ONE_AT_A_TIME
+      ) {
+        let number_working_on = 1;
+        for (let i = 1; i < number_of_descriptions + 1; i++) {
+          if (number_working_on <= repeats)
+            element_row.children[i].children[0].children[0].value =
+              number_working_on + ":";
+          else element_row.children[i].children[0].children[0].value = "?:";
+          number_working_on++;
+        }
+      } else if (
+        element_row.multi_description_type == MULTI_DESCRIPTION_TYPE.BY_ROUND
+      ) {
+        let set_reps = parseInt(
+          element_row.parentElement.parentElement.parentElement.children[0]
+            .children[1].children[0].value
+        );
+
+        let number_working_on = 1;
+        for (let i = 1; i < number_of_descriptions + 1; i++) {
+          if (number_working_on <= set_reps)
+            element_row.children[i].children[0].children[0].value =
+              "RD " + number_working_on + ":";
+          else element_row.children[i].children[0].children[0].value = "?:";
+          number_working_on++;
+        }
+      }
+
+      //first row set, now copy to additonal sendoffs
+      for (let i = 1; i < number_of_descriptions + 1; i++) {
+        let value = element_row.children[i].children[0].children[0].value;
+        let description_row = element_row.children[i];
+        for (let j = description_row.children.length - 4; j > 1; j--) {
+          description_row.children[j].children[1].children[0].value = value;
+        }
+      }
+
+      //check for ? entries
+      for (let i = 1; i < number_of_descriptions + 1; i++) {
+        if (element_row.children[i].children[0].children[0].value.includes("?"))
+          element_row.children[
+            i
+          ].children[0].children[0].style.backgroundColor =
+            ERROR_BACKGROUND_COLOR;
+        else
+          element_row.children[
+            i
+          ].children[0].children[0].style.backgroundColor = "";
+        let description_row = element_row.children[i];
+        for (let j = description_row.children.length - 4; j > 1; j--) {
+          if (
+            description_row.children[j].children[1].children[0].value.includes(
+              "?"
+            )
+          )
+            description_row.children[
+              j
+            ].children[1].children[0].style.backgroundColor =
+              ERROR_BACKGROUND_COLOR;
+          else
+            description_row.children[
+              j
+            ].children[1].children[0].style.backgroundColor = "";
+        }
+      }
+    }
+
+    function addDescriptionClicked(e) {
+      const element_row = this.parentElement.parentElement;
+      const upper_row = element_row.children[0];
+
+      const lower_row = document.createElement("div");
+      lower_row.classList.add("element_bottom_part");
+      element_row.appendChild(lower_row);
+
+      //debugger;
+      const description_wrapper = document.createElement("div");
+      description_wrapper.classList.add("description_wrapper");
+      lower_row.appendChild(description_wrapper);
+
+      const type_display = document.createElement("input");
+      type_display.classList.add("type_display");
+      //if (upper_row.children[0].value == 1) type_display.value = "1:";
+      //else type_display.value = "1-" + upper_row.children[0].value + ":";
+      description_wrapper.appendChild(type_display);
+
+      const temp = document.createElement("input");
+      temp.classList.add("multi-description");
+      temp.type = "text";
+      description_wrapper.appendChild(temp);
+
+      const sendoff_wrapper = document.createElement("div");
+      sendoff_wrapper.classList.add("sendoff_wrapper");
+      lower_row.appendChild(sendoff_wrapper);
+
+      const sendoff_letter = document.createElement("div");
+      sendoff_letter.classList.add("sendoff_letter");
+
+      sendoff_letter.innerText = "A:";
+      sendoff_wrapper.appendChild(sendoff_letter);
+
+      const first_sendoff = document.createElement("input");
+      first_sendoff.classList.add("sendoff");
+      first_sendoff.placeholder = "time";
+      first_sendoff.type = "text";
+      first_sendoff.addEventListener("input", sendoffValueChanged);
+      sendoff_wrapper.appendChild(first_sendoff);
+
+      const add_sendoff_button = document.createElement("button");
+      add_sendoff_button.type = "button";
+      add_sendoff_button.classList.add("btn");
+      add_sendoff_button.classList.add("btn-success");
+      add_sendoff_button.classList.add("extreme_bold");
+      add_sendoff_button.innerText = "+";
+      add_sendoff_button.addEventListener("click", addDescriptionSendoff);
+      lower_row.appendChild(add_sendoff_button);
+
+      const delete_sendoff_button = document.createElement("button");
+      delete_sendoff_button.type = "button";
+      delete_sendoff_button.classList.add("btn");
+      delete_sendoff_button.classList.add("btn-danger");
+      delete_sendoff_button.classList.add("extreme_bold");
+      delete_sendoff_button.classList.add("middle_button");
+      delete_sendoff_button.innerText = "-";
+      delete_sendoff_button.addEventListener("click", removeDescriptionSendoff);
+      delete_sendoff_button.style.visibility = "hidden";
+      lower_row.appendChild(delete_sendoff_button);
+
+      const delete_element_button = document.createElement("button");
+      delete_element_button.type = "button";
+      delete_element_button.classList.add("btn");
+      delete_element_button.classList.add("btn-danger");
+      delete_element_button.classList.add("extreme_bold");
+      delete_element_button.innerText = "x";
+      delete_element_button.addEventListener("click", deleteDescription);
+      lower_row.appendChild(delete_element_button);
+
+      redoDescriptionSpread(element_row);
+
+      const last_row_before_this =
+        element_row.children[element_row.children.length - 2];
+      let number_of_clicks = last_row_before_this.children.length - 5;
+      for (let i = 0; i < number_of_clicks; i++) {
+        add_sendoff_button.click();
+      }
+    }
+
+    function addDescriptionSendoff(e) {
+      let element_row = e.target.parentElement;
+
+      let letter = String.fromCharCode(
+        element_row.children.length - 4 + 64 + 1
+      ).toUpperCase();
+
+      const sendoff_wrapper = document.createElement("div");
+      sendoff_wrapper.classList.add("sendoff_wrapper");
+      element_row.insertBefore(
+        sendoff_wrapper,
+        element_row.children[element_row.children.length - 3]
+      );
+
+      const sendoff_letter = document.createElement("div");
+      sendoff_letter.classList.add("sendoff_letter");
+      sendoff_letter.innerText = letter + ":";
+      sendoff_wrapper.appendChild(sendoff_letter);
+
+      const sendoff_number_wrapper = document.createElement("div");
+      sendoff_number_wrapper.classList.add("inner_sendoff_number");
+      sendoff_number_wrapper.addEventListener("mousemove", displayCustomUpDown);
+      sendoff_number_wrapper.addEventListener(
+        "mouseenter",
+        displayCustomUpDown
+      );
+      sendoff_wrapper.appendChild(sendoff_number_wrapper);
+
+      const custom_description_numbers = document.createElement("input");
+      custom_description_numbers.type = "type";
+      custom_description_numbers.classList.add("custom_description_numbers");
+      custom_description_numbers.addEventListener(
+        "input",
+        recolorOnInvalidInput
+      );
+      custom_description_numbers.value =
+        element_row.children[0].children[0].value;
+      if (custom_description_numbers.value.includes("?"))
+        custom_description_numbers.style.backgroundColor =
+          ERROR_BACKGROUND_COLOR;
+      custom_description_numbers.addEventListener("change", addColon);
+      sendoff_number_wrapper.appendChild(custom_description_numbers);
+
+      const first_sendoff = document.createElement("input");
+      first_sendoff.classList.add("sendoff");
+      first_sendoff.placeholder = "time";
+      first_sendoff.type = "text";
+      first_sendoff.addEventListener("input", sendoffValueChanged);
+      sendoff_wrapper.appendChild(first_sendoff);
+
+      element_row.children[element_row.children.length - 2].style.visibility =
+        "";
+    }
+
+    function removeDescriptionSendoff(e) {
+      this.parentElement.children[
+        this.parentElement.children.length - 4
+      ].remove();
+      if (this.parentElement.children.length == 5)
+        this.style.visibility = "hidden";
+    }
+
+    function deleteDescription(e) {
+      const element_row = this.parentElement.parentElement;
+      this.parentElement.remove();
+      if (element_row.children.length == 1) {
+        const upper_row = element_row.children[0];
+        upper_row.children[3].remove();
+        upper_row.children[0].removeEventListener(
+          "change",
+          elementRepeatChanged
+        );
+        upper_row.children[0].addEventListener(
+          "change",
+          changeAllSendoffsToMainCount
+        );
+        upper_row.children[3].style.display = "";
+
+        for (let i = 4; i < upper_row.children.length; i++) {
+          upper_row.children[i].style.visibility = "";
+          upper_row.children[i].style.display = "";
+        }
+
+        upper_row.children[upper_row.children.length - 2].innerText = "✱";
+        upper_row.children[upper_row.children.length - 2].addEventListener(
+          "click",
+          addSendOff
+        );
+        upper_row.children[upper_row.children.length - 2].removeEventListener(
+          "click",
+          addDescriptionSendoff
+        );
+        upper_row.children[upper_row.children.length - 1].innerText = "x";
+        upper_row.children[upper_row.children.length - 1].classList.add(
+          "btn-danger"
+        );
+        upper_row.children[upper_row.children.length - 1].classList.add(
+          "extreme_bold"
+        );
+        upper_row.children[upper_row.children.length - 1].classList.remove(
+          "btn-success"
+        );
+        upper_row.children[upper_row.children.length - 1].addEventListener(
+          "click",
+          deleteElement
+        );
+        upper_row.children[upper_row.children.length - 1].removeEventListener(
+          "click",
+          addDescriptionClicked
+        );
+
+        const element_bottom_part = document.createElement("div");
+        element_bottom_part.classList.add("element_bottom_part");
+        element_row.appendChild(element_bottom_part);
+      } else redoDescriptionSpread(element_row);
+    }
+
+    function changeAllSendoffsToMainCount(e) {
+      let reps = this.value;
+      for (let i = this.parentElement.children.length - 5; i > 4; i--) {
+        let sendoff_wrapper = this.parentElement.children[i];
+        sendoff_wrapper.children[1].children[0].innerText = reps + " x";
+      }
+    }
+
+    function changeTypeClicked(e) {
+      const element_row = this.parentElement.parentElement;
+
+      element_row.multi_description_type++;
+      if (
+        element_row.multi_description_type >
+        Object.keys(MULTI_DESCRIPTION_TYPE).length
+      )
+        element_row.multi_description_type = 1;
+
+      let element_type_display = element_row.children[0].children[3];
+      switch (element_row.multi_description_type) {
+        case MULTI_DESCRIPTION_TYPE.BY_ROUND:
+          element_type_display.innerText = "Do each line once BY ROUND";
+          break;
+        case MULTI_DESCRIPTION_TYPE.REPEAT_ONE_AT_A_TIME:
+          element_type_display.innerText =
+            "Repeat below one time each line until finished";
+          break;
+        case MULTI_DESCRIPTION_TYPE.SPLIT_EVENLY:
+          element_type_display.innerText = "Do below one time through";
+          break;
+      }
+
+      redoDescriptionSpread(element_row);
+    }
+
+    function setRepeatChanged(e) {
+      let element_row =
+        this.parentElement.parentElement.parentElement.children[1].children[1]
+          .children[1];
+      if (element_row)
+        if (
+          element_row.multi_description_type == MULTI_DESCRIPTION_TYPE.BY_ROUND
+        )
+          redoDescriptionSpread(element_row);
+    }
+
+    function containsOnlyNumbers(str) {
+      if (str == "") return true;
+      return /^\d+$/.test(str);
+    }
+
+    function sendoffValueChanged(e) {
+      let valid = true;
+      let value = this.value.trim();
+      let colon_added = false;
+
+      if (value != "") {
+        if (value.length > 2 && !value.includes(":")) {
+          value =
+            value.substring(0, value.length - 2) +
+            ":" +
+            value.substring(value.length - 2, value.length);
+          colon_added = true;
+        } else if (value.length > 2 && value.includes(":")) {
+          let split_string = value.split(":");
+          if (split_string.length > 2) valid = false;
+          else {
+            if (split_string[1].length < 2) valid = false;
+            else if (split_string[1].length > 2) {
+              split_string[0] =
+                split_string[0] +
+                split_string[1].substring(0, split_string[1].length - 2);
+              split_string[1] = split_string[1].substring(
+                split_string[1].length - 2,
+                split_string[1].length
+              );
+              value = split_string[0] + ":" + split_string[1];
+              colon_added = true;
+            }
+          }
+        }
+        let split_string = value.split(":");
+        let before_colon = 0;
+        let after_colon = "";
+
+        if (split_string.length > 2) valid = false;
+        else {
+          if (split_string.length == 2) {
+            before_colon = split_string[0];
+            after_colon = split_string[1];
+            if (
+              !containsOnlyNumbers(before_colon) ||
+              !containsOnlyNumbers(after_colon)
+            )
+              valid = false;
+            else {
+              before_colon = parseInt(before_colon);
+              after_colon = parseInt(after_colon);
+            }
+          } else after_colon = parseInt(split_string[0]);
+          if (
+            !typeof before_colon == "number" ||
+            !!typeof after_colon == "number"
+          )
+            valid = false;
+          else {
+            if (
+              before_colon < 0 ||
+              before_colon > 99 ||
+              after_colon < 0 ||
+              after_colon > 59
+            )
+              valid = false;
+          }
+        }
+
+        if (value == "") valid = true;
+        if (value == ":") valid = false;
+        if (value.startsWith(":"))
+          if (after_colon < 10 && split_string[1].length != 2) valid = false;
+        if (valid && containsOnlyNumbers(value)) {
+          value = ":" + value;
+          colon_added = true;
+        }
+      }
+
+      if (!valid) {
+        this.style.backgroundColor = ERROR_BACKGROUND_COLOR;
+      } else {
+        this.style.backgroundColor = "";
+        if (colon_added) this.value = value;
+      }
+    }
+
+    function addColon(e) {
+      if (!this.value.includes(":")) this.value = this.value + ":";
+    }
+
+    function recolorOnInvalidInput(e) {
+      this.value = this.value.toUpperCase();
+      if (checkforValidDescriptionNumbers(this))
+        this.style.backgroundColor = "";
+      else this.style.backgroundColor = ERROR_BACKGROUND_COLOR;
+    }
+
+    function checkforValidDescriptionNumbers(element) {
+      let element_row;
+      if (element.classList[0] == "type_display")
+        element_row = element.parentElement.parentElement.parentElement;
+      else {
+        element_row =
+          element.parentElement.parentElement.parentElement.parentElement;
+      }
+
+      let type = element_row.multi_description_type;
+
+      if (type == MULTI_DESCRIPTION_TYPE.SPLIT_EVENLY) {
+        let temp = element.value;
+        if (temp.endsWith(":")) temp = temp.replace(":", "");
+        if (temp.includes("-")) {
+          let split = temp.split("-");
+          if (split.length != 2) return false;
+          if (
+            split[0].trim() == "" ||
+            split[1].trim() == "" ||
+            split[0].trim() == "0" ||
+            split[1].trim() == "0"
+          )
+            return false;
+          return (
+            containsOnlyNumbers(split[0].trim()) &&
+            containsOnlyNumbers(split[1].trim())
+          );
+        } else {
+          return containsOnlyNumbers(temp.trim());
+        }
+      } else if (type == MULTI_DESCRIPTION_TYPE.REPEAT_ONE_AT_A_TIME) {
+        let temp = element.value;
+        if (temp.endsWith(":")) temp = temp.replace(":", "");
+        return containsOnlyNumbers(temp);
+      } else if (type == MULTI_DESCRIPTION_TYPE.BY_ROUND) {
+        if (!element.value.startsWith("RD") && !element.value.startsWith("RD "))
+          return false;
+        else {
+          let temp = element.value;
+          temp.startsWith("RD ")
+            ? (temp = temp.replace("RD ", ""))
+            : (temp = temp.replace("RD", ""));
+          if (temp.endsWith(":")) temp = temp.replace(":", "");
+          temp = temp.trim();
+          if (temp == "") return false;
+          return containsOnlyNumbers(temp);
+        }
+      }
+    }
+  </script>
+</html>
