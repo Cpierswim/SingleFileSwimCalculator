@@ -1758,13 +1758,9 @@
         description_container.appendChild(set_description_label);
 
         const set_description_input = document.createElement("textarea");
-        //set_description_input.type = "text";
         set_description_input.addEventListener("keyup", textAreaAdjust);
         set_description_input.classList.add("set_description_input");
         description_container.appendChild(set_description_input);
-        //set_description_input.value = " ";
-        //set_description_input.style.height = "1px";
-        //set_description_input.style.height = 14 + this.scrollHeight + "px";
         textAreaAdjust({ target: set_description_input });
         this.classList.remove("btn-primary");
         this.classList.add("btn-danger");
