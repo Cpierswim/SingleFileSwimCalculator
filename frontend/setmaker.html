@@ -316,6 +316,13 @@
         align-content: center;
         justify-content: center;
       }
+      .custom_description_numbers {
+        height: 100%;
+        background-color: lightblue;
+        border-width: 0px;
+        width: 5.5vw;
+        text-align: right;
+      }
     </style>
     <link rel="icon" href="../temp/stopwatch.svg" />
   </head>
@@ -353,6 +360,8 @@
       SPLIT_EVENLY: 2,
       REPEAT_ONE_AT_A_TIME: 3,
     });
+
+    const ERROR_BACKGROUND_COLOR = "palevioletred";
     let mouse = false;
     document
       .getElementById("full_screen")
@@ -799,7 +808,7 @@
 
       const element_type_display = document.createElement("div");
       element_type_display.classList.add("element_type_display");
-      element_type_display.innerText = "Do below descriptions once through";
+      element_type_display.innerText = "Do below only once through";
       upper_row.insertBefore(element_type_display, upper_row.children[3]);
 
       const description_wrapper = document.createElement("div");
@@ -809,8 +818,11 @@
       const type_display = document.createElement("input");
       type_display.type = "text";
       type_display.classList.add("type_display");
+      type_display.addEventListener("input", recolorOnInvalidInput);
       if (upper_row.children[0].value == 1) type_display.value = "1:";
       else type_display.value = "1-" + upper_row.children[0].value + ":";
+      type_display.addEventListener("change", addColon);
+      type_display.addEventListener("input", recolorOnInvalidInput);
       description_wrapper.appendChild(type_display);
 
       const temp = document.createElement("input");
@@ -943,6 +955,36 @@
           number_working_on++;
         }
       }
+
+      //first row set, now copy to additonal sendoffs
+      for (let i = 1; i < number_of_descriptions + 1; i++) {
+        let value = element_row.children[i].children[0].children[0].value;
+        let description_row = element_row.children[i];
+        for (let j = description_row.children.length - 4; j > 1; j--) {
+          description_row.children[j].children[1].children[0].value = value;
+        }
+      }
+
+      //check for ? entries
+      for (let i = 1; i < number_of_descriptions + 1; i++) {
+        if (element_row.children[i].children[0].children[0].value.includes("?"))
+          element_row.children[
+            i
+          ].children[0].children[0].style.backgroundColor =
+            ERROR_BACKGROUND_COLOR;
+        let description_row = element_row.children[i];
+        for (let j = description_row.children.length - 4; j > 1; j--) {
+          if (
+            description_row.children[j].children[1].children[0].value.includes(
+              "?"
+            )
+          )
+            description_row.children[
+              j
+            ].children[1].children[0].style.backgroundColor =
+              ERROR_BACKGROUND_COLOR;
+        }
+      }
     }
 
     function addDescriptionClicked(e) {
@@ -1044,7 +1086,7 @@
       sendoff_letter.innerText = letter + ":";
       sendoff_wrapper.appendChild(sendoff_letter);
 
-      /*const sendoff_number_wrapper = document.createElement("div");
+      const sendoff_number_wrapper = document.createElement("div");
       sendoff_number_wrapper.classList.add("inner_sendoff_number");
       sendoff_number_wrapper.addEventListener("mousemove", displayCustomUpDown);
       sendoff_number_wrapper.addEventListener(
@@ -1053,33 +1095,20 @@
       );
       sendoff_wrapper.appendChild(sendoff_number_wrapper);
 
-      const sendoff_custom_number = document.createElement("div");
-      sendoff_custom_number.classList.add("sendoff_custom_number");
-      if (element_row.children.length == 10)
-        sendoff_custom_number.innerText = element_row.children[0].value + " x";
-      else
-        sendoff_custom_number.innerText =
-          element_row.children[
-            element_row.children.length - 6
-          ].children[1].children[0].innerText.split(" ")[0] + " x";
-      sendoff_number_wrapper.appendChild(sendoff_custom_number);
-
-      const custom_arrow_wrapper = document.createElement("div");
-      custom_arrow_wrapper.classList.add("custom_arrow_wrapper");
-      if (mouseExists) custom_arrow_wrapper.style.display = "none";
-      sendoff_number_wrapper.appendChild(custom_arrow_wrapper);
-
-      const custom_up = document.createElement("div");
-      custom_up.classList.add("custom_up_down");
-      custom_up.innerText = "▲";
-      custom_up.addEventListener("click", customUpClicked);
-      custom_arrow_wrapper.appendChild(custom_up);
-
-      const custom_down = document.createElement("div");
-      custom_down.classList.add("custom_up_down");
-      custom_down.innerText = "▼";
-      custom_down.addEventListener("click", customDownClicked);
-      custom_arrow_wrapper.appendChild(custom_down);*/
+      const custom_description_numbers = document.createElement("input");
+      custom_description_numbers.type = "type";
+      custom_description_numbers.classList.add("custom_description_numbers");
+      custom_description_numbers.addEventListener(
+        "input",
+        recolorOnInvalidInput
+      );
+      custom_description_numbers.value =
+        element_row.children[0].children[0].value;
+      if (custom_description_numbers.value.includes("?"))
+        custom_description_numbers.style.backgroundColor =
+          ERROR_BACKGROUND_COLOR;
+      custom_description_numbers.addEventListener("change", addColon);
+      sendoff_number_wrapper.appendChild(custom_description_numbers);
 
       const first_sendoff = document.createElement("input");
       first_sendoff.classList.add("sendoff");
@@ -1176,14 +1205,14 @@
       let element_type_display = element_row.children[0].children[3];
       switch (element_row.multi_description_type) {
         case MULTI_DESCRIPTION_TYPE.BY_ROUND:
-          element_type_display.innerText = "Do below by round";
+          element_type_display.innerText = "Do each line once BY ROUND";
           break;
         case MULTI_DESCRIPTION_TYPE.REPEAT_ONE_AT_A_TIME:
           element_type_display.innerText =
-            "Repeat below descriptions until exhausted";
+            "Repeat below one time each line until finished";
           break;
         case MULTI_DESCRIPTION_TYPE.SPLIT_EVENLY:
-          element_type_display.innerText = "Do below descriptions once through";
+          element_type_display.innerText = "Do below one time through";
           break;
       }
 
@@ -1201,14 +1230,15 @@
           redoDescriptionSpread(element_row);
     }
 
+    function containsOnlyNumbers(str) {
+      if (str == "") return true;
+      return /^\d+$/.test(str);
+    }
+
     function sendoffValueChanged(e) {
       let valid = true;
       let value = this.value.trim();
       let colon_added = false;
-      const containsOnlyNumbers = (str) => {
-        if (str == "") return true;
-        return /^\d+$/.test(str);
-      };
 
       if (value != "") {
         if (value.length > 2 && !value.includes(":")) {
@@ -1281,24 +1311,73 @@
       }
 
       if (!valid) {
-        this.style.backgroundColor = "palevioletred";
+        this.style.backgroundColor = ERROR_BACKGROUND_COLOR;
       } else {
         this.style.backgroundColor = "";
         if (colon_added) this.value = value;
       }
     }
 
-    function newSendoffValueChanged(e) {
-      let valid = false;
+    function addColon(e) {
+      if (!this.value.includes(":")) this.value = this.value + ":";
+    }
 
-      let regex = new RegExp(/[0-9]:[0-5][0-9]|[0-9][0-9]:[0-5][0-9]/gi);
-      let simple_regex = new RegExp(/[0-5]?[0-9]/gi);
+    function recolorOnInvalidInput(e) {
+      this.value = this.value.toUpperCase();
+      if (checkforValidDescriptionNumbers(this))
+        this.style.backgroundColor = "";
+      else this.style.backgroundColor = ERROR_BACKGROUND_COLOR;
+    }
 
-      if (regex.test(this.value)) valid = true;
-      if (this.value.length <= 2)
-        if (simple_regex.test(this.value)) valid = true;
+    function checkforValidDescriptionNumbers(element) {
+      let element_row;
+      if (element.classList[0] == "type_display")
+        element_row = element.parentElement.parentElement.parentElement;
+      else {
+        element_row =
+          element.parentElement.parentElement.parentElement.parentElement;
+      }
 
-      if (!valid) debugger;
+      let type = element_row.multi_description_type;
+
+      if (type == MULTI_DESCRIPTION_TYPE.SPLIT_EVENLY) {
+        let temp = element.value;
+        if (temp.endsWith(":")) temp = temp.replace(":", "");
+        if (temp.includes("-")) {
+          let split = temp.split("-");
+          if (split.length != 2) return false;
+          if (
+            split[0].trim() == "" ||
+            split[1].trim() == "" ||
+            split[0].trim() == "0" ||
+            split[1].trim() == "0"
+          )
+            return false;
+          return (
+            containsOnlyNumbers(split[0].trim()) &&
+            containsOnlyNumbers(split[1].trim())
+          );
+        } else {
+          return containsOnlyNumbers(temp.trim());
+        }
+      } else if (type == MULTI_DESCRIPTION_TYPE.REPEAT_ONE_AT_A_TIME) {
+        let temp = element.value;
+        if (temp.endsWith(":")) temp = temp.replace(":", "");
+        return containsOnlyNumbers(temp);
+      } else if (type == MULTI_DESCRIPTION_TYPE.BY_ROUND) {
+        if (!element.value.startsWith("RD") && !element.value.startsWith("RD "))
+          return false;
+        else {
+          let temp = element.value;
+          temp.startsWith("RD ")
+            ? (temp = temp.replace("RD ", ""))
+            : (temp = temp.replace("RD", ""));
+          if (temp.endsWith(":")) temp = temp.replace(":", "");
+          temp = temp.trim();
+          if (temp == "") return false;
+          return containsOnlyNumbers(temp);
+        }
+      }
     }
   </script>
 </html>
