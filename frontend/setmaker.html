@@ -449,8 +449,9 @@
         display: table-cell;
         text-align: right;
         padding-right: 8px;
+        align-content: center;
       }
-      input.paperlike_text_input {
+      .paperlike_text_input {
         border: none;
         border-bottom: solid;
         margin-bottom: 8px;
@@ -458,6 +459,9 @@
         width: 100%;
         padding: 3px;
         padding-top: 0px;
+      }
+      textarea.paperlike_text_input {
+        min-height: 4ch;
       }
       .description_container {
         margin-left: max(12px, 2vw);
@@ -488,6 +492,11 @@
         padding-left: 4px;
         height: 1px;
       }
+      .save_button_row {
+        display: flex;
+        margin-top: 20px;
+        justify-content: space-evenly;
+      }
     </style>
     <link rel="icon" href="../temp/stopwatch.svg" />
   </head>
@@ -517,7 +526,7 @@
           id="save_set_button"
           type="button"
           class="btn btn-primary main_button"
-          onclick="saveIndividualSet(this)"
+          onclick="saveIndividualSetClicked(this)"
           style="visibility: hidden"
           disabled
         >
@@ -526,7 +535,7 @@
         <button
           id="save_to_practice_button"
           class="btn btn-primary main_button"
-          onclick="saveSet(this)"
+          onclick="saveAsPractice(this)"
           style="visibility: hidden"
           disabled
         >
@@ -589,13 +598,24 @@
                 <label for="set_short_description">Description:</label>
               </div>
               <div class="table_cell_input">
-                <input
+                <textarea
                   id="set_short_description"
                   name="set_short_description"
                   type="text"
                   class="paperlike_text_input"
-                />
+                ></textarea>
               </div>
+            </div>
+            <div class="save_button_row">
+              <button class="btn btn-primary" onclick="saveIndivdualSet()">
+                Save
+              </button>
+              <button
+                class="btn btn-danger"
+                onclick="closeModal(this.parentElement)"
+              >
+                Cancel
+              </button>
             </div>
           </div>
           <input id="set_id" type="hidden" />
@@ -652,6 +672,14 @@
       .addEventListener("click", switchToSetMaker);
 
     document.getElementById("set_date").valueAsDate = new Date();
+
+    const dateInputs = document.getElementsByTagName("input");
+    for (let i = 0; i < dateInputs.length; i++) {
+      if ((dateInputs.type = "date")) {
+        dateInputs[i].min = "2020-01-01";
+        dateInputs[i].max = new Date().getFullYear() + 10 + "-12-31";
+      }
+    }
 
     function mouseExists(e) {
       mouse = true;
@@ -910,6 +938,7 @@
       first_sendoff.type = "text";
       first_sendoff.addEventListener("input", sendoffValueChanged);
       sendoff_wrapper.appendChild(first_sendoff);
+      element_row.sendoffs_list = [first_sendoff];
 
       const add_sendoff_button = document.createElement("button");
       add_sendoff_button.type = "button";
@@ -955,6 +984,7 @@
 
     function addSendOff(e) {
       let element_row = e.target.parentElement;
+      let actual_element_row = element_row.parentElement;
 
       let letter = String.fromCharCode(
         element_row.children.length - 8 + 64 + 1
@@ -1015,6 +1045,7 @@
       first_sendoff.type = "text";
       first_sendoff.addEventListener("input", sendoffValueChanged);
       sendoff_wrapper.appendChild(first_sendoff);
+      actual_element_row.sendoffs_list.push(first_sendoff);
 
       element_row.children[element_row.children.length - 3].style.visibility =
         "";
@@ -1064,10 +1095,21 @@
     }
 
     function deleteElement(e) {
+      for (let i = this.parentElement.children.length - 5; i > 4; i--)
+        this.parentElement.parentElement.sendoffs_list = removeFromList(
+          this.parentElement.parentElement.sendoffs_list,
+          this.parentElement.children[i].children[2]
+        );
+
+      this.parentElement.parentElement.sendoffs_list = removeFromList(
+        this.parentElement.parentElement.sendoffs_list,
+        this.parentElement.children[4].children[1]
+      );
       this.parentElement.parentElement.remove();
     }
 
     function changeToMultiType(e) {
+      let element_row = this.parentElement.parentElement;
       if (this.innerText != "✱") return "";
       const upper_row = this.parentElement;
       upper_row.parentElement.multi_description_type =
@@ -1139,6 +1181,7 @@
       type_display.addEventListener("change", addColon);
       type_display.addEventListener("input", recolorOnInvalidInput);
       description_wrapper.appendChild(type_display);
+      element_row.type_display_list = [type_display];
 
       const temp = document.createElement("input");
       temp.classList.add("multi-description");
@@ -1161,6 +1204,7 @@
       first_sendoff.type = "text";
       first_sendoff.addEventListener("input", sendoffValueChanged);
       sendoff_wrapper.appendChild(first_sendoff);
+      element_row.sendoffs_list.push(first_sendoff);
 
       const add_sendoff_button = document.createElement("button");
       add_sendoff_button.type = "button";
@@ -1203,6 +1247,7 @@
     }
 
     function redoDescriptionSpread(element_row) {
+      element_row.descriptions_valid = true;
       const number_of_descriptions = element_row.children.length - 1;
       const repeats = parseInt(element_row.children[0].children[0].value);
       if (
@@ -1282,12 +1327,15 @@
 
       //check for ? entries
       for (let i = 1; i < number_of_descriptions + 1; i++) {
-        if (element_row.children[i].children[0].children[0].value.includes("?"))
+        if (
+          element_row.children[i].children[0].children[0].value.includes("?")
+        ) {
           element_row.children[
             i
           ].children[0].children[0].style.backgroundColor =
             ERROR_BACKGROUND_COLOR;
-        else
+          element_row.descriptions_valid = false;
+        } else
           element_row.children[
             i
           ].children[0].children[0].style.backgroundColor = "";
@@ -1297,12 +1345,13 @@
             description_row.children[j].children[1].children[0].value.includes(
               "?"
             )
-          )
+          ) {
             description_row.children[
               j
             ].children[1].children[0].style.backgroundColor =
               ERROR_BACKGROUND_COLOR;
-          else
+            element_row.descriptions_valid = false;
+          } else
             description_row.children[
               j
             ].children[1].children[0].style.backgroundColor = "";
@@ -1328,6 +1377,7 @@
       //if (upper_row.children[0].value == 1) type_display.value = "1:";
       //else type_display.value = "1-" + upper_row.children[0].value + ":";
       description_wrapper.appendChild(type_display);
+      element_row.type_display_list.push(type_display);
 
       const temp = document.createElement("input");
       temp.classList.add("multi-description");
@@ -1350,6 +1400,7 @@
       first_sendoff.type = "text";
       first_sendoff.addEventListener("input", sendoffValueChanged);
       sendoff_wrapper.appendChild(first_sendoff);
+      element_row.sendoffs_list.push(first_sendoff);
 
       const add_sendoff_button = document.createElement("button");
       add_sendoff_button.type = "button";
@@ -1392,6 +1443,8 @@
 
     function addDescriptionSendoff(e) {
       let element_row = e.target.parentElement;
+      let actual_sendoff_row = element_row.parentElement;
+      element_row.sendoffs_valid = true;
 
       let letter = String.fromCharCode(
         element_row.children.length - 4 + 64 + 1
@@ -1419,7 +1472,7 @@
       sendoff_wrapper.appendChild(sendoff_number_wrapper);
 
       const custom_description_numbers = document.createElement("input");
-      custom_description_numbers.type = "type";
+      custom_description_numbers.type = "text";
       custom_description_numbers.classList.add("custom_description_numbers");
       custom_description_numbers.addEventListener(
         "input",
@@ -1427,11 +1480,14 @@
       );
       custom_description_numbers.value =
         element_row.children[0].children[0].value;
-      if (custom_description_numbers.value.includes("?"))
+      if (custom_description_numbers.value.includes("?")) {
         custom_description_numbers.style.backgroundColor =
           ERROR_BACKGROUND_COLOR;
+        element_row.sendoffs_valid = false;
+      }
       custom_description_numbers.addEventListener("change", addColon);
       sendoff_number_wrapper.appendChild(custom_description_numbers);
+      actual_sendoff_row.type_display_list.push(custom_description_numbers);
 
       const first_sendoff = document.createElement("input");
       first_sendoff.classList.add("sendoff");
@@ -1439,12 +1495,25 @@
       first_sendoff.type = "text";
       first_sendoff.addEventListener("input", sendoffValueChanged);
       sendoff_wrapper.appendChild(first_sendoff);
+      actual_sendoff_row.sendoffs_list.push(first_sendoff);
 
       element_row.children[element_row.children.length - 2].style.visibility =
         "";
     }
 
     function removeDescriptionSendoff(e) {
+      this.parentElement.parentElement.sendoffs_list = removeFromList(
+        this.parentElement.parentElement.sendoffs_list,
+        this.parentElement.children[this.parentElement.children.length - 4]
+          .children[2]
+      );
+
+      this.parentElement.parentElement.type_display_list = removeFromList(
+        this.parentElement.parentElement.type_display_list,
+        this.parentElement.children[this.parentElement.children.length - 4]
+          .children[1].children[0]
+      );
+
       this.parentElement.children[
         this.parentElement.children.length - 4
       ].remove();
@@ -1454,6 +1523,26 @@
 
     function deleteDescription(e) {
       const element_row = this.parentElement.parentElement;
+      //delete all sendoffs from list
+      for (let i = this.parentElement.children.length - 4; i > 1; i--) {
+        element_row.sendoffs_list = removeFromList(
+          element_row.sendoffs_list,
+          this.parentElement.children[i].children[2]
+        );
+        element_row.type_display_list = removeFromList(
+          element_row.type_display_list,
+          this.parentElement.children[i].children[1].children[0]
+        );
+      }
+      element_row.sendoffs_list = removeFromList(
+        element_row.sendoffs_list,
+        this.parentElement.children[1].children[2]
+      );
+      element_row.type_display_list = removeFromList(
+        element_row.type_display_list,
+        this.parentElement.children[0].children[0]
+      );
+
       this.parentElement.remove();
       if (element_row.children.length == 1) {
         const upper_row = element_row.children[0];
@@ -1562,6 +1651,7 @@
       let valid = true;
       let value = this.value.trim();
       let colon_added = false;
+      let element_row = this.parentElement.parentElement.parentElement;
 
       if (value != "") {
         if (value.length > 2 && !value.includes(":")) {
@@ -1623,6 +1713,7 @@
           }
         }
 
+        if (isNaN(before_colon) || isNaN(after_colon)) valid = false;
         if (value == "") valid = true;
         if (value == ":") valid = false;
         if (value.startsWith(":"))
@@ -1635,8 +1726,10 @@
 
       if (!valid) {
         this.style.backgroundColor = ERROR_BACKGROUND_COLOR;
+        this.valid_sendoff = false;
       } else {
         this.style.backgroundColor = "";
+        this.valid_sendoff = true;
         if (colon_added) this.value = value;
       }
     }
@@ -1646,10 +1739,16 @@
     }
 
     function recolorOnInvalidInput(e) {
+      let element_row = this.parentElement.parentElement.parentElement;
+      debugger;
       this.value = this.value.toUpperCase();
-      if (checkforValidDescriptionNumbers(this))
+      if (checkforValidDescriptionNumbers(this)) {
         this.style.backgroundColor = "";
-      else this.style.backgroundColor = ERROR_BACKGROUND_COLOR;
+        this.description_valid = true;
+      } else {
+        this.style.backgroundColor = ERROR_BACKGROUND_COLOR;
+        this.description_valid = false;
+      }
     }
 
     function checkforValidDescriptionNumbers(element) {
@@ -1727,7 +1826,13 @@
       document.getElementById("save_to_practice_button").style.display = "none";
     }
 
-    function saveIndividualSet(e) {
+    function saveIndividualSetClicked(e) {
+      const set_short_description = document.getElementById(
+        "set_short_description"
+      );
+      set_short_description.value = " ";
+      textAreaAdjust({ target: set_short_description });
+      set_short_description.addEventListener("input", textAreaAdjust);
       document.getElementById("save_set_modal").style.display = "";
     }
 
@@ -1776,6 +1881,300 @@
     function textAreaAdjust(e) {
       e.target.style.height = "1px";
       e.target.style.height = 14 + e.target.scrollHeight + "px";
+    }
+
+    function removeFromList(list, item_to_remove) {
+      let new_array = [];
+      for (let i = 0; i < list.length; i++) {
+        if (list[i] != item_to_remove) {
+          new_array.push(list[i]);
+        }
+      }
+
+      return new_array;
+    }
+
+    function saveIndivdualSet() {
+      document.getElementById("save_set_modal").remove(); //TODO: get rid of this when finished
+      let set_display = document.getElementById("set_display");
+      let set_repeats = parseInt(
+        set_display.children[0].children[0].children[1].children[0].value
+      );
+      let main_set = set_display.children[0].children[1].children[1].children;
+
+      let set = { repeats: set_repeats };
+
+      let elements = 0;
+      let valid = _isSetValid(main_set);
+
+      if (valid) {
+        for (let i = 1; i < main_set.length; i++) {
+          if (
+            main_set[i].classList[0] == "element_row" &&
+            main_set[i].children[1].children.length == 0
+          ) {
+            let element = { type: "standard" };
+
+            element.reps = main_set[1].children[0].children[0].value;
+            element.distance = main_set[1].children[0].children[2].value;
+            element.description = main_set[1].children[0].children[3].value;
+            element.sendoffs = {};
+            element.sendoffs.A =
+              main_set[1].children[0].children[4].children[1].value;
+            for (
+              let j = 5;
+              j < main_set[1].children[0].children.length - 4;
+              j++
+            ) {
+              let letter = main_set[1].children[0].children[
+                j
+              ].children[0].innerText.replace(":", "");
+              let value = main_set[1].children[0].children[j].children[2].value;
+              element.sendoffs[letter] = value;
+            }
+            set[elements] = element;
+            elements++;
+          } else if (
+            main_set[i].classList[0] == "element_row" &&
+            main_set[i].children[1].children.length != 0
+          ) {
+            let top_part = main_set[i].children[0];
+            let description_row = main_set[i].children[1];
+            let element = { type: "multi-part" };
+            element.multi_description_type = main_set[i].multi_description_type;
+            element.distance = top_part.children[2].value;
+            element.sendoffs = {};
+            let description_number = 0;
+            for (let k = 1; k < main_set[i].children.length; k++) {
+              let description = main_set[i].children[k];
+
+              let letter = "A";
+              let rep = description.children[0].children[0].value;
+              let value = description.children[1].children[1].value.replace(
+                ":",
+                ""
+              );
+              let description_text = description.children[0].children[1].value;
+              if (element.sendoffs.A == undefined) element.sendoffs.A = [];
+              let description_object = {};
+              description_object.rep = rep;
+              description_object.description = description_text;
+              description_object.value = value;
+              element.sendoffs.A.push(description_object);
+              for (let j = 2; j < description.children.length - 3; j++) {
+                let letter = description.children[
+                  j
+                ].children[0].innerText.replace(":", "");
+                let rep = description.children[
+                  j
+                ].children[1].children[0].value.replace(":", "");
+                let value = description.children[j].children[2].value;
+                let description_text =
+                  description.children[0].children[1].value;
+
+                if (element.sendoffs[letter] == undefined)
+                  element.sendoffs[letter] = [];
+                let description_object = {};
+                description_object.rep = rep;
+                description_object.description = description_text;
+                description_object.value = value;
+                element.sendoffs[letter].push(description_object);
+              }
+
+              description_number++;
+            }
+
+            debugger;
+            set[elements] = element;
+          }
+        }
+      }
+
+      debugger;
+    }
+
+    function _isSetValid(set) {
+      for (let i = 0; i < set.length; i++) {
+        if (
+          set[i].classList[0] == "element_row" &&
+          set[i].children[1].children.length == 0
+        ) {
+          let element_row = set[i];
+          for (let j = 0; j < element_row.sendoffs_list.length; j++) {
+            if (element_row.sendoffs_list[j].valid_sendoff != undefined) {
+              if (!element_row.sendoffs_list[j]) {
+                debugger;
+                return false;
+              }
+            } else {
+              debugger;
+              return false;
+            }
+          }
+        } else if (
+          set[i].classList[0] == "element_row" &&
+          set[i].children[1].children.length != 0
+        ) {
+          let description_row = set[i].children[1];
+          if (!description_row.children[1].children[1].valid_sendoff)
+            return false;
+          for (let j = 2; j < description_row.children.length - 3; j++) {
+            if (!description_row.children[j].children[2].valid_sendoff)
+              return false;
+          }
+        } else if (set[i].classList[0] == "sub_container") {
+          return _isSetValid(set[i].children[1].children[1].children);
+        }
+      }
+
+      return true;
+    }
+
+    function saveAsPractice() {
+      //document.getElementById("add_set_button").click();
+      let sub_container = document.getElementsByClassName("sub_container")[0];
+      sub_container.children[1].children[1].children[0].children[0].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[0].children[0].click();
+
+      sub_container.children[1].children[1].children[1].children[0].children[0].value = 5;
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[5].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[6].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[2].children[0].children[7].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[2].children[1].children[2].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[2].children[1].children[3].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[0].children[2].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[4].children[1].select();
+      sub_container.children[1].children[1].children[1].children[0].children[4].children[1].value =
+        "100";
+      sub_container.children[1].children[1].children[1].children[0].children[4].children[1].dispatchEvent(
+        new InputEvent("input")
+      );
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[5].children[2].select();
+      sub_container.children[1].children[1].children[1].children[0].children[5].children[2].value =
+        "110";
+      sub_container.children[1].children[1].children[1].children[0].children[5].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[6].children[2].select();
+      sub_container.children[1].children[1].children[1].children[0].children[6].children[2].value =
+        "120";
+      sub_container.children[1].children[1].children[1].children[0].children[6].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      setTimeout(() => {}, 10);
+
+      sub_container.children[1].children[1].children[2].children[0].children[0].value = 5;
+      sub_container.children[1].children[1].children[2].children[0].children[0].dispatchEvent(
+        new InputEvent("change")
+      );
+      sub_container.children[1].children[1].children[1].children[0].children[3].value =
+        "Free";
+      sub_container.children[1].children[1].children[2].children[0].children[2].value = 50;
+      sub_container.children[1].children[1].children[2].children[1].children[0].children[1].value =
+        "Back";
+      sub_container.children[1].children[1].children[2].children[1].children[1].children[1].value =
+        "40";
+      sub_container.children[1].children[1].children[2].children[1].children[1].children[1].dispatchEvent(
+        new InputEvent("input")
+      );
+      sub_container.children[1].children[1].children[2].children[1].children[2].children[2].value =
+        "40";
+      sub_container.children[1].children[1].children[2].children[1].children[2].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      sub_container.children[1].children[1].children[2].children[1].children[3].children[2].value =
+        "45";
+      sub_container.children[1].children[1].children[2].children[1].children[3].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      let index =
+        sub_container.children[1].children[1].children[2].children[0].children
+          .length - 1;
+      sub_container.children[1].children[1].children[2].children[0].children[
+        index
+      ].click();
+
+      sub_container = sub_container.children[1].children[1].children[3];
+      sub_container.children[1].children[1].children[0].children[0].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[0].children[0].click();
+
+      sub_container.children[1].children[1].children[1].children[0].children[0].value = 5;
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[5].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[6].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[2].children[0].children[7].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[2].children[1].children[2].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[2].children[1].children[3].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[0].children[2].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[4].children[1].select();
+      sub_container.children[1].children[1].children[1].children[0].children[4].children[1].value =
+        "100";
+      sub_container.children[1].children[1].children[1].children[0].children[4].children[1].dispatchEvent(
+        new InputEvent("input")
+      );
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[5].children[2].select();
+      sub_container.children[1].children[1].children[1].children[0].children[5].children[2].value =
+        "110";
+      sub_container.children[1].children[1].children[1].children[0].children[5].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[6].children[2].select();
+      sub_container.children[1].children[1].children[1].children[0].children[6].children[2].value =
+        "120";
+      sub_container.children[1].children[1].children[1].children[0].children[6].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      setTimeout(() => {}, 10);
+
+      sub_container.children[1].children[1].children[2].children[0].children[0].value = 5;
+      sub_container.children[1].children[1].children[2].children[0].children[0].dispatchEvent(
+        new InputEvent("change")
+      );
+      sub_container.children[1].children[1].children[1].children[0].children[3].value =
+        "Free";
+      sub_container.children[1].children[1].children[2].children[0].children[2].value = 50;
+      sub_container.children[1].children[1].children[2].children[1].children[0].children[1].value =
+        "Back";
+      sub_container.children[1].children[1].children[2].children[1].children[1].children[1].value =
+        "40";
+      sub_container.children[1].children[1].children[2].children[1].children[1].children[1].dispatchEvent(
+        new InputEvent("input")
+      );
+      sub_container.children[1].children[1].children[2].children[1].children[2].children[2].value =
+        "40";
+      sub_container.children[1].children[1].children[2].children[1].children[2].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      sub_container.children[1].children[1].children[2].children[1].children[3].children[2].value =
+        "45";
+      sub_container.children[1].children[1].children[2].children[1].children[3].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      index =
+        sub_container.children[1].children[1].children[2].children[0].children
+          .length - 1;
+      sub_container.children[1].children[1].children[2].children[0].children[
+        index
+      ].click();
     }
   </script>
 </html>
