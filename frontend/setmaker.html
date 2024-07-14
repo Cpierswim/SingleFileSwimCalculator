@@ -1933,8 +1933,9 @@
             element.distance = main_set[1].children[0].children[2].value;
             element.description = main_set[1].children[0].children[3].value;
             element.sendoffs = {};
-            element.sendoffs.A =
-              main_set[1].children[0].children[4].children[1].value;
+            element.sendoffs.A = getSeconds(
+              main_set[1].children[0].children[4].children[1].value
+            );
             for (
               let j = 5;
               j < main_set[1].children[0].children.length - 4;
@@ -1943,7 +1944,9 @@
               let letter = main_set[1].children[0].children[
                 j
               ].children[0].innerText.replace(":", "");
-              let value = main_set[1].children[0].children[j].children[2].value;
+              let value = getSeconds(
+                main_set[1].children[0].children[j].children[2].value
+              );
               element.sendoffs[letter] = value;
             }
             set[elements] = element;
@@ -1973,7 +1976,7 @@
               let description_object = {};
               description_object.rep = rep;
               description_object.description = description_text;
-              description_object.value = value;
+              description_object.value = getSeconds(value);
               element.sendoffs.A.push(description_object);
               for (let j = 2; j < description.children.length - 3; j++) {
                 let letter = description.children[
@@ -1982,7 +1985,9 @@
                 let rep = description.children[
                   j
                 ].children[1].children[0].value.replace(":", "");
-                let value = description.children[j].children[2].value;
+                let loop_value = getSeconds(
+                  description.children[j].children[2].value
+                );
                 let description_text =
                   description.children[0].children[1].value;
 
@@ -1991,7 +1996,7 @@
                 let description_object = {};
                 description_object.rep = rep;
                 description_object.description = description_text;
-                description_object.value = value;
+                description_object.value = loop_value;
                 element.sendoffs[letter].push(description_object);
               }
 
@@ -2314,9 +2319,20 @@
       return /^[0-9,-]+$/.test(str);
     }
 
-    const str = "1-4";
-    const regex = /^[0-9,-]+$/; // Only allows letters and numbers
-
-    console.log(containsOnlyAcceptableChars(str, regex)); // Outputs: true
+    function getSeconds(regular_time) {
+      let split = regular_time.split(":");
+      if (split.length == 1) {
+        return parseInt(split[0]);
+      }
+      let min = 0;
+      if (split[0] != "") {
+        min = parseInt(split[0]);
+      }
+      let sec = 0;
+      if (split[1] != "") {
+        sec = parseInt(split[1]);
+      }
+      return min * 60 + sec;
+    }
   </script>
 </html>
