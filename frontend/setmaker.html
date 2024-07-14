@@ -1916,7 +1916,14 @@
       );
       let main_set = set_display.children[0].children[1].children[1].children;
 
-      let set = { repeats: set_repeats };
+      let set = _getSetObject(main_set, set_repeats);
+
+      debugger;
+    }
+
+    function _getSetObject(set_html_collection, repeats) {
+      let main_set = set_html_collection;
+      let set = { repeats: repeats };
 
       let elements = 0;
       let valid = _isSetValid(main_set);
@@ -2004,11 +2011,23 @@
             }
 
             set[elements] = element;
+            elements++;
+          } else if (main_set[i].classList[0] == "sub_container") {
+            let subset_repeats = parseInt(
+              main_set[i].children[0].children[1].children[0].value
+            );
+            let subset_elements = main_set[i].children[1].children[1].children;
+            let subset_object = _getSetObject(subset_elements, subset_repeats);
+
+            let subset_element = { type: "subset", set: subset_object };
+
+            set[elements] = subset_element;
+            elements++;
           }
         }
       }
 
-      debugger;
+      return set;
     }
 
     function _isSetValid(set) {
