@@ -1464,11 +1464,6 @@
 
       const sendoff_number_wrapper = document.createElement("div");
       sendoff_number_wrapper.classList.add("inner_sendoff_number");
-      sendoff_number_wrapper.addEventListener("mousemove", displayCustomUpDown);
-      sendoff_number_wrapper.addEventListener(
-        "mouseenter",
-        displayCustomUpDown
-      );
       sendoff_wrapper.appendChild(sendoff_number_wrapper);
 
       const custom_description_numbers = document.createElement("input");
@@ -1662,10 +1657,12 @@
           colon_added = true;
         } else if (value.length > 2 && value.includes(":")) {
           let split_string = value.split(":");
-          if (split_string.length > 2) valid = false;
-          else {
-            if (split_string[1].length < 2) valid = false;
-            else if (split_string[1].length > 2) {
+          if (split_string.length > 2) {
+            valid = false;
+          } else {
+            if (split_string[1].length < 2) {
+              valid = false;
+            } else if (split_string[1].length > 2) {
               split_string[0] =
                 split_string[0] +
                 split_string[1].substring(0, split_string[1].length - 2);
@@ -1682,8 +1679,9 @@
         let before_colon = 0;
         let after_colon = "";
 
-        if (split_string.length > 2) valid = false;
-        else {
+        if (split_string.length > 2) {
+          valid = false;
+        } else {
           if (split_string.length == 2) {
             before_colon = split_string[0];
             after_colon = split_string[1];
@@ -1693,7 +1691,9 @@
             )
               valid = false;
             else {
-              before_colon = parseInt(before_colon);
+              if (!before_colon == "") {
+                before_colon = parseInt(before_colon);
+              }
               after_colon = parseInt(after_colon);
             }
           } else after_colon = parseInt(split_string[0]);
@@ -1713,11 +1713,21 @@
           }
         }
 
-        if (isNaN(before_colon) || isNaN(after_colon)) valid = false;
-        if (value == "") valid = true;
-        if (value == ":") valid = false;
+        if (isNaN(before_colon) || isNaN(after_colon)) {
+          if (!split_string[1].startsWith("0")) {
+            valid = false;
+          }
+        }
+        if (value == "") {
+          valid = true;
+        }
+        if (value == ":") {
+          valid = false;
+        }
         if (value.startsWith(":"))
-          if (after_colon < 10 && split_string[1].length != 2) valid = false;
+          if (after_colon < 10 && split_string[1].length != 2) {
+            valid = false;
+          }
         if (valid && containsOnlyNumbers(value)) {
           value = ":" + value;
           colon_added = true;
@@ -1731,6 +1741,10 @@
         this.style.backgroundColor = "";
         this.valid_sendoff = true;
         if (colon_added) this.value = value;
+      }
+
+      if (value == "") {
+        this.valid_sendoff = false;
       }
     }
 
@@ -1984,7 +1998,6 @@
               description_number++;
             }
 
-            debugger;
             set[elements] = element;
           }
         }
@@ -1994,6 +2007,33 @@
     }
 
     function _isSetValid(set) {
+      //check all the custom description numbers
+      for (let i = 0; i < set.length; i++) {
+        let row = set[i];
+        if (
+          row.classList[0] == "element_row" &&
+          row.children[1].children.length != 0
+        ) {
+          let max_reps = parseInt(row.children[0].children[0].value);
+          for (let j = 1; j < row.children.length; j++) {
+            let description_row = row.children[j];
+
+            //A numbers
+            let first_numbers = description_row.children[0].children[0];
+            if (
+              !_isValidDescriptionNumbers(
+                first_numbers.value,
+                row.multi_description_type,
+                max_reps
+              )
+            ) {
+              return false;
+            }
+          }
+        }
+      }
+
+      //check all the sendoffs
       for (let i = 0; i < set.length; i++) {
         if (
           set[i].classList[0] == "element_row" &&
@@ -2002,12 +2042,13 @@
           let element_row = set[i];
           for (let j = 0; j < element_row.sendoffs_list.length; j++) {
             if (element_row.sendoffs_list[j].valid_sendoff != undefined) {
-              if (!element_row.sendoffs_list[j]) {
-                debugger;
+              if (
+                !element_row.sendoffs_list[j].valid_sendoff ||
+                element_row.sendoffs_list[j].value == ""
+              ) {
                 return false;
               }
             } else {
-              debugger;
               return false;
             }
           }
@@ -2015,15 +2056,67 @@
           set[i].classList[0] == "element_row" &&
           set[i].children[1].children.length != 0
         ) {
-          let description_row = set[i].children[1];
-          if (!description_row.children[1].children[1].valid_sendoff)
-            return false;
-          for (let j = 2; j < description_row.children.length - 3; j++) {
-            if (!description_row.children[j].children[2].valid_sendoff)
+          for (let k = 1; k < set[i].children.length; k++) {
+            let description_row = set[i].children[k];
+            if (
+              !description_row.children[1].children[1].valid_sendoff ||
+              description_row.children[1].children[1].value == ""
+            )
               return false;
+            for (let j = 2; j < description_row.children.length - 3; j++) {
+              if (
+                !description_row.children[j].children[2].valid_sendoff ||
+                description_row.children[j].children[2].value == ""
+              )
+                return false;
+            }
           }
         } else if (set[i].classList[0] == "sub_container") {
           return _isSetValid(set[i].children[1].children[1].children);
+        }
+      }
+
+      return true;
+    }
+
+    function _isValidDescriptionNumbers(value, type, max_reps) {
+      value = value.replace(/\s/g, "");
+      if (value.endsWith(":")) value = value.substring(0, value.length - 1);
+      if (type == MULTI_DESCRIPTION_TYPE.BY_ROUND) {
+        type = type.toUpperCase();
+        type = type.replace("RD");
+      }
+      if (!containsOnlyAcceptableChars(value)) return false;
+      let comma_split = value.split(",");
+      let numbers = [];
+      for (let i = 0; i < comma_split.length; i++) {
+        let split_part = comma_split[i];
+        if (split_part.includes("-")) {
+          let split_dash = split_part.split("-");
+          if (split_dash.length != 2) {
+            return false;
+          }
+          let first_number = parseInt(split_dash[0]);
+          let second_number = parseInt(split_dash[1]);
+          if (isNaN(first_number) || isNaN(second_number)) {
+            return false;
+          }
+          for (let j = first_number; j <= second_number; j++) {
+            numbers.push(j);
+          }
+        } else {
+          let number = parseInt(split_part);
+          if (isNaN(number)) {
+            return false;
+          }
+
+          numbers.push(number);
+        }
+      }
+
+      for (let i = 0; i < numbers.length; i++) {
+        if (numbers[i] > max_reps) {
+          return false;
         }
       }
 
@@ -2097,6 +2190,7 @@
       sub_container.children[1].children[1].children[2].children[1].children[3].children[2].dispatchEvent(
         new InputEvent("input")
       );
+
       let index =
         sub_container.children[1].children[1].children[2].children[0].children
           .length - 1;
@@ -2104,7 +2198,28 @@
         index
       ].click();
 
+      sub_container.children[1].children[1].children[2].children[2].children[0].children[1].value =
+        "Back kick";
+      sub_container.children[1].children[1].children[2].children[2].children[1].children[1].value =
+        "40";
+      sub_container.children[1].children[1].children[2].children[2].children[1].children[1].dispatchEvent(
+        new InputEvent("input")
+      );
+      sub_container.children[1].children[1].children[2].children[2].children[2].children[2].value =
+        "40";
+      sub_container.children[1].children[1].children[2].children[2].children[2].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      sub_container.children[1].children[1].children[2].children[2].children[3].children[2].value =
+        "45";
+      sub_container.children[1].children[1].children[2].children[2].children[3].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+
+      //--------------------------
       sub_container = sub_container.children[1].children[1].children[3];
+      //--------------------------
+
       sub_container.children[1].children[1].children[0].children[0].click();
       setTimeout(() => {}, 10);
       sub_container.children[1].children[1].children[0].children[0].click();
@@ -2175,6 +2290,33 @@
       sub_container.children[1].children[1].children[2].children[0].children[
         index
       ].click();
+
+      sub_container.children[1].children[1].children[2].children[2].children[0].children[1].value =
+        "Back kick";
+      sub_container.children[1].children[1].children[2].children[2].children[1].children[1].value =
+        "40";
+      sub_container.children[1].children[1].children[2].children[2].children[1].children[1].dispatchEvent(
+        new InputEvent("input")
+      );
+      sub_container.children[1].children[1].children[2].children[2].children[2].children[2].value =
+        "40";
+      sub_container.children[1].children[1].children[2].children[2].children[2].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      sub_container.children[1].children[1].children[2].children[2].children[3].children[2].value =
+        "45";
+      sub_container.children[1].children[1].children[2].children[2].children[3].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
     }
+
+    function containsOnlyAcceptableChars(str) {
+      return /^[0-9,-]+$/.test(str);
+    }
+
+    const str = "1-4";
+    const regex = /^[0-9,-]+$/; // Only allows letters and numbers
+
+    console.log(containsOnlyAcceptableChars(str, regex)); // Outputs: true
   </script>
 </html>
