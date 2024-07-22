@@ -245,7 +245,7 @@
     </div>
 
     <script>
-      const SKIP_FULLSCREEN = 1;
+      const SKIP_FULLSCREEN = 0;
       let socket = undefined;
       let clock;
       let time_delta;
@@ -398,18 +398,20 @@
 
       function requestFullScreen(div_to_fullscreen) {
         //request Full Screen
-        if (typeof SKIP_FULLSCREEN === "undefined") return;
-        if (SKIP_FULLSCREEN == 1) return;
+        try {
+          if (typeof SKIP_FULLSCREEN === "undefined") return;
+          if (SKIP_FULLSCREEN == 1) return;
 
-        if (div_to_fullscreen.requestFullscreen) {
-          div_to_fullscreen.requestFullscreen();
-        } else if (div_to_fullscreen.webkitRequestFullscreen) {
-          /* Safari */
-          div_to_fullscreen.webkitRequestFullscreen();
-        } else if (div_to_fullscreen.msRequestFullscreen) {
-          /* IE11 */
-          div_to_fullscreen.msRequestFullscreen();
-        }
+          if (div_to_fullscreen.requestFullscreen) {
+            div_to_fullscreen.requestFullscreen();
+          } else if (div_to_fullscreen.webkitRequestFullscreen) {
+            /* Safari */
+            div_to_fullscreen.webkitRequestFullscreen();
+          } else if (div_to_fullscreen.msRequestFullscreen) {
+            /* IE11 */
+            div_to_fullscreen.msRequestFullscreen();
+          }
+        } catch {}
       }
 
       function newSetClock() {
