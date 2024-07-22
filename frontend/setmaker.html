@@ -1131,6 +1131,8 @@
       const element_bottom_part = document.createElement("div");
       element_bottom_part.classList.add("element_bottom_part");
       element_row.appendChild(element_bottom_part);
+
+      calculateTimes(element_row.parentElement.parentElement.parentElement);
     }
 
     function addSendOff(e) {
@@ -1200,6 +1202,10 @@
 
       element_row.children[element_row.children.length - 3].style.visibility =
         "";
+      calculateTimes(
+        this.parentElement.parentElement.parentElement.parentElement
+          .parentElement
+      );
     }
 
     function removeLastSendoff(e) {
@@ -1215,6 +1221,10 @@
 
       if (this.parentElement.children.length == 9)
         this.style.visibility = "hidden";
+      calculateTimes(
+        this.parentElement.parentElement.parentElement.parentElement
+          .parentElement
+      );
     }
 
     function customUpClicked(e) {
@@ -1264,7 +1274,11 @@
         this.parentElement.parentElement.sendoffs_list,
         this.parentElement.children[4].children[1]
       );
+      let main_set =
+        this.parentElement.parentElement.parentElement.parentElement
+          .parentElement;
       this.parentElement.parentElement.remove();
+      calculateTimes(main_set);
     }
 
     function changeToMultiType(e) {
@@ -1392,9 +1406,22 @@
       delete_element_button.innerText = "x";
       delete_element_button.addEventListener("click", deleteDescription);
       lower_row.appendChild(delete_element_button);
+
+      calculateTimes(element_row.parentElement.parentElement.parentElement);
     }
 
     function elementRepeatChanged(e) {
+      if (
+        this.parentElement.parentElement.multi_description_type ==
+        MULTI_DESCRIPTION_TYPE.BY_ROUND
+      ) {
+        calculateTimes(
+          this.parentElement.parentElement.parentElement.parentElement
+            .parentElement
+        );
+        return 0;
+      }
+
       let value = parseInt(this.value);
       if (
         parseInt(this.value) <
@@ -1604,6 +1631,8 @@
       for (let i = 0; i < number_of_clicks; i++) {
         add_sendoff_button.click();
       }
+
+      calculateTimes(element_row.parentElement.parentElement.parentElement);
     }
 
     function addDescriptionSendoff(e) {
@@ -1659,6 +1688,10 @@
 
       element_row.children[element_row.children.length - 2].style.visibility =
         "";
+
+      calculateTimes(
+        element_row.parentElement.parentElement.parentElement.parentElement
+      );
     }
 
     function removeDescriptionSendoff(e) {
@@ -1679,6 +1712,11 @@
       ].remove();
       if (this.parentElement.children.length == 5)
         this.style.visibility = "hidden";
+
+      calculateTimes(
+        this.parentElement.parentElement.parentElement.parentElement
+          .parentElement
+      );
     }
 
     function deleteDescription(e) {
@@ -1754,6 +1792,8 @@
         element_bottom_part.classList.add("element_bottom_part");
         element_row.appendChild(element_bottom_part);
       } else redoDescriptionSpread(element_row);
+
+      calculateTimes(element_row.parentElement.parentElement.parentElement);
     }
 
     function changeAllSendoffsToMainCount(e) {
@@ -1805,6 +1845,10 @@
       }
 
       redoDescriptionSpread(element_row);
+      calculateTimes(
+        this.parentElement.parentElement.parentElement.parentElement
+          .parentElement
+      );
     }
 
     function setRepeatChanged(e) {
@@ -2292,10 +2336,7 @@
 
             let letter = "A";
             let rep = description.children[0].children[0].value;
-            let value = description.children[1].children[1].value.replace(
-              ":",
-              ""
-            );
+            let value = description.children[1].children[1].value.trim();
             let description_text = description.children[0].children[1].value;
             if (element.sendoffs.A == undefined) element.sendoffs.A = [];
             let description_object = {};
@@ -2454,9 +2495,11 @@
         }
       }
 
-      for (let i = 0; i < numbers.length; i++) {
-        if (numbers[i] > max_reps) {
-          return false;
+      if (type != MULTI_DESCRIPTION_TYPE.BY_ROUND) {
+        for (let i = 0; i < numbers.length; i++) {
+          if (numbers[i] > max_reps) {
+            return false;
+          }
         }
       }
 
