@@ -2508,431 +2508,217 @@
 
     function mockUpSet(e) {
       document.getElementById("add_set_button").click();
+      // let sub_container = document.getElementsByClassName("sub_container")[0];
+
+      // sub_container.children[1].children[1].children[0].children[0].click();
+      // setTimeout(() => {}, 10);
+
+      // //temp - only multiline
+      // sub_container.children[1].children[1].children[1].children[0].children[7].click();
+      // setTimeout(() => {}, 10);
+      // sub_container.children[1].children[1].children[1].children[0].children[9].click();
+      // setTimeout(() => {}, 10);
+      // sub_container.children[1].children[1].children[1].children[0].children[0].value = 5;
+      // sub_container.children[1].children[1].children[1].children[1].children[2].click();
+      // setTimeout(() => {}, 10);
+      // sub_container.children[1].children[1].children[1].children[1].children[3].click();
+      // setTimeout(() => {}, 10);
+      // sub_container.children[1].children[1].children[1].children[0].children[0].dispatchEvent(
+      //   new InputEvent("change")
+      // );
+      // sub_container.children[1].children[1].children[1].children[0].children[2].value = 50;
+      // sub_container.children[1].children[1].children[1].children[1].children[0].children[1].value =
+      //   "Back";
+      // sub_container.children[1].children[1].children[1].children[1].children[1].children[1].value =
+      //   "40";
+      // sub_container.children[1].children[1].children[1].children[1].children[1].children[1].dispatchEvent(
+      //   new InputEvent("input")
+      // );
+      // sub_container.children[1].children[1].children[1].children[1].children[2].children[2].value =
+      //   "40";
+      // sub_container.children[1].children[1].children[1].children[1].children[2].children[2].dispatchEvent(
+      //   new InputEvent("input")
+      // );
+      // sub_container.children[1].children[1].children[1].children[1].children[3].children[2].value =
+      //   "45";
+      // sub_container.children[1].children[1].children[1].children[1].children[3].children[2].dispatchEvent(
+      //   new InputEvent("input")
+      // );
+
       let sub_container = document.getElementsByClassName("sub_container")[0];
       sub_container.children[1].children[1].children[0].children[0].click();
       setTimeout(() => {}, 10);
-
-      //temp - only multiline
-      sub_container.children[1].children[1].children[1].children[0].children[7].click();
-      setTimeout(() => {}, 10);
-      sub_container.children[1].children[1].children[1].children[0].children[9].click();
-      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[0].children[0].click();
       sub_container.children[1].children[1].children[1].children[0].children[0].value = 5;
-      sub_container.children[1].children[1].children[1].children[1].children[2].click();
       setTimeout(() => {}, 10);
-      sub_container.children[1].children[1].children[1].children[1].children[3].click();
+      sub_container.children[1].children[1].children[1].children[0].children[5].click();
       setTimeout(() => {}, 10);
-      sub_container.children[1].children[1].children[1].children[0].children[0].dispatchEvent(
+      sub_container.children[1].children[1].children[1].children[0].children[6].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[2].children[0].children[7].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[2].children[1].children[2].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[2].children[1].children[3].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[0].children[2].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[4].children[1].select();
+      sub_container.children[1].children[1].children[1].children[0].children[4].children[1].value =
+        "100";
+      sub_container.children[1].children[1].children[1].children[0].children[4].children[1].dispatchEvent(
+        new InputEvent("input")
+      );
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[5].children[2].select();
+      sub_container.children[1].children[1].children[1].children[0].children[5].children[2].value =
+        "110";
+      sub_container.children[1].children[1].children[1].children[0].children[5].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[6].children[2].select();
+      sub_container.children[1].children[1].children[1].children[0].children[6].children[2].value =
+        "120";
+      sub_container.children[1].children[1].children[1].children[0].children[6].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[2].children[0].children[0].value = 5;
+      sub_container.children[1].children[1].children[2].children[0].children[0].dispatchEvent(
         new InputEvent("change")
       );
-      sub_container.children[1].children[1].children[1].children[0].children[2].value = 50;
-      sub_container.children[1].children[1].children[1].children[1].children[0].children[1].value =
+      sub_container.children[1].children[1].children[1].children[0].children[3].value =
+        "Free";
+      sub_container.children[1].children[1].children[2].children[0].children[2].value = 50;
+      sub_container.children[1].children[1].children[2].children[1].children[0].children[1].value =
         "Back";
-      sub_container.children[1].children[1].children[1].children[1].children[1].children[1].value =
+      sub_container.children[1].children[1].children[2].children[1].children[1].children[1].value =
         "40";
-      sub_container.children[1].children[1].children[1].children[1].children[1].children[1].dispatchEvent(
+      sub_container.children[1].children[1].children[2].children[1].children[1].children[1].dispatchEvent(
         new InputEvent("input")
       );
-      sub_container.children[1].children[1].children[1].children[1].children[2].children[2].value =
+      sub_container.children[1].children[1].children[2].children[1].children[2].children[2].value =
         "40";
-      sub_container.children[1].children[1].children[1].children[1].children[2].children[2].dispatchEvent(
+      sub_container.children[1].children[1].children[2].children[1].children[2].children[2].dispatchEvent(
         new InputEvent("input")
       );
-      sub_container.children[1].children[1].children[1].children[1].children[3].children[2].value =
+      sub_container.children[1].children[1].children[2].children[1].children[3].children[2].value =
         "45";
-      sub_container.children[1].children[1].children[1].children[1].children[3].children[2].dispatchEvent(
+      sub_container.children[1].children[1].children[2].children[1].children[3].children[2].dispatchEvent(
         new InputEvent("input")
       );
-
-      sub_container.children[1].children[1].children[1].children[2].children[2].click();
-      setTimeout(() => {}, 10);
-      sub_container.children[1].children[1].children[1].children[2].children[3].click();
-      setTimeout(() => {}, 10);
-
-      sub_container.children[1].children[1].children[1].children[2].children[0].children[1].value =
+      let index =
+        sub_container.children[1].children[1].children[2].children[0].children
+          .length - 1;
+      sub_container.children[1].children[1].children[2].children[0].children[
+        index
+      ].click();
+      sub_container.children[1].children[1].children[2].children[2].children[0].children[1].value =
         "Back kick";
-      sub_container.children[1].children[1].children[1].children[2].children[1].children[1].value =
+      sub_container.children[1].children[1].children[2].children[2].children[1].children[1].value =
         "40";
-      sub_container.children[1].children[1].children[1].children[2].children[1].children[1].dispatchEvent(
+      sub_container.children[1].children[1].children[2].children[2].children[1].children[1].dispatchEvent(
         new InputEvent("input")
       );
-      sub_container.children[1].children[1].children[1].children[2].children[2].children[2].value =
+      sub_container.children[1].children[1].children[2].children[2].children[2].children[2].value =
         "40";
-      sub_container.children[1].children[1].children[1].children[2].children[2].children[2].dispatchEvent(
+      sub_container.children[1].children[1].children[2].children[2].children[2].children[2].dispatchEvent(
         new InputEvent("input")
       );
-      sub_container.children[1].children[1].children[1].children[2].children[3].children[2].value =
+      sub_container.children[1].children[1].children[2].children[2].children[3].children[2].value =
         "45";
-      sub_container.children[1].children[1].children[1].children[2].children[3].children[2].dispatchEvent(
+      sub_container.children[1].children[1].children[2].children[2].children[3].children[2].dispatchEvent(
         new InputEvent("input")
       );
-
-      //sub_container.children[1].children[1].children[0].children[0].click();
-
-      // sub_container.children[1].children[1].children[1].children[0].children[0].value = 5;
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[5].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[6].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[2].children[0].children[7].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[2].children[1].children[2].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[2].children[1].children[3].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[0].children[2].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[4].children[1].select();
-      // sub_container.children[1].children[1].children[1].children[0].children[4].children[1].value =
-      //   "100";
-      // sub_container.children[1].children[1].children[1].children[0].children[4].children[1].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[5].children[2].select();
-      // sub_container.children[1].children[1].children[1].children[0].children[5].children[2].value =
-      //   "110";
-      // sub_container.children[1].children[1].children[1].children[0].children[5].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[6].children[2].select();
-      // sub_container.children[1].children[1].children[1].children[0].children[6].children[2].value =
-      //   "120";
-      // sub_container.children[1].children[1].children[1].children[0].children[6].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // setTimeout(() => {}, 10);
-
-      // sub_container.children[1].children[1].children[2].children[0].children[0].value = 5;
-      // sub_container.children[1].children[1].children[2].children[0].children[0].dispatchEvent(
-      //   new InputEvent("change")
-      // );
-      // sub_container.children[1].children[1].children[1].children[0].children[3].value =
-      //   "Free";
-      // sub_container.children[1].children[1].children[2].children[0].children[2].value = 50;
-      // sub_container.children[1].children[1].children[2].children[1].children[0].children[1].value =
-      //   "Back";
-      // sub_container.children[1].children[1].children[2].children[1].children[1].children[1].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[1].children[1].children[1].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[1].children[2].children[2].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[1].children[2].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[1].children[3].children[2].value =
-      //   "45";
-      // sub_container.children[1].children[1].children[2].children[1].children[3].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-
-      // let index =
-      //   sub_container.children[1].children[1].children[2].children[0].children
-      //     .length - 1;
-      // sub_container.children[1].children[1].children[2].children[0].children[
-      //   index
-      // ].click();
-
-      // sub_container.children[1].children[1].children[2].children[2].children[0].children[1].value =
-      //   "Back kick";
-      // sub_container.children[1].children[1].children[2].children[2].children[1].children[1].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[2].children[1].children[1].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[2].children[2].children[2].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[2].children[2].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[2].children[3].children[2].value =
-      //   "45";
-      // sub_container.children[1].children[1].children[2].children[2].children[3].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-
-      // //--------------------------
-      // sub_container = sub_container.children[1].children[1].children[3];
-      // //--------------------------
-
-      // sub_container.children[1].children[1].children[0].children[0].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[0].children[0].click();
-
-      // sub_container.children[1].children[1].children[1].children[0].children[0].value = 5;
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[5].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[6].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[2].children[0].children[7].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[2].children[1].children[2].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[2].children[1].children[3].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[0].children[2].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[4].children[1].select();
-      // sub_container.children[1].children[1].children[1].children[0].children[4].children[1].value =
-      //   "100";
-      // sub_container.children[1].children[1].children[1].children[0].children[4].children[1].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[5].children[2].select();
-      // sub_container.children[1].children[1].children[1].children[0].children[5].children[2].value =
-      //   "110";
-      // sub_container.children[1].children[1].children[1].children[0].children[5].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[6].children[2].select();
-      // sub_container.children[1].children[1].children[1].children[0].children[6].children[2].value =
-      //   "120";
-      // sub_container.children[1].children[1].children[1].children[0].children[6].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // setTimeout(() => {}, 10);
-
-      // sub_container.children[1].children[1].children[2].children[0].children[0].value = 5;
-      // sub_container.children[1].children[1].children[2].children[0].children[0].dispatchEvent(
-      //   new InputEvent("change")
-      // );
-      // sub_container.children[1].children[1].children[1].children[0].children[3].value =
-      //   "Free";
-      // sub_container.children[1].children[1].children[2].children[0].children[2].value = 50;
-      // sub_container.children[1].children[1].children[2].children[1].children[0].children[1].value =
-      //   "Back";
-      // sub_container.children[1].children[1].children[2].children[1].children[1].children[1].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[1].children[1].children[1].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[1].children[2].children[2].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[1].children[2].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[1].children[3].children[2].value =
-      //   "45";
-      // sub_container.children[1].children[1].children[2].children[1].children[3].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // index =
-      //   sub_container.children[1].children[1].children[2].children[0].children
-      //     .length - 1;
-      // sub_container.children[1].children[1].children[2].children[0].children[
-      //   index
-      // ].click();
-
-      // sub_container.children[1].children[1].children[2].children[2].children[0].children[1].value =
-      //   "Back kick";
-      // sub_container.children[1].children[1].children[2].children[2].children[1].children[1].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[2].children[1].children[1].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[2].children[2].children[2].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[2].children[2].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[2].children[3].children[2].value =
-      //   "45";
-      // sub_container.children[1].children[1].children[2].children[2].children[3].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-
-      // document.getElementById("add_set_button").click();
-
-      // sub_container = document.getElementsByClassName("sub_container")[3];
-      // sub_container.children[1].children[1].children[0].children[0].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[0].children[0].click();
-
-      // sub_container.children[1].children[1].children[1].children[0].children[0].value = 5;
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[5].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[6].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[2].children[0].children[7].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[2].children[1].children[2].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[2].children[1].children[3].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[0].children[2].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[4].children[1].select();
-      // sub_container.children[1].children[1].children[1].children[0].children[4].children[1].value =
-      //   "100";
-      // sub_container.children[1].children[1].children[1].children[0].children[4].children[1].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[5].children[2].select();
-      // sub_container.children[1].children[1].children[1].children[0].children[5].children[2].value =
-      //   "110";
-      // sub_container.children[1].children[1].children[1].children[0].children[5].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[6].children[2].select();
-      // sub_container.children[1].children[1].children[1].children[0].children[6].children[2].value =
-      //   "120";
-      // sub_container.children[1].children[1].children[1].children[0].children[6].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // setTimeout(() => {}, 10);
-
-      // sub_container.children[1].children[1].children[2].children[0].children[0].value = 5;
-      // sub_container.children[1].children[1].children[2].children[0].children[0].dispatchEvent(
-      //   new InputEvent("change")
-      // );
-      // sub_container.children[1].children[1].children[1].children[0].children[3].value =
-      //   "Free";
-      // sub_container.children[1].children[1].children[2].children[0].children[2].value = 50;
-      // sub_container.children[1].children[1].children[2].children[1].children[0].children[1].value =
-      //   "Back";
-      // sub_container.children[1].children[1].children[2].children[1].children[1].children[1].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[1].children[1].children[1].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[1].children[2].children[2].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[1].children[2].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[1].children[3].children[2].value =
-      //   "45";
-      // sub_container.children[1].children[1].children[2].children[1].children[3].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-
-      // index =
-      //   sub_container.children[1].children[1].children[2].children[0].children
-      //     .length - 1;
-      // sub_container.children[1].children[1].children[2].children[0].children[
-      //   index
-      // ].click();
-
-      // sub_container.children[1].children[1].children[2].children[2].children[0].children[1].value =
-      //   "Back kick";
-      // sub_container.children[1].children[1].children[2].children[2].children[1].children[1].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[2].children[1].children[1].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[2].children[2].children[2].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[2].children[2].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[2].children[3].children[2].value =
-      //   "45";
-      // sub_container.children[1].children[1].children[2].children[2].children[3].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-
-      // //--------------------------
-      // sub_container = sub_container.children[1].children[1].children[3];
-      // //--------------------------
-
-      // sub_container.children[1].children[1].children[0].children[0].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[0].children[0].click();
-
-      // sub_container.children[1].children[1].children[1].children[0].children[0].value = 5;
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[5].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[6].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[2].children[0].children[7].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[2].children[1].children[2].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[2].children[1].children[3].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[0].children[2].click();
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[4].children[1].select();
-      // sub_container.children[1].children[1].children[1].children[0].children[4].children[1].value =
-      //   "100";
-      // sub_container.children[1].children[1].children[1].children[0].children[4].children[1].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[5].children[2].select();
-      // sub_container.children[1].children[1].children[1].children[0].children[5].children[2].value =
-      //   "110";
-      // sub_container.children[1].children[1].children[1].children[0].children[5].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // setTimeout(() => {}, 10);
-      // sub_container.children[1].children[1].children[1].children[0].children[6].children[2].select();
-      // sub_container.children[1].children[1].children[1].children[0].children[6].children[2].value =
-      //   "120";
-      // sub_container.children[1].children[1].children[1].children[0].children[6].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // setTimeout(() => {}, 10);
-
-      // sub_container.children[1].children[1].children[2].children[0].children[0].value = 5;
-      // sub_container.children[1].children[1].children[2].children[0].children[0].dispatchEvent(
-      //   new InputEvent("change")
-      // );
-      // sub_container.children[1].children[1].children[1].children[0].children[3].value =
-      //   "Free";
-      // sub_container.children[1].children[1].children[2].children[0].children[2].value = 50;
-      // sub_container.children[1].children[1].children[2].children[1].children[0].children[1].value =
-      //   "Back";
-      // sub_container.children[1].children[1].children[2].children[1].children[1].children[1].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[1].children[1].children[1].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[1].children[2].children[2].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[1].children[2].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[1].children[3].children[2].value =
-      //   "45";
-      // sub_container.children[1].children[1].children[2].children[1].children[3].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // index =
-      //   sub_container.children[1].children[1].children[2].children[0].children
-      //     .length - 1;
-      // sub_container.children[1].children[1].children[2].children[0].children[
-      //   index
-      // ].click();
-
-      // sub_container.children[1].children[1].children[2].children[2].children[0].children[1].value =
-      //   "Back kick";
-      // sub_container.children[1].children[1].children[2].children[2].children[1].children[1].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[2].children[1].children[1].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[2].children[2].children[2].value =
-      //   "40";
-      // sub_container.children[1].children[1].children[2].children[2].children[2].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
-      // sub_container.children[1].children[1].children[2].children[2].children[3].children[2].value =
-      //   "45";
-      // sub_container.children[1].children[1].children[2].children[2].children[3].children[2].dispatchEvent(
-      //   new InputEvent("input")
-      // );
+      //--------------------------
+      sub_container = sub_container.children[1].children[1].children[3];
+      //--------------------------
+      sub_container.children[1].children[1].children[0].children[0].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[0].children[0].click();
+      sub_container.children[1].children[1].children[1].children[0].children[0].value = 5;
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[5].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[6].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[2].children[0].children[7].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[2].children[1].children[2].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[2].children[1].children[3].click();
+      setTimeout(() => {}, 10);
+      //sub_container.children[1].children[1].children[0].children[2].click();
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[4].children[1].select();
+      sub_container.children[1].children[1].children[1].children[0].children[4].children[1].value =
+        "100";
+      sub_container.children[1].children[1].children[1].children[0].children[4].children[1].dispatchEvent(
+        new InputEvent("input")
+      );
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[5].children[2].select();
+      sub_container.children[1].children[1].children[1].children[0].children[5].children[2].value =
+        "110";
+      sub_container.children[1].children[1].children[1].children[0].children[5].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[1].children[0].children[6].children[2].select();
+      sub_container.children[1].children[1].children[1].children[0].children[6].children[2].value =
+        "120";
+      sub_container.children[1].children[1].children[1].children[0].children[6].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      setTimeout(() => {}, 10);
+      sub_container.children[1].children[1].children[2].children[0].children[0].value = 5;
+      sub_container.children[1].children[1].children[2].children[0].children[0].dispatchEvent(
+        new InputEvent("change")
+      );
+      sub_container.children[1].children[1].children[1].children[0].children[3].value =
+        "Free";
+      sub_container.children[1].children[1].children[2].children[0].children[2].value = 50;
+      sub_container.children[1].children[1].children[2].children[1].children[0].children[1].value =
+        "Back";
+      sub_container.children[1].children[1].children[2].children[1].children[1].children[1].value =
+        "40";
+      sub_container.children[1].children[1].children[2].children[1].children[1].children[1].dispatchEvent(
+        new InputEvent("input")
+      );
+      sub_container.children[1].children[1].children[2].children[1].children[2].children[2].value =
+        "40";
+      sub_container.children[1].children[1].children[2].children[1].children[2].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      sub_container.children[1].children[1].children[2].children[1].children[3].children[2].value =
+        "45";
+      sub_container.children[1].children[1].children[2].children[1].children[3].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      index =
+        sub_container.children[1].children[1].children[2].children[0].children
+          .length - 1;
+      sub_container.children[1].children[1].children[2].children[0].children[
+        index
+      ].click();
+      sub_container.children[1].children[1].children[2].children[2].children[0].children[1].value =
+        "Back kick";
+      sub_container.children[1].children[1].children[2].children[2].children[1].children[1].value =
+        "40";
+      sub_container.children[1].children[1].children[2].children[2].children[1].children[1].dispatchEvent(
+        new InputEvent("input")
+      );
+      sub_container.children[1].children[1].children[2].children[2].children[2].children[2].value =
+        "40";
+      sub_container.children[1].children[1].children[2].children[2].children[2].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
+      sub_container.children[1].children[1].children[2].children[2].children[3].children[2].value =
+        "45";
+      sub_container.children[1].children[1].children[2].children[2].children[3].children[2].dispatchEvent(
+        new InputEvent("input")
+      );
     }
 
     function containsOnlyAcceptableChars(str) {
@@ -2956,6 +2742,7 @@
     }
 
     function calculateTimes(set_to_calculate_for) {
+      set_to_calculate_for = getParentSetIfSubSet(set_to_calculate_for);
       if (set_to_calculate_for.classList[0] != "sub_container") return null;
       let repeat_count = parseInt(
         set_to_calculate_for.children[0].children[1].children[0].value
@@ -3010,6 +2797,22 @@
           }
         }
       }
+    }
+
+    function getParentSetIfSubSet(set_to_check) {
+      let last_that_is_a_set = set_to_check;
+      let element_to_check = set_to_check;
+      while (element_to_check.parentElement) {
+        element_to_check = element_to_check.parentElement;
+        if (
+          element_to_check.classList.length > 0 &&
+          element_to_check.classList[0] == "sub_container"
+        ) {
+          last_that_is_a_set = element_to_check;
+        }
+      }
+
+      return last_that_is_a_set;
     }
 
     function _getTotalSetTime(list_of_sendoffs) {
@@ -3413,6 +3216,38 @@
                 by_round_elements.push(element);
 
                 sendoff_lists[sendoff_this_is].list.push(element);
+              }
+            }
+          } else if (element.type == "subset") {
+            let subsendoffs = _getSendoffLists(element.set);
+            //have the subsendoffs, copy them to the main sendoff list
+
+            if (all_sendoffs.length != Object.keys(subsendoffs).length)
+              return null;
+
+            for (
+              let sendoff_index = 0;
+              sendoff_index < all_sendoffs.length;
+              sendoff_index++
+            ) {
+              let copying_letter = all_sendoffs[sendoff_index];
+              let temp_list = [];
+              let running_time = -1;
+              if (sendoff_lists[copying_letter].running_time)
+                running_time = sendoff_lists[copying_letter].running_time;
+              else running_time = 0;
+              for (
+                let index = 0;
+                index < subsendoffs[copying_letter].list.length;
+                index++
+              ) {
+                subsendoffs[copying_letter].list[index].time = running_time;
+                sendoff_lists[copying_letter].list.push(
+                  subsendoffs[copying_letter].list[index]
+                );
+                running_time +=
+                  subsendoffs[copying_letter].list[index].rep_time;
+                sendoff_lists[copying_letter].running_time = running_time;
               }
             }
           }
