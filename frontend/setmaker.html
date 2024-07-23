@@ -1557,7 +1557,6 @@
       lower_row.classList.add("element_bottom_part");
       element_row.appendChild(lower_row);
 
-      //debugger;
       const description_wrapper = document.createElement("div");
       description_wrapper.classList.add("description_wrapper");
       lower_row.appendChild(description_wrapper);
@@ -2215,8 +2214,6 @@
           set: set,
         };
 
-        debugger;
-
         e.parentElement.parentElement.parentElement.parentElement.style.display =
           "none";
         e.parentElement.parentElement.children[0].style.display = "none";
@@ -2310,7 +2307,6 @@
           main_set[i].classList[0] == "element_row" &&
           main_set[i].children[1].children.length != 0
         ) {
-          //debugger;
           let top_part = main_set[i].children[0];
           let description_row = main_set[i].children[1];
           let max_reps = parseInt(top_part.children[0].value);
@@ -2992,7 +2988,6 @@
     }
 
     function _getSendoffLists(set) {
-      //debugger;
       let by_round_elements = [];
       if (set == null) return null;
       let all_sendoffs = _getSendoffs(set);
@@ -3094,10 +3089,6 @@
               let temp_list = [];
               let running_time = sendoff_lists[sendoff_this_is].running_time;
 
-              //TODO: finish this part, forgot to do
-
-              //
-              //debugger;
               if (
                 element.multi_description_type ==
                 MULTI_DESCRIPTION_TYPE.SPLIT_EVENLY
