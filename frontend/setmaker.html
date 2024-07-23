@@ -597,7 +597,7 @@
         <button
           id="save_to_practice_button"
           class="btn btn-danger main_button"
-          onclick="test(this)"
+          onclick="testSetClicked(this)"
         >
           Test Set
         </button>
@@ -1986,19 +1986,34 @@
     }
 
     function recolorOnInvalidInput(e) {
-      let element_row = this.parentElement.parentElement.parentElement;
-      this.value = this.value.toUpperCase();
-      let multi_description_type =
-        this.parentElement.parentElement.parentElement.multi_description_type;
-      let max_reps = parseInt(
-        this.parentElement.parentElement.parentElement.children[0].children[0]
-          .value
-      );
+      // let element_row = this.parentElement.parentElement.parentElement;
+      // this.value = this.value.toUpperCase();
+      // let multi_description_type =
+      //   this.parentElement.parentElement.parentElement.multi_description_type;
+      // let max_reps = parseInt(
+      //   this.parentElement.parentElement.parentElement.children[0].children[0]
+      //     .value
+      // );
+      // if (multi_description_type == MULTI_DESCRIPTION_TYPE.BY_ROUND)
+      //   max_reps = parseInt(
+      //     this.parentElement.parentElement.parentElement.parentElement
+      //       .parentElement.parentElement.children[0].children[1].children[0]
+      //       .value
+      //   );
+
+      let element_row =
+        this.parentElement.parentElement.parentElement.parentElement;
+      let multi_description_type = element_row.multi_description_type;
+      let max_reps;
       if (multi_description_type == MULTI_DESCRIPTION_TYPE.BY_ROUND)
         max_reps = parseInt(
+          element_row.parentElement.parentElement.parentElement.parentElement
+            .children[0].children[1].children[0].value
+        );
+      else
+        max_reps = parseInt(
           this.parentElement.parentElement.parentElement.parentElement
-            .parentElement.parentElement.children[0].children[1].children[0]
-            .value
+            .children[0].children[0].value
         );
 
       if (
@@ -3424,16 +3439,20 @@
       return id;
     }
 
-    function test(e) {
+    function testSetClicked(e) {
       let set_display = document.getElementById("set_display");
       let set_repeats = parseInt(
         set_display.children[0].children[0].children[1].children[0].value
       );
       let main_set = set_display.children[0].children[1].children[1].children;
+      let reps = parseInt(
+        set_display.children[0].children[0].children[1].children[0].value
+      );
 
-      debugger;
       try {
-        let set = _getSetObject();
+        let set = _getSetObject(main_set, reps);
+        let sendoff_lists = _getSendoffLists(set);
+        debugger;
       } catch {
         recolorCalculatedSendoffsToError(main_set);
       }
