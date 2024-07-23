@@ -723,6 +723,19 @@
             </div>
             <div class="table_row">
               <div class="table_cell_label">
+                <label for="practice_group">Group:</label>
+              </div>
+              <div class="table_cell_input">
+                <input
+                  id="practice_group"
+                  name="practice_group"
+                  class="paperlike_text_input"
+                  type="text"
+                />
+              </div>
+            </div>
+            <div class="table_row">
+              <div class="table_cell_label">
                 <label for="practice_date">Date:</label>
               </div>
               <div class="table_cell_input">
@@ -2191,9 +2204,10 @@
       );
       let main_set = set_display.children[0].children[1].children[1].children;
 
-      let start = Date.now();
+      let start = performance.now();
       let set = _getSetObject(main_set, set_repeats);
-      let end = Date.now();
+      let sendoffs = _getSendoffLists(set);
+      let end = performance.now();
       let time = end - start;
 
       let name =
@@ -2237,27 +2251,56 @@
       }
     }
 
-    function saveAsPractice() {
-      document.getElementById("save_practice_modal").remove(); //TODO: get rid of this when finished
-      let set_display = document.getElementById("set_display");
-      let set_displays = set_display.children;
+    function saveAsPractice(e) {
+      //document.getElementById("save_practice_modal").remove(); //TODO: get rid of this when finished
+      try {
+        let set_display = document.getElementById("set_display");
+        let set_displays = set_display.children;
 
-      let set_number = 0;
-      let practice_object = {};
-      let start = Date.now();
-      for (let i = 0; i < set_displays.length; i++) {
-        let set_repeats = parseInt(
-          set_displays[i].children[0].children[1].children[0].value
-        );
-        let main_set = set_displays[i].children[1].children[1].children;
+        let practice_object = {};
+        let start = Date.now();
+        for (let i = 0; i < set_displays.length; i++) {
+          let set_repeats = parseInt(
+            set_displays[i].children[0].children[1].children[0].value
+          );
+          let main_set = set_displays[i].children[1].children[1].children;
 
-        let set = _getSetObject(main_set, set_repeats);
-        practice_object[set_number] = set;
-        set_number++;
+          let set = _getSetObject(main_set, set_repeats);
+          let sendoffs = _getSendoffLists(set);
+          practice_object[i] = set;
+        }
+        let end = Date.now();
+        let time = end - start;
+        debugger;
+
+        let practice_number =
+          e.parentElement.parentElement.children[1].children[0].children[1]
+            .children[0].value;
+        let group =
+          e.parentElement.parentElement.children[1].children[1].children[1]
+            .children[0].value;
+        let date =
+          e.parentElement.parentElement.children[1].children[2].children[1]
+            .children[0].value;
+        let key_words =
+          e.parentElement.parentElement.children[1].children[3].children[1]
+            .children[0].value;
+        let description =
+          e.parentElement.parentElement.children[1].children[4].children[1]
+            .children[0].value;
+
+        practice_object.practice_number = parseInt(practice_number);
+        practice_object.group = group;
+        practice_object.date = date;
+        practice_object.key_words = key_words;
+        practice_object.description = description;
+
+        e.parentElement.parentElement.parentElement.parentElement.style.display =
+          "none";
+        e.parentElement.parentElement.children[0].style.display = "none";
+      } catch {
+        e.parentElement.parentElement.children[0].style.display = "";
       }
-      let end = Date.now();
-      let time = end - start;
-      debugger;
     }
 
     function _getSetObject(set_html_collection, repeats) {
