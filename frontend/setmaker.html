@@ -2295,6 +2295,17 @@
         practice_object.key_words = key_words;
         practice_object.description = description;
 
+        let filename =
+          today.getFullYear() +
+          "-" +
+          today.getMonth() +
+          "-" +
+          today.getDay() +
+          "-PRACTICE-" +
+          practice_number +
+          "-" +
+          group;
+
         e.parentElement.parentElement.parentElement.parentElement.style.display =
           "none";
         e.parentElement.parentElement.children[0].style.display = "none";
