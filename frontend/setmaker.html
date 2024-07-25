@@ -543,6 +543,16 @@
         color: red;
         text-align: center;
       }
+      .setting_wraper {
+        display: flex;
+        align-items: center;
+        margin-top: 8px;
+      }
+
+      .setting_wraper * {
+        margin-left: 4px;
+        margin-right: 4px;
+      }
     </style>
     <link rel="icon" href="../temp/stopwatch.svg" />
   </head>
@@ -558,6 +568,9 @@
         </div>
         <div id="video_tab" class="tab" onclick="switchToVideoSetUp(this)">
           Video Set Up
+        </div>
+        <div id="settings_tab" class="tab" onclick="switchToSettings(this)">
+          Settings
         </div>
       </div>
       <div class="button_row">
@@ -603,8 +616,51 @@
         </button>
       </div>
       <div id="set_display" class="display"></div>
-      <div id="practice_display" class="display hide"></div>
+
       <div id="video_display" class="display hide"></div>
+      <div id="settings_display" class="display hide">
+        <div
+          id="no_coach_id_error_message"
+          class="error_message"
+          style="display: none"
+        >
+          Coach ID Not found
+        </div>
+        <div
+          id="invalid_coach_id_error_message"
+          class="error_message"
+          style="display: none"
+        >
+          Invalid Coach ID
+        </div>
+        <div class="setting_wraper">
+          <label for="coach_id" id="coach_id_label">Coach ID:</label>
+          <input
+            id="coach_id"
+            name="coach_id"
+            type="text"
+            placeholder="required"
+            disabled="true"
+          />
+          <button
+            id="edit_coach_id_button"
+            type="button"
+            class="btn btn-primary"
+            onclick="editCoachIDButtonClicked()"
+          >
+            Edit Coach ID
+          </button>
+          <button
+            id="save_coach_id_button"
+            type="button"
+            class="btn btn-success"
+            style="display: none"
+            onclick="saveCoachIDButtonclicked()"
+          >
+            Save Coach ID
+          </button>
+        </div>
+      </div>
     </div>
     <div id="save_set_modal" class="background_blocker" style="display: none">
       <div class="modal_wrapper">
@@ -826,6 +882,10 @@
       }
     }
 
+    if (!localStorage.getItem("coach_id")) coachIDNotFound();
+    let COACH_ID = localStorage.getItem("coach_id");
+    document.getElementById("coach_id").value = COACH_ID;
+
     function mouseExists(e) {
       mouse = true;
       let target = e.target;
@@ -842,6 +902,43 @@
           wrappers[i].parentElement.children[0].style.marginLeft = "";
           wrappers[i].parentElement.children[0].style.marginRight = "";
         }
+      }
+    }
+
+    function coachIDNotFound() {
+      document.getElementById("settings_tab").click();
+      document.getElementById("coach_id").disabled = false;
+      document.getElementById("no_coach_id_error_message").style.display = "";
+      document.getElementById("edit_coach_id_button").style.display = "none";
+      document.getElementById("save_coach_id_button").style.display = "";
+    }
+
+    function editCoachIDButtonClicked() {
+      document.getElementById("coach_id").disabled = false;
+      document.getElementById("edit_coach_id_button").style.display = "none";
+      document.getElementById("save_coach_id_button").style.display = "";
+    }
+
+    function saveCoachIDButtonclicked() {
+      let coach_id_input = document.getElementById("coach_id");
+      let coachID = coach_id_input.value;
+      coachID = coachID.trim();
+      if (coachID.includes(" ") || coachID == "") {
+        document.getElementById(
+          "invalid_coach_id_error_message"
+        ).style.display = "";
+      } else {
+        document.getElementById(
+          "invalid_coach_id_error_message"
+        ).style.display = "none";
+        document.getElementById("no_coach_id_error_message").style.display =
+          "none";
+
+        COACH_ID = coachID;
+        localStorage.setItem("coach_id", coachID);
+        document.getElementById("edit_coach_id_button").style.display = "";
+        document.getElementById("save_coach_id_button").style.display = "none";
+        document.getElementById("coach_id").disabled = true;
       }
     }
 
@@ -2101,10 +2198,12 @@
 
     function switchToSetMaker(e) {
       document.getElementById("video_tab").classList.remove("active_tab");
+      document.getElementById("settings_tab").classList.remove("active_tab");
       document.getElementById("set_tab").classList.add("active_tab");
 
       document.getElementById("set_display").classList.remove("hide");
       document.getElementById("video_display").classList.add("hide");
+      document.getElementById("settings_display").classList.add("hide");
 
       document.getElementById("add_set_button").style.display = "";
       document.getElementById("save_set_button").style.display = "";
@@ -2113,10 +2212,26 @@
 
     function switchToVideoSetUp(e) {
       document.getElementById("set_tab").classList.remove("active_tab");
+      document.getElementById("settings_tab").classList.remove("active_tab");
       document.getElementById("video_tab").classList.add("active_tab");
 
       document.getElementById("set_display").classList.add("hide");
       document.getElementById("video_display").classList.remove("hide");
+      document.getElementById("settings_display").classList.add("hide");
+
+      document.getElementById("add_set_button").style.display = "none";
+      document.getElementById("save_set_button").style.display = "none";
+      document.getElementById("save_to_practice_button").style.display = "none";
+    }
+
+    function switchToSettings(e) {
+      document.getElementById("set_tab").classList.remove("active_tab");
+      document.getElementById("video_tab").classList.remove("active_tab");
+      document.getElementById("settings_tab").classList.add("active_tab");
+
+      document.getElementById("set_display").classList.add("hide");
+      document.getElementById("video_display").classList.add("hide");
+      document.getElementById("settings_display").classList.remove("hide");
 
       document.getElementById("add_set_button").style.display = "none";
       document.getElementById("save_set_button").style.display = "none";
@@ -2258,7 +2373,7 @@
         let set_displays = set_display.children;
 
         let practice_object = {};
-        let start = Date.now();
+        let start = performance.now();
         for (let i = 0; i < set_displays.length; i++) {
           let set_repeats = parseInt(
             set_displays[i].children[0].children[1].children[0].value
@@ -2269,9 +2384,6 @@
           let sendoffs = _getSendoffLists(set);
           practice_object[i] = set;
         }
-        let end = Date.now();
-        let time = end - start;
-        debugger;
 
         let practice_number =
           e.parentElement.parentElement.children[1].children[0].children[1]
@@ -2295,6 +2407,8 @@
         practice_object.key_words = key_words;
         practice_object.description = description;
 
+        let today = new Date();
+
         let filename =
           today.getFullYear() +
           "-" +
@@ -2305,6 +2419,10 @@
           practice_number +
           "-" +
           group;
+
+        let end = performance.now();
+        let time = end - start;
+        console.log("Time to process practice: " + end + "ms");
 
         e.parentElement.parentElement.parentElement.parentElement.style.display =
           "none";
