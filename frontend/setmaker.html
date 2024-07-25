@@ -553,6 +553,9 @@
         margin-left: 4px;
         margin-right: 4px;
       }
+      .saving_status {
+        color: green;
+      }
     </style>
     <link rel="icon" href="../temp/stopwatch.svg" />
   </head>
@@ -836,6 +839,11 @@
               Cancel
             </button>
           </div>
+          <div
+            id="practice_saving_status"
+            class="saving_status"
+            style="display: none"
+          ></div>
           <input id="practice_id" type="hidden" />
         </div>
       </div>
@@ -2319,10 +2327,10 @@
       );
       let main_set = set_display.children[0].children[1].children[1].children;
 
-      let start = performance.now();
+      let start = Date.now();
       let set = _getSetObject(main_set, set_repeats);
       let sendoffs = _getSendoffLists(set);
-      let end = performance.now();
+      let end = Date.now();
       let time = end - start;
 
       let name =
@@ -2366,14 +2374,21 @@
       }
     }
 
-    function saveAsPractice(e) {
+    async function saveAsPractice(e) {
       //document.getElementById("save_practice_modal").remove(); //TODO: get rid of this when finished
+      let practice_saving_status = document.getElementById(
+        "practice_saving_status"
+      );
+      practice_saving_status.innerText = "Saving practice...";
+      practice_saving_status.style.display = "";
       try {
         let set_display = document.getElementById("set_display");
         let set_displays = set_display.children;
 
         let practice_object = {};
+        practice_object.practice = {};
         let start = performance.now();
+        let set, sendoffs;
         for (let i = 0; i < set_displays.length; i++) {
           let set_repeats = parseInt(
             set_displays[i].children[0].children[1].children[0].value
@@ -2382,7 +2397,7 @@
 
           let set = _getSetObject(main_set, set_repeats);
           let sendoffs = _getSendoffLists(set);
-          practice_object[i] = set;
+          practice_object.practice[i] = set;
         }
 
         let practice_number =
@@ -2406,29 +2421,51 @@
         practice_object.date = date;
         practice_object.key_words = key_words;
         practice_object.description = description;
+        practice_object.coach_id = COACH_ID;
 
         let today = new Date();
 
         let filename =
           today.getFullYear() +
           "-" +
-          today.getMonth() +
+          (today.getMonth() + 1) +
           "-" +
-          today.getDay() +
+          today.getDate() +
           "-PRACTICE-" +
           practice_number +
           "-" +
-          group;
+          group +
+          ".json";
+
+        practice_object.filename = filename;
 
         let end = performance.now();
         let time = end - start;
-        console.log("Time to process practice: " + end + "ms");
+        console.log("Time to process practice: " + time + "ms");
 
-        e.parentElement.parentElement.parentElement.parentElement.style.display =
-          "none";
-        e.parentElement.parentElement.children[0].style.display = "none";
-      } catch {
+        let temp = JSON.stringify(practice_object);
+
+        let answer = await fetch(
+          "https://wrsmqorkonj3w2fk22ekct2o3m0gngqg.lambda-url.us-east-2.on.aws/",
+          {
+            method: "POST",
+            body: JSON.stringify(practice_object),
+          }
+        );
+
+        if (!answer.ok || Math.trunc(answer.status / 100) != 2) {
+          practice_saving_status.style.color = "red";
+          practice_saving_status.innerText = "ERROR SAVING PRACTICE";
+        } else {
+          e.parentElement.parentElement.parentElement.parentElement.style.display =
+            "none";
+          e.parentElement.parentElement.children[0].style.display = "none";
+          practice_saving_status.style.display = "none";
+          practice_saving_status.innerText = "";
+        }
+      } catch (error) {
         e.parentElement.parentElement.children[0].style.display = "";
+        console.log(error);
       }
     }
 
