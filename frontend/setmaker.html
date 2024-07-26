@@ -557,7 +557,7 @@
         color: green;
       }
       #practices_div {
-        width: 50%;
+        width: 40%;
         height: 90%;
         margin-left: 4vw;
         margin-top: 3vw;
@@ -580,6 +580,34 @@
         padding-top: 3px;
         border-radius: 3px;
         white-space: nowrap;
+      }
+      #individual_practice {
+        width: 40%;
+        height: 90%;
+        margin-top: 3vw;
+        margin-right: 4vw;
+        background-color: white;
+        border-style: solid;
+        border-color: darkgray;
+        padding: 8px;
+        border-radius: 8px;
+        box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+        overflow: auto;
+      }
+      #practices_display {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+      #working_modal {
+        cursor: progress;
+        -webkit-backdrop-filter: blur(0px);
+        backdrop-filter: blur(0px);
+      }
+      .individual_set_top_part {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
       }
     </style>
     <link rel="icon" href="../temp/stopwatch.svg" />
@@ -653,6 +681,7 @@
       <div id="set_display" class="display"></div>
       <div id="practices_display" class="display hide">
         <div id="practices_div"></div>
+        <div id="individual_practice"></div>
       </div>
       <div id="video_display" class="display hide"></div>
       <div id="settings_display" class="display hide">
@@ -882,6 +911,11 @@
         </div>
       </div>
     </div>
+    <div
+      id="working_modal"
+      class="background_blocker"
+      style="display: none"
+    ></div>
   </body>
 
   <script>
@@ -3778,15 +3812,17 @@
         const practice_div = document.createElement("div");
         practice_div.classList.add("practice_small_display");
         practice_div.innerText = `${practice.month}/${practice.day}/${practice.year} - Group: ${practice.group}  - #${practice.practice_of_the_day}`;
-        practice_div.filename = practice.filename;
+        practice_div.practice_info = practice;
         practice_div.addEventListener("click", practiceClicked);
         practices_div.appendChild(practice_div);
       });
     }
 
     async function practiceClicked(e) {
-      debugger;
-      let filename = this.filename;
+      //display loading modal
+      const working_modal = document.getElementById("working_modal");
+      working_modal.style.display = "";
+      let filename = this.practice_info.filename;
       filename = encodeURIComponent(filename);
 
       const headers = {
@@ -3794,18 +3830,9 @@
         "Content-Type": "application/json",
       };
 
-      // const requestOptions = {
-      //   method: "GET",
-      //   headers: headers,
-      //   mode: "no-cors",
-      // };
-
       let url =
         "https://lufypj7qre3hbvkvasijiv7rhy0tvrtr.lambda-url.us-east-2.on.aws/?filename=" +
         filename;
-
-      //let result = await fetch(url, requestOptions);
-      //let practice_info = await result.json();
 
       const requestOptions = {
         method: "GET",
@@ -3815,10 +3842,137 @@
       fetch(url, requestOptions)
         .then((response) => response.text())
         .then((practice) => {
+          working_modal.style.display = "none";
           practice = JSON.parse(practice);
-          debugger;
+
+          const individual_practice = document.getElementById(
+            "individual_practice"
+          );
+
+          const top_part = document.createElement("div");
+          top_part.classList.add("individual_set_top_part");
+          individual_practice.appendChild(top_part);
+
+          const date_wrapper = document.createElement("div");
+          top_part.appendChild(date_wrapper);
+
+          const date_label = document.createElement("label");
+          date_label.innerText = "Practice Date:";
+          date_label.htmlFor = "date_data";
+          date_wrapper.appendChild(date_label);
+
+          const date_data = document.createElement("input");
+          date_data.type = "text";
+          date_data.id = "date_data";
+          date_data.name = "date_data";
+          const date = new Date(practice.date);
+          let day_of_week = date.getDay();
+          switch (day_of_week) {
+            case 0:
+              day_of_week = "Sunday";
+              break;
+            case 1:
+              day_of_week = "Monday";
+              break;
+            case 2:
+              day_of_week = "Tuesday";
+              break;
+            case 3:
+              day_of_week = "Wednesday";
+              break;
+            case 4:
+              day_of_week = "Thursday";
+              break;
+            case 5:
+              day_of_week = "Friday";
+              break;
+            case 6:
+              day_of_week = "Saturday";
+              break;
+          }
+          date_data.value = day_of_week + " " + date.toLocaleDateString();
+          date_data.disabled = true;
+          date_wrapper.appendChild(date_data);
+
+          const group_wrapper = document.createElement("div");
+          top_part.appendChild(group_wrapper);
+
+          const group_label = document.createElement("div");
+          group_label.innerText = "Group:";
+          group_label.htmlFor = "group_data";
+          group_wrapper.appendChild(group_label);
+
+          const group_data = document.createElement("input");
+          group_data.type = "text";
+          group_data.value = practice.group;
+          group_data.id = "group_data";
+          group_data.name = "group_data";
+          group_data.disabled = true;
+          group_wrapper.appendChild(group_data);
+
+          const key_words_wrapper = document.createElement("div");
+          top_part.appendChild(key_words_wrapper);
+
+          const key_words_label = document.createElement("label");
+          key_words_label.innerText = "Key Words:";
+          key_words_label.htmlFor = "key_words_data";
+          key_words_wrapper.appendChild(key_words_label);
+
+          const key_words_data = document.createElement("input");
+          key_words_data.type = "text";
+          key_words_data.value = practice.key_words;
+          key_words_data.id = "key_words_data";
+          key_words_data.name = "key_words_data";
+          key_words_data.disabled = true;
+          key_words_wrapper.appendChild(key_words_data);
+
+          const practice_number_wrapper = document.createElement("div");
+          top_part.appendChild(practice_number_wrapper);
+
+          const practice_number_label = document.createElement("label");
+          practice_number_label.innerText = "Practice Number:";
+          practice_number_label.htmlFor = "practice_number_data";
+          practice_number_wrapper.appendChild(practice_number_label);
+
+          const practice_number_data = document.createElement("input");
+          practice_number_data.type = "number";
+          practice_number_data.id = "practice_number_data";
+          practice_number_data.name = "practice_number_data";
+          practice_number_data.value = practice.practice_of_the_day ?? 1;
+          practice_number_data.disabled = true;
+          practice_number_data.min = 1;
+          practice_number_data.max = 9;
+          practice_number_wrapper.appendChild(practice_number_data);
+
+          const description_wrapper = document.createElement("div");
+          top_part.appendChild(description_wrapper);
+
+          const description_label = document.createElement("label");
+          description_label.innerText = "Description:";
+          description_label.htmlFor = "description_data";
+          description_wrapper.appendChild(description_label);
+
+          const description_data = document.createElement("input");
+          description_data.type = "text";
+          description_data.id = "description_data";
+          description_data.name = "description_data";
+          description_data.value = practice.description;
+          description_data.disabled = true;
+          description_wrapper.appendChild(description_data);
+
+          const bottom_part = document.createElement("div");
+          individual_practice.appendChild(bottom_part);
+
+          displayPractice(bottom_part, practice);
         })
-        .catch((error) => console.error(error));
+        .catch((error) => {
+          working_modal.style.display = "none";
+          console.error(error);
+        });
+    }
+
+    function displayPractice(element_to_display_to, practice) {
+      debugger;
     }
   </script>
 </html>
