@@ -556,6 +556,31 @@
       .saving_status {
         color: green;
       }
+      #practices_div {
+        width: 50%;
+        height: 90%;
+        margin-left: 4vw;
+        margin-top: 3vw;
+        background-color: white;
+        border-style: solid;
+        border-color: darkgray;
+        padding: 8px;
+        border-radius: 8px;
+        box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+        overflow: auto;
+      }
+      .practice_small_display:hover {
+        cursor: pointer;
+        background-color: rgb(166, 244, 255);
+      }
+      .practice_small_display {
+        padding-left: 4px;
+        padding-right: 4px;
+        width: 100%;
+        padding-top: 3px;
+        border-radius: 3px;
+        white-space: nowrap;
+      }
     </style>
     <link rel="icon" href="../temp/stopwatch.svg" />
   </head>
@@ -572,11 +597,18 @@
         <div id="video_tab" class="tab" onclick="switchToVideoSetUp(this)">
           Video Set Up
         </div>
+        <div
+          id="practices_tab"
+          class="tab"
+          onclick="switchToPracticesTab(this)"
+        >
+          Practices
+        </div>
         <div id="settings_tab" class="tab" onclick="switchToSettings(this)">
           Settings
         </div>
       </div>
-      <div class="button_row">
+      <div id="main_button_row" class="button_row">
         <button
           id="add_set_button"
           class="btn btn-primary main_button"
@@ -604,14 +636,14 @@
           Save As Practice
         </button>
         <button
-          id="save_to_practice_button"
+          id="mockup_set_button"
           class="btn btn-danger main_button"
           onclick="mockUpSet(this)"
         >
           Mockup Set
         </button>
         <button
-          id="save_to_practice_button"
+          id="test_set_button"
           class="btn btn-danger main_button"
           onclick="testSetClicked(this)"
         >
@@ -619,7 +651,9 @@
         </button>
       </div>
       <div id="set_display" class="display"></div>
-
+      <div id="practices_display" class="display hide">
+        <div id="practices_div"></div>
+      </div>
       <div id="video_display" class="display hide"></div>
       <div id="settings_display" class="display hide">
         <div
@@ -893,6 +927,8 @@
     if (!localStorage.getItem("coach_id")) coachIDNotFound();
     let COACH_ID = localStorage.getItem("coach_id");
     document.getElementById("coach_id").value = COACH_ID;
+
+    loadPractices();
 
     function mouseExists(e) {
       mouse = true;
@@ -2204,46 +2240,71 @@
       }
     }
 
-    function switchToSetMaker(e) {
-      document.getElementById("video_tab").classList.remove("active_tab");
-      document.getElementById("settings_tab").classList.remove("active_tab");
-      document.getElementById("set_tab").classList.add("active_tab");
+    function switchToTab(tab_to_switch_to, display_to_switch_to) {
+      let tabs = document.getElementsByClassName("tab");
+      for (let i = 0; i < tabs.length; i++) {
+        if (tabs[i] == tab_to_switch_to) tabs[i].classList.add("active_tab");
+        else tabs[i].classList.remove("active_tab");
+      }
+      let displays = document.getElementsByClassName("display");
+      for (let i = 0; i < displays.length; i++) {
+        if (displays[i] == display_to_switch_to)
+          displays[i].classList.remove("hide");
+        else displays[i].classList.add("hide");
+      }
+      hideAllButtonsInButtonRow();
+    }
 
-      document.getElementById("set_display").classList.remove("hide");
-      document.getElementById("video_display").classList.add("hide");
-      document.getElementById("settings_display").classList.add("hide");
+    function hideAllButtonsInButtonRow() {
+      let button_row = document.getElementById("main_button_row");
+      for (let i = 0; i < button_row.children.length; i++)
+        button_row.children[i].style.display = "none";
+      button_row.style.display = "none";
+    }
+
+    function addCurves(element) {
+      element.style.borderTopLeftRadius = "20px";
+      element.style.borderTopRightRadius = "20px";
+    }
+
+    function switchToSetMaker(e) {
+      switchToTab(
+        document.getElementById("set_tab"),
+        document.getElementById("set_display")
+      );
 
       document.getElementById("add_set_button").style.display = "";
       document.getElementById("save_set_button").style.display = "";
       document.getElementById("save_to_practice_button").style.display = "";
+      document.getElementById("mockup_set_button").style.display = "";
+      document.getElementById("test_set_button").style.display = "";
+
+      document.getElementById("main_button_row").style.display = "";
     }
 
     function switchToVideoSetUp(e) {
-      document.getElementById("set_tab").classList.remove("active_tab");
-      document.getElementById("settings_tab").classList.remove("active_tab");
-      document.getElementById("video_tab").classList.add("active_tab");
+      switchToTab(
+        document.getElementById("video_tab"),
+        document.getElementById("video_display")
+      );
 
-      document.getElementById("set_display").classList.add("hide");
-      document.getElementById("video_display").classList.remove("hide");
-      document.getElementById("settings_display").classList.add("hide");
-
-      document.getElementById("add_set_button").style.display = "none";
-      document.getElementById("save_set_button").style.display = "none";
-      document.getElementById("save_to_practice_button").style.display = "none";
+      addCurves(document.getElementById("video_display"));
     }
 
     function switchToSettings(e) {
-      document.getElementById("set_tab").classList.remove("active_tab");
-      document.getElementById("video_tab").classList.remove("active_tab");
-      document.getElementById("settings_tab").classList.add("active_tab");
+      switchToTab(
+        document.getElementById("settings_tab"),
+        document.getElementById("settings_display")
+      );
+      addCurves(document.getElementById("settings_display"));
+    }
 
-      document.getElementById("set_display").classList.add("hide");
-      document.getElementById("video_display").classList.add("hide");
-      document.getElementById("settings_display").classList.remove("hide");
-
-      document.getElementById("add_set_button").style.display = "none";
-      document.getElementById("save_set_button").style.display = "none";
-      document.getElementById("save_to_practice_button").style.display = "none";
+    function switchToPracticesTab(e) {
+      switchToTab(
+        document.getElementById("practices_tab"),
+        document.getElementById("practices_display")
+      );
+      addCurves(document.getElementById("practices_display"));
     }
 
     function saveIndividualSetClicked(e) {
@@ -3679,6 +3740,53 @@
           main_set[0].parentElement.parentElement.parentElement
         );
       }
+    }
+
+    async function loadPractices() {
+      let practices_div = document.getElementById("practices_div");
+      const headers = {
+        coach_id: "Cpierswim",
+        "Content-Type": "application/json",
+        Authorization: "Bearer your-token",
+      };
+
+      const requestOptions = {
+        method: "GET",
+        headers: headers,
+      };
+
+      let result = await fetch(
+        "https://c6a7fgweplcxu3yjgx5gkklxce0nopqg.lambda-url.us-east-2.on.aws/?coach_id=" +
+          COACH_ID,
+        requestOptions
+      );
+
+      let practice_info = await result.json();
+
+      let practices = practice_info.practices;
+      let metadata = practice_info.metadata;
+
+      practices.sort((a, b) => {
+        let a_date = new Date(a.year, a.month - 1, a.day).getTime();
+        let b_date = new Date(b.year, b.month - 1, b.day).getTime();
+        if (b_date - a_date == 0)
+          return b.practice_of_the_day - a.practice_of_the_day;
+        return b_date - a_date;
+      });
+
+      practices.forEach((practice) => {
+        if (practice.group == "") practice.group = "-undefined-";
+        const practice_div = document.createElement("div");
+        practice_div.classList.add("practice_small_display");
+        practice_div.innerText = `${practice.month}/${practice.day}/${practice.year} - Group: ${practice.group}  - #${practice.practice_of_the_day}`;
+        practice_div.filename = practice.filename;
+        practice_div.addEventListener("click", practiceClicked);
+        practices_div.appendChild(practice_div);
+      });
+    }
+
+    function practiceClicked(e) {
+      debugger;
     }
   </script>
 </html>
