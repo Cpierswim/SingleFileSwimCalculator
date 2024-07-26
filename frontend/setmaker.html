@@ -3747,7 +3747,6 @@
       const headers = {
         coach_id: "Cpierswim",
         "Content-Type": "application/json",
-        Authorization: "Bearer your-token",
       };
 
       const requestOptions = {
@@ -3785,8 +3784,41 @@
       });
     }
 
-    function practiceClicked(e) {
+    async function practiceClicked(e) {
       debugger;
+      let filename = this.filename;
+      filename = encodeURIComponent(filename);
+
+      const headers = {
+        coach_id: "Cpierswim",
+        "Content-Type": "application/json",
+      };
+
+      // const requestOptions = {
+      //   method: "GET",
+      //   headers: headers,
+      //   mode: "no-cors",
+      // };
+
+      let url =
+        "https://lufypj7qre3hbvkvasijiv7rhy0tvrtr.lambda-url.us-east-2.on.aws/?filename=" +
+        filename;
+
+      //let result = await fetch(url, requestOptions);
+      //let practice_info = await result.json();
+
+      const requestOptions = {
+        method: "GET",
+        redirect: "follow",
+      };
+
+      fetch(url, requestOptions)
+        .then((response) => response.text())
+        .then((practice) => {
+          practice = JSON.parse(practice);
+          debugger;
+        })
+        .catch((error) => console.error(error));
     }
   </script>
 </html>
