@@ -557,7 +557,7 @@
         color: green;
       }
       #practices_div {
-        width: 40%;
+        width: 30%;
         height: 90%;
         margin-left: 4vw;
         margin-top: 3vw;
@@ -568,6 +568,7 @@
         border-radius: 8px;
         box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
         overflow: auto;
+        user-select: none;
       }
       .practice_small_display:hover {
         cursor: pointer;
@@ -582,7 +583,7 @@
         white-space: nowrap;
       }
       #individual_practice {
-        width: 40%;
+        width: 50%;
         height: 90%;
         margin-top: 3vw;
         margin-right: 4vw;
@@ -607,10 +608,57 @@
         width: 100vw;
         height: 100vh;
       }
-      .individual_set_top_part {
+      .individual_practice_top_part {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
+      }
+      .individual_practice_bottom_part {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        padding-top: 12px;
+      }
+      .label_wrapper {
+        display: flex;
+      }
+      .individual_set {
+        display: flex;
+        align-items: center;
+        flex: 1 1 auto;
+      }
+      .set_repeat_side {
+      }
+      .set_display_side {
+        height: 100%;
+        flex: 1 1 auto;
+      }
+      .curly_brace_wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      .brace {
+        width: 20px;
+        height: 25%;
+      }
+      .curly_brace_part_one {
+        border-left: 2px solid black;
+        border-top-left-radius: 12px;
+        margin-left: 18px;
+      }
+      .curly_brace_part_two {
+        border-right: 2px solid black;
+        border-bottom-right-radius: 12px;
+      }
+      .curly_brace_part_three {
+        border-right: 2px solid black;
+        border-top-right-radius: 12px;
+      }
+      .curly_brace_part_four {
+        border-left: 2px solid black;
+        border-bottom-left-radius: 12px;
+        margin-left: 18px;
       }
     </style>
     <link rel="icon" href="../temp/stopwatch.svg" />
@@ -960,6 +1008,18 @@
     if (!localStorage.getItem("coach_id")) coachIDNotFound();
     let COACH_ID = localStorage.getItem("coach_id");
     document.getElementById("coach_id").value = COACH_ID;
+
+    if (!localStorage.getItem("set_first_set_as_warmup"))
+      localStorage.setItem("set_first_set_as_warmup", true);
+    let SET_FIRST_SET_AS_WARMUP = localStorage.getItem(
+      "set_first_set_as_warmup"
+    );
+
+    if (!localStorage.getItem("set_last_set_as_cooldown"))
+      localStorage.setItem("set_last_set_as_cooldown", true);
+    let SET_LAST_SET_AS_COOLDOWN = localStorage.getItem(
+      "set_last_set_as_cooldown"
+    );
 
     loadPractices();
 
@@ -3850,10 +3910,11 @@
             individual_practice.children[0].remove();
 
           const top_part = document.createElement("div");
-          top_part.classList.add("individual_set_top_part");
+          top_part.classList.add("individual_practice_top_part");
           individual_practice.appendChild(top_part);
 
           const date_wrapper = document.createElement("div");
+          date_wrapper.classList.add("label_wrapper");
           top_part.appendChild(date_wrapper);
 
           const date_label = document.createElement("label");
@@ -3895,6 +3956,7 @@
           date_wrapper.appendChild(date_data);
 
           const group_wrapper = document.createElement("div");
+          group_wrapper.classList.add("label_wrapper");
           top_part.appendChild(group_wrapper);
 
           const group_label = document.createElement("div");
@@ -3911,6 +3973,7 @@
           group_wrapper.appendChild(group_data);
 
           const key_words_wrapper = document.createElement("div");
+          key_words_wrapper.classList.add("label_wrapper");
           top_part.appendChild(key_words_wrapper);
 
           const key_words_label = document.createElement("label");
@@ -3927,6 +3990,7 @@
           key_words_wrapper.appendChild(key_words_data);
 
           const practice_number_wrapper = document.createElement("div");
+          practice_number_wrapper.classList.add("label_wrapper");
           top_part.appendChild(practice_number_wrapper);
 
           const practice_number_label = document.createElement("label");
@@ -3945,6 +4009,7 @@
           practice_number_wrapper.appendChild(practice_number_data);
 
           const description_wrapper = document.createElement("div");
+          description_wrapper.classList.add("label_wrapper");
           top_part.appendChild(description_wrapper);
 
           const description_label = document.createElement("label");
@@ -3961,6 +4026,7 @@
           description_wrapper.appendChild(description_data);
 
           const bottom_part = document.createElement("div");
+          bottom_part.classList.add("individual_practice_bottom_part");
           individual_practice.appendChild(bottom_part);
 
           displayPractice(bottom_part, practice);
@@ -3972,7 +4038,128 @@
     }
 
     function displayPractice(element_to_display_to, practice) {
-      debugger;
+      let keys = Object.keys(practice.practice);
+      keys.sort((a, b) => parseInt(a) - parseInt(b));
+      for (let i = 0; i < keys.length; i++) {
+        const set_descriptor = document.createElement("div");
+        set_descriptor.innerText = "Set " + (parseInt(keys[i]) + 1) + ":";
+        if (keys.length > 1) {
+          if (SET_FIRST_SET_AS_WARMUP && keys[i] == "0")
+            set_descriptor.innerText = "Warm-up:";
+          if (SET_LAST_SET_AS_COOLDOWN && i + 1 == keys.length)
+            set_descriptor.innerText = "Cool-down:";
+        }
+        element_to_display_to.appendChild(set_descriptor);
+
+        const set_display = document.createElement("div");
+        set_display.classList.add("individual_set");
+        element_to_display_to.appendChild(set_display);
+        displaySet(set_display, practice.practice[keys[i]]);
+      }
+    }
+
+    function displaySet(element_to_display_to, set) {
+      if (set.repeats > 1) {
+        const left_side = document.createElement("div");
+        left_side.classList.add("set_repeat_side");
+        element_to_display_to.appendChild(left_side);
+
+        const curly_brace_wrapper = document.createElement("div");
+        curly_brace_wrapper.classList.add("curly_brace_wrapper");
+        element_to_display_to.appendChild(curly_brace_wrapper);
+
+        const curly_brace_part_one = document.createElement("div");
+        curly_brace_part_one.classList.add("curly_brace_part_one");
+        curly_brace_part_one.classList.add("brace");
+        curly_brace_wrapper.appendChild(curly_brace_part_one);
+
+        const curly_brace_part_two = document.createElement("div");
+        curly_brace_part_two.classList.add("curly_brace_part_two");
+        curly_brace_part_two.classList.add("brace");
+        curly_brace_wrapper.appendChild(curly_brace_part_two);
+
+        const curly_brace_part_three = document.createElement("div");
+        curly_brace_part_three.classList.add("curly_brace_part_three");
+        curly_brace_part_three.classList.add("brace");
+        curly_brace_wrapper.appendChild(curly_brace_part_three);
+
+        const curly_brace_part_four = document.createElement("div");
+        curly_brace_part_four.classList.add("curly_brace_part_four");
+        curly_brace_part_four.classList.add("brace");
+        curly_brace_wrapper.appendChild(curly_brace_part_four);
+
+        const set_repeat = document.createElement("div");
+        set_repeat.innerText = set.repeats + " X";
+        left_side.appendChild(set_repeat);
+      }
+
+      const right_side = document.createElement("div");
+      right_side.classList.add("set_display_side");
+      element_to_display_to.appendChild(right_side);
+
+      right_side.appendChild(document.createElement("div"));
+
+      if (set.description && set.description != "") {
+        const set_description = document.createElement("div");
+        set_description.innerText = set.description;
+        right_side.appendChild(set_description);
+      }
+
+      let keys = Object.keys(set);
+      let temp = [];
+      for (let i = 0; i < keys.length; i++)
+        if (keys[i] != "repeats") temp.push(keys[i]);
+      keys = temp;
+      for (let i = 0; i < keys.length; i++) {
+        let key = keys[i];
+        let element = set[key];
+
+        if (set[key].type == "standard") {
+          let sendoffs = Object.keys(element.sendoffs);
+          let A_reps = element.sendoffs[sendoffs[0]].reps;
+          let all_the_same_reps = true;
+
+          for (let k = 1; k < sendoffs.length; k++)
+            if (element.sendoffs[sendoffs[k]].reps != A_reps)
+              all_the_same_reps = false;
+
+          let standard_element_div = document.createElement("div");
+          standard_element_div.innerText =
+            A_reps +
+            " X " +
+            element.distance +
+            " " +
+            element.description +
+            " @";
+
+          standard_element_div.innerText +=
+            " " + timeToString(element.sendoffs[sendoffs[0]].time);
+          if (sendoffs.length != 1) {
+            for (let k = 1; k < sendoffs.length; k++) {
+              standard_element_div.innerText += " / ";
+              if (!all_the_same_reps) {
+                if (A_reps != element.sendoffs[sendoffs[k]].reps) {
+                  standard_element_div.innerText +=
+                    "(" + element.sendoffs[sendoffs[k]].reps + "x) ";
+                }
+              }
+              standard_element_div.innerText += timeToString(
+                element.sendoffs[sendoffs[k]].time
+              );
+            }
+          }
+
+          right_side.appendChild(standard_element_div);
+        }
+      }
+    }
+
+    function timeToString(time) {
+      let min = Math.trunc(time / 60);
+      let sec = time - 60 * min;
+      if (sec < 10) sec = "0" + sec;
+      if (min > 0) return min + ":" + sec;
+      return ":" + sec;
     }
   </script>
 </html>
