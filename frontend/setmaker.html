@@ -601,8 +601,11 @@
       }
       #working_modal {
         cursor: progress;
-        -webkit-backdrop-filter: blur(0px);
-        backdrop-filter: blur(0px);
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
       }
       .individual_set_top_part {
         display: flex;
@@ -911,11 +914,7 @@
         </div>
       </div>
     </div>
-    <div
-      id="working_modal"
-      class="background_blocker"
-      style="display: none"
-    ></div>
+    <div id="working_modal" style="display: none"></div>
   </body>
 
   <script>
@@ -3819,7 +3818,6 @@
     }
 
     async function practiceClicked(e) {
-      //display loading modal
       const working_modal = document.getElementById("working_modal");
       working_modal.style.display = "";
       let filename = this.practice_info.filename;
@@ -3848,6 +3846,8 @@
           const individual_practice = document.getElementById(
             "individual_practice"
           );
+          while (individual_practice.children.length != 0)
+            individual_practice.children[0].remove();
 
           const top_part = document.createElement("div");
           top_part.classList.add("individual_set_top_part");
