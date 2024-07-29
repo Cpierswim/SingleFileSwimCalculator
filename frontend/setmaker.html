@@ -608,6 +608,18 @@
         align-items: flex-start;
         justify-content: space-between;
       }
+      #middle_display {
+        width: 10%;
+        align-self: stretch;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .middle_button {
+        margin-top: 2vh;
+      }
       #working_modal {
         cursor: progress;
         position: absolute;
@@ -804,6 +816,30 @@
       <div id="set_display" class="display"></div>
       <div id="practices_display" class="display hide">
         <div id="practices_div"></div>
+        <div id="middle_display">
+          <button
+            id="load_button"
+            class="btn btn-primary middle_button"
+            disabled="true"
+          >
+            Load
+          </button>
+          <button
+            id="edit_button"
+            class="btn btn-primary middle_button"
+            disabled="true"
+          >
+            Edit
+          </button>
+          <button
+            id="delete_button"
+            class="btn btn-danger middle_button"
+            disabled="true"
+            onclick="deleteDisplayedPractice()"
+          >
+            Delete
+          </button>
+        </div>
         <div id="individual_practice"></div>
       </div>
       <div id="video_display" class="display hide"></div>
@@ -3929,7 +3965,6 @@
       setPracticesAsLoading(practices_div);
 
       const headers = {
-        coach_id: "Cpierswim",
         "Content-Type": "application/json",
       };
 
@@ -3987,7 +4022,6 @@
       filename = encodeURIComponent(filename);
 
       const headers = {
-        coach_id: "Cpierswim",
         "Content-Type": "application/json",
       };
 
@@ -4133,6 +4167,8 @@
           let sides = document.getElementsByClassName("side");
           for (let count = 0; count < sides.length; count++)
             displayPractice(sides[count], practice);
+          individual_practice.filename = filename;
+          document.getElementById("delete_button").disabled = false;
         })
         .catch((error) => {
           working_modal.style.display = "none";
@@ -4346,6 +4382,42 @@
       if (sec < 10) sec = "0" + sec;
       if (min > 0) return min + ":" + sec;
       return ":" + sec;
+    }
+
+    function deleteDisplayedPractice(e) {
+      const individual_practice = document.getElementById(
+        "individual_practice"
+      );
+      const filename = individual_practice.filename;
+
+      while (individual_practice.children.length > 0) {
+        individual_practice.children[0].remove();
+      }
+
+      const deleteing_message = document.createElement("div");
+      deleteing_message.innerText = "Deleting...";
+      individual_practice.appendChild(deleteing_message);
+
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      let url =
+        "https://jqedqo6bbt22obfhjboydz5rhi0kkzss.lambda-url.us-east-2.on.aws/?filename=" +
+        filename +
+        "?coachid=" +
+        COACH_ID;
+
+      const requestOptions = { method: "DELETE", redirect: "follow" };
+
+      fetch(url, requestOptions)
+        .then((response) => response.text())
+        .then((reply) => {
+          while (individual_practice.children.length > 0) {
+            individual_practice.children[0].remove();
+          }
+          loadPractices();
+        });
     }
   </script>
 </html>
