@@ -690,7 +690,6 @@
           border-bottom-width: 1px;
           padding-top: 8px;
           padding-bottom: 8px;
-          background-color: red;
         }
 
         #printable_set {
@@ -723,6 +722,14 @@
         .side:last-child {
           border-right-style: solid;
           border-right-width: 1px;
+        }
+
+        @page {
+          page-orientation: upright;
+        }
+
+        @page upright {
+          size: landscape;
         }
       }
     </style>
