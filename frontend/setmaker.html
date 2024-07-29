@@ -671,6 +671,60 @@
       .rep_part {
         padding-left: 5%;
       }
+      @media screen {
+        #printable_set {
+          display: none;
+        }
+      }
+      @media print {
+        body {
+          visibility: hidden;
+        }
+
+        .set_descriptor {
+          display: none;
+        }
+
+        .side > .individual_set {
+          border-bottom: solid;
+          border-bottom-width: 1px;
+          padding-top: 8px;
+          padding-bottom: 8px;
+          background-color: red;
+        }
+
+        #printable_set {
+          visibility: visible;
+          position: absolute;
+          left: 0;
+          top: 0;
+          display: flex;
+          justify-content: center;
+          align-items: stretch;
+          height: 100%;
+          width: 100%;
+          font-size: 11px;
+        }
+
+        .side {
+          visibility: visible;
+          border-left-style: solid;
+          border-left-width: 1px;
+          border-top-style: solid;
+          border-top-width: 1px;
+          border-bottom-style: solid;
+          border-bottom-width: 1px;
+          padding-left: 8px;
+          padding-right: 8px;
+          width: 50%;
+          border-right: none;
+        }
+
+        .side:last-child {
+          border-right-style: solid;
+          border-right-width: 1px;
+        }
+      }
     </style>
     <link rel="icon" href="../temp/stopwatch.svg" />
   </head>
@@ -974,6 +1028,11 @@
       </div>
     </div>
     <div id="working_modal" style="display: none"></div>
+    <div id="printable_set">
+      <div class="side"></div>
+      <div class="side"></div>
+      <div class="side"></div>
+    </div>
   </body>
 
   <script>
@@ -4064,6 +4123,9 @@
           individual_practice.appendChild(bottom_part);
 
           displayPractice(bottom_part, practice);
+          let sides = document.getElementsByClassName("side");
+          for (let count = 0; count < sides.length; count++)
+            displayPractice(sides[count], practice);
         })
         .catch((error) => {
           working_modal.style.display = "none";
@@ -4077,6 +4139,7 @@
       for (let i = 0; i < keys.length; i++) {
         const set_descriptor = document.createElement("div");
         set_descriptor.innerText = "Set " + (parseInt(keys[i]) + 1) + ":";
+        set_descriptor.classList.add("set_descriptor");
         set_descriptor.style.marginBottom = "4px";
         if (keys.length > 1) {
           if (SET_FIRST_SET_AS_WARMUP && keys[i] == "0")
