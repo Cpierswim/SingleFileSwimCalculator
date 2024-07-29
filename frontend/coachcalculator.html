@@ -3667,8 +3667,25 @@
           LANES[lane].letter = letter;
         }
 
+        sendSendoffLists(sendoff_lists);
+
         assign_lanes_popup.remove();
         pick_set_display.remove();
+      }
+
+      function sendSendoffLists(sendoff_lists) {
+        let lanes = Object.keys(LANES);
+        let data = {
+          action: "sendSendoffLists",
+          roomKey: roomKey,
+          lists: {},
+        };
+
+        for (let i = 0; i < lanes.length; i++) {
+          data.lists[lanes[i]] = LANES[lanes[i]].sendoff_list;
+        }
+
+        socket.send(JSON.stringify(data));
       }
     </script>
   </body>
