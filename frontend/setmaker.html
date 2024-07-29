@@ -582,6 +582,14 @@
         border-radius: 3px;
         white-space: nowrap;
       }
+      .practice_small_display_loading {
+        width: 100%;
+        padding-top: 3px;
+        padding-left: 4px;
+        padding-right: 4px;
+        padding-top: 3px;
+        white-space: nowrap;
+      }
       #individual_practice {
         width: 50%;
         height: 90%;
@@ -636,7 +644,7 @@
       .curly_brace_wrapper {
         display: flex;
         flex-direction: column;
-        height: 100%;
+        align-self: stretch;
       }
       .brace {
         width: 20px;
@@ -659,6 +667,9 @@
         border-left: 2px solid black;
         border-bottom-left-radius: 12px;
         margin-left: 18px;
+      }
+      .rep_part {
+        padding-left: 5%;
       }
     </style>
     <link rel="icon" href="../temp/stopwatch.svg" />
@@ -2616,6 +2627,8 @@
           e.parentElement.parentElement.children[0].style.display = "none";
           practice_saving_status.style.display = "none";
           practice_saving_status.innerText = "";
+          loadPractices();
+          document.getElementById("practices_tab").click();
         }
       } catch (error) {
         e.parentElement.parentElement.children[0].style.display = "";
@@ -3835,8 +3848,20 @@
       }
     }
 
+    function setPracticesAsLoading(practices_div) {
+      while (practices_div.children.length != 0)
+        practices_div.children[0].remove();
+
+      const practice_div = document.createElement("div");
+      practice_div.classList.add("practice_small_display_loading");
+      practice_div.innerText = "Loading saved practices...";
+      practices_div.appendChild(practice_div);
+    }
+
     async function loadPractices() {
       let practices_div = document.getElementById("practices_div");
+      setPracticesAsLoading(practices_div);
+
       const headers = {
         coach_id: "Cpierswim",
         "Content-Type": "application/json",
@@ -3866,6 +3891,9 @@
         return b_date - a_date;
       });
 
+      while (practices_div.children.length != 0)
+        practices_div.children[0].remove();
+
       practices.forEach((practice) => {
         if (practice.group == "") practice.group = "-undefined-";
         const practice_div = document.createElement("div");
@@ -3878,6 +3906,15 @@
     }
 
     async function practiceClicked(e) {
+      const individual_practice = document.getElementById(
+        "individual_practice"
+      );
+      while (individual_practice.children.length != 0)
+        individual_practice.children[0].remove();
+      const loading_message = document.createElement("div");
+      loading_message.innerText = "Loading practice...";
+      individual_practice.appendChild(loading_message);
+
       const working_modal = document.getElementById("working_modal");
       working_modal.style.display = "";
       let filename = this.practice_info.filename;
@@ -3903,9 +3940,6 @@
           working_modal.style.display = "none";
           practice = JSON.parse(practice);
 
-          const individual_practice = document.getElementById(
-            "individual_practice"
-          );
           while (individual_practice.children.length != 0)
             individual_practice.children[0].remove();
 
@@ -4043,6 +4077,7 @@
       for (let i = 0; i < keys.length; i++) {
         const set_descriptor = document.createElement("div");
         set_descriptor.innerText = "Set " + (parseInt(keys[i]) + 1) + ":";
+        set_descriptor.style.marginBottom = "4px";
         if (keys.length > 1) {
           if (SET_FIRST_SET_AS_WARMUP && keys[i] == "0")
             set_descriptor.innerText = "Warm-up:";
@@ -4058,8 +4093,9 @@
       }
     }
 
-    function displaySet(element_to_display_to, set) {
-      if (set.repeats > 1) {
+    function displaySet(element_to_display_to, set, force_display_set_rep) {
+      if (force_display_set_rep == undefined) force_display_set_rep = false;
+      if (set.repeats > 1 || force_display_set_rep) {
         const left_side = document.createElement("div");
         left_side.classList.add("set_repeat_side");
         element_to_display_to.appendChild(left_side);
@@ -4097,8 +4133,6 @@
       right_side.classList.add("set_display_side");
       element_to_display_to.appendChild(right_side);
 
-      right_side.appendChild(document.createElement("div"));
-
       if (set.description && set.description != "") {
         const set_description = document.createElement("div");
         set_description.innerText = set.description;
@@ -4116,6 +4150,7 @@
 
         if (set[key].type == "standard") {
           let sendoffs = Object.keys(element.sendoffs);
+          sendoffs.sort((a, b) => b - a);
           let A_reps = element.sendoffs[sendoffs[0]].reps;
           let all_the_same_reps = true;
 
@@ -4150,6 +4185,87 @@
           }
 
           right_side.appendChild(standard_element_div);
+        } else if (element.type == "multi-part") {
+          const element_display = document.createElement("div");
+          right_side.appendChild(element_display);
+
+          const element_display_top_part = document.createElement("div");
+          element_display_top_part.innerText =
+            element.max_reps + " X " + element.distance;
+          element_display.appendChild(element_display_top_part);
+
+          const element_display_bottom_part = document.createElement("div");
+          element_display.appendChild(element_display_bottom_part);
+
+          let sendoff_letters = Object.keys(element.sendoffs);
+          sendoff_letters.sort((a, b) => a - b);
+          let a_reps = Object.keys(element.sendoffs[sendoff_letters[0]]);
+          keys.sort((a, b) => parseInt(a) - parseInt(a));
+          for (let k = 0; k < a_reps.length; k++) {
+            const rep_part_div = document.createElement("div");
+            rep_part_div.innerText =
+              element.sendoffs[sendoff_letters[0]][a_reps[k]].rep +
+              " " +
+              element.sendoffs[sendoff_letters[0]][a_reps[k]].description +
+              " @ " +
+              timeToString(
+                element.sendoffs[sendoff_letters[0]][a_reps[k]].value
+              );
+            rep_part_div.classList.add("rep_part");
+            rep_part_div.first_rep =
+              element.sendoffs[sendoff_letters[0]][a_reps[k]].rep;
+            rep_part_div.first_sendoff =
+              element.sendoffs[sendoff_letters[0]][a_reps[k]].value;
+            element_display_bottom_part.appendChild(rep_part_div);
+          }
+
+          let display_all_reps = false,
+            display_all_times = false;
+
+          for (let k = 1; k < sendoff_letters.length; k++) {
+            let sendoff_letter = sendoff_letters[k];
+            let sendoff_working_on = element.sendoffs[sendoff_letter];
+            for (let l = 0; l < sendoff_working_on.length; l++) {
+              let description_part = sendoff_working_on[l];
+              let corresponding_A_div = element_display_bottom_part.children[l];
+              if (
+                corresponding_A_div.first_rep != description_part.rep &&
+                corresponding_A_div.first_rep + ":" != description_part.rep &&
+                corresponding_A_div.first_rep != description_part.rep + ":"
+              )
+                display_all_reps = true;
+              else if (
+                corresponding_A_div.first_sendoff != description_part.value
+              )
+                display_all_times = true;
+            }
+          }
+
+          for (let k = 1; k < sendoff_letters.length; k++) {
+            let sendoff_letter = sendoff_letters[k];
+            let sendoff_working_on = element.sendoffs[sendoff_letter];
+            for (let l = 0; l < sendoff_working_on.length; l++) {
+              let description_part = sendoff_working_on[l];
+              let corresponding_A_div = element_display_bottom_part.children[l];
+              let stop = 0;
+
+              if (display_all_reps) {
+                corresponding_A_div.innerText +=
+                  " / " +
+                  description_part.rep +
+                  " @ " +
+                  timeToString(description_part.value);
+              } else if (display_all_times) {
+                corresponding_A_div.innerText +=
+                  " / " + timeToString(description_part.value);
+              }
+            }
+          }
+        } else if (element.type == "subset") {
+          let sub_set_display = document.createElement("div");
+          sub_set_display.classList.add("individual_set");
+          right_side.appendChild(sub_set_display);
+          displaySet(sub_set_display, element.set, true);
         }
       }
     }
