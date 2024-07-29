@@ -552,21 +552,9 @@
 
       if (!localStorage.getItem("coach_id"))
         localStorage.setItem("coach_id", createCoachID());
+
       const COACH_ID = localStorage.getItem("coach_id");
 
-      let socket = undefined;
-      const LANES = {};
-      let clock;
-      let time_delta;
-      let additional_time_delta = 0;
-      let roomKey;
-      let lanes_display;
-      let last_orientation = screen.orientation.type;
-      let current_mode = 1;
-      let last_touch = 0;
-      let player;
-    </script>
-    <script>
       function createCoachID() {
         debugger;
         let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -583,6 +571,19 @@
         return id;
       }
 
+      let socket = undefined;
+      const LANES = {};
+      let clock;
+      let time_delta;
+      let additional_time_delta = 0;
+      let roomKey;
+      let lanes_display;
+      let last_orientation = screen.orientation.type;
+      let current_mode = 1;
+      let last_touch = 0;
+      let player;
+    </script>
+    <script>
       function closeWebSocket() {
         socket.close();
       }
