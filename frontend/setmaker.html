@@ -258,6 +258,9 @@
         margin-right: 0.25vw;
         flex: 1 1 auto;
         border-radius: var(--common-radius);
+        resize: none;
+        border-top-right-radius: 0px;
+        border-bottom-right-radius: 0px;
       }
       .sendoff {
         width: 5vw;
@@ -569,6 +572,7 @@
         box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
         overflow: auto;
         user-select: none;
+        max-height: 90vh;
       }
       .practice_small_display:hover {
         cursor: pointer;
@@ -602,6 +606,7 @@
         border-radius: 8px;
         box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
         overflow: auto;
+        max-height: 90vh;
       }
       #practices_display {
         display: flex;
@@ -683,6 +688,16 @@
       .rep_part {
         padding-left: 5%;
       }
+      .individual_practice_bottom_part > .individual_set {
+        border-bottom-style: solid;
+        margin-bottom: 25px;
+        padding-bottom: 25px;
+      }
+      .individual_practice_bottom_part > .individual_set:last-child {
+        border-bottom-style: hidden;
+        margin-bottom: 0px;
+        padding-bottom: 0px;
+      }
       @media screen {
         #printable_set {
           display: none;
@@ -702,6 +717,10 @@
           border-bottom-width: 1px;
           padding-top: 8px;
           padding-bottom: 8px;
+        }
+        .side > .individual_set:last-child {
+          border-bottom: hidden;
+          padding-bottom: 0px;
         }
 
         #printable_set {
@@ -1427,8 +1446,9 @@
       element_distance.value = 100;
       element_top_part.appendChild(element_distance);
 
-      const element_description = document.createElement("input");
+      const element_description = document.createElement("textarea");
       element_description.type = "text";
+      element_description.rows = "1";
       element_description.classList.add("single_description");
       element_description.placeholder = "   description";
       element_top_part.appendChild(element_description);
@@ -2690,7 +2710,7 @@
         practice_object.description = description;
         practice_object.coach_id = COACH_ID;
 
-        let today = new Date();
+        let today = new Date(date);
 
         let filename =
           today.getFullYear() +
@@ -2709,8 +2729,6 @@
         let end = performance.now();
         let time = end - start;
         console.log("Time to process practice: " + time + "ms");
-
-        let temp = JSON.stringify(practice_object);
 
         let answer = await fetch(
           "https://wrsmqorkonj3w2fk22ekct2o3m0gngqg.lambda-url.us-east-2.on.aws/",
@@ -4232,6 +4250,7 @@
 
         const set_repeat = document.createElement("div");
         set_repeat.innerText = set.repeats + " X";
+        set_repeat.style.whiteSpace = "nowrap";
         left_side.appendChild(set_repeat);
       }
 
@@ -4264,33 +4283,70 @@
             if (element.sendoffs[sendoffs[k]].reps != A_reps)
               all_the_same_reps = false;
 
-          let standard_element_div = document.createElement("div");
-          standard_element_div.innerText =
-            A_reps +
-            " X " +
-            element.distance +
-            " " +
-            element.description +
-            " @";
+          let description_split = element.description.split("\n");
 
-          standard_element_div.innerText +=
+          let standard_element_div = document.createElement("div");
+          right_side.appendChild(standard_element_div);
+
+          let standard_element_div_top_part = document.createElement("div");
+          if (description_split.length == 1) {
+          }
+
+          if (A_reps > 1)
+            standard_element_div_top_part.innerText =
+              A_reps +
+              " X " +
+              element.distance +
+              " " +
+              description_split[0] +
+              " @";
+          else {
+            if (element.distance > 0)
+              standard_element_div_top_part.innerText =
+                element.distance + " " + description_split[0] + " @";
+            else
+              standard_element_div_top_part.innerText =
+                description_split[0] + " @";
+          }
+
+          standard_element_div_top_part.innerText +=
             " " + timeToString(element.sendoffs[sendoffs[0]].time);
           if (sendoffs.length != 1) {
             for (let k = 1; k < sendoffs.length; k++) {
-              standard_element_div.innerText += " / ";
+              standard_element_div_top_part.innerText += " / ";
               if (!all_the_same_reps) {
                 if (A_reps != element.sendoffs[sendoffs[k]].reps) {
-                  standard_element_div.innerText +=
+                  standard_element_div_top_part.innerText +=
                     "(" + element.sendoffs[sendoffs[k]].reps + "x) ";
                 }
               }
-              standard_element_div.innerText += timeToString(
+              standard_element_div_top_part.innerText += timeToString(
                 element.sendoffs[sendoffs[k]].time
               );
             }
           }
 
-          right_side.appendChild(standard_element_div);
+          standard_element_div.appendChild(standard_element_div_top_part);
+
+          if (description_split.length > 1) {
+            let standard_element_div_bottom_part =
+              document.createElement("div");
+            for (let part = 1; part < description_split.length; part++) {
+              let part_working_on = description_split[part];
+              part_working_on.trim();
+              if (!part_working_on.startsWith("-"))
+                part_working_on = "- " + part_working_on;
+              if (part == 1) {
+                standard_element_div_bottom_part.innerHTML = part_working_on;
+              } else {
+                standard_element_div_bottom_part.innerHTML +=
+                  "<br />" + part_working_on;
+              }
+            }
+
+            standard_element_div_bottom_part.style.paddingLeft = "5%";
+            standard_element_div.appendChild(standard_element_div_bottom_part);
+          }
         } else if (element.type == "multi-part") {
           const element_display = document.createElement("div");
           right_side.appendChild(element_display);
@@ -4405,7 +4461,7 @@
       let url =
         "https://jqedqo6bbt22obfhjboydz5rhi0kkzss.lambda-url.us-east-2.on.aws/?filename=" +
         filename +
-        "?coachid=" +
+        "&coachid=" +
         COACH_ID;
 
       const requestOptions = { method: "DELETE", redirect: "follow" };
@@ -4417,6 +4473,11 @@
             individual_practice.children[0].remove();
           }
           loadPractices();
+        })
+        .catch((error) => {
+          console.error(error);
+          deleteing_message.innerText = "Error deleting practice";
+          deleteing_message.style.color = "red";
         });
     }
   </script>

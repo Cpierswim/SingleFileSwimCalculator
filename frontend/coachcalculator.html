@@ -551,6 +551,7 @@
       .individual_practice_bottom_part {
         display: flex;
         flex-direction: column;
+        align-items: center;
         width: 100%;
         padding-top: 12px;
       }
@@ -565,6 +566,9 @@
         padding-bottom: 6px;
         border-radius: 3px;
         white-space: nowrap;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
       }
       .practice_small_display:last-child {
         padding-bottom: 3px;
@@ -604,6 +608,9 @@
         display: flex;
         align-items: center;
         flex: 1 1 auto;
+        -webkit-user-select: none; /* Safari */
+        -ms-user-select: none; /* IE 10 and IE 11 */
+        user-select: none; /* Standard syntax */
       }
       .individual_practice_bottom_part > .individual_set {
         width: 98%;
@@ -1335,6 +1342,10 @@
 
             const split_clock = getLaneClock(split_panel);
             split_clock.innerText = display_time;
+
+            lanes.forEach((lane) =>
+              processTimeForLane(lane, lane_clock.innerText)
+            );
 
             if (LANES[lane_number].stopwatch.running) {
               let time_elapsed = now - LANES[lane_number].stopwatch.start_time;
@@ -2892,33 +2903,72 @@
               if (element.sendoffs[sendoffs[k]].reps != A_reps)
                 all_the_same_reps = false;
 
-            let standard_element_div = document.createElement("div");
-            standard_element_div.innerText =
-              A_reps +
-              " X " +
-              element.distance +
-              " " +
-              element.description +
-              " @";
+            let description_split = element.description.split("\n");
 
-            standard_element_div.innerText +=
+            let standard_element_div = document.createElement("div");
+            right_side.appendChild(standard_element_div);
+
+            let standard_element_div_top_part = document.createElement("div");
+            if (description_split.length == 1) {
+            }
+
+            if (A_reps > 1)
+              standard_element_div_top_part.innerText =
+                A_reps +
+                " X " +
+                element.distance +
+                " " +
+                description_split[0] +
+                " @";
+            else {
+              if (element.distance > 0)
+                standard_element_div_top_part.innerText =
+                  element.distance + " " + description_split[0] + " @";
+              else
+                standard_element_div_top_part.innerText =
+                  description_split[0] + " @";
+            }
+
+            standard_element_div_top_part.innerText +=
               " " + timeToString(element.sendoffs[sendoffs[0]].time);
             if (sendoffs.length != 1) {
               for (let k = 1; k < sendoffs.length; k++) {
-                standard_element_div.innerText += " / ";
+                standard_element_div_top_part.innerText += " / ";
                 if (!all_the_same_reps) {
                   if (A_reps != element.sendoffs[sendoffs[k]].reps) {
-                    standard_element_div.innerText +=
+                    standard_element_div_top_part.innerText +=
                       "(" + element.sendoffs[sendoffs[k]].reps + "x) ";
                   }
                 }
-                standard_element_div.innerText += timeToString(
+                standard_element_div_top_part.innerText += timeToString(
                   element.sendoffs[sendoffs[k]].time
                 );
               }
             }
 
-            right_side.appendChild(standard_element_div);
+            standard_element_div.appendChild(standard_element_div_top_part);
+
+            if (description_split.length > 1) {
+              let standard_element_div_bottom_part =
+                document.createElement("div");
+              for (let part = 1; part < description_split.length; part++) {
+                let part_working_on = description_split[part];
+                part_working_on.trim();
+                if (!part_working_on.startsWith("-"))
+                  part_working_on = "- " + part_working_on;
+                if (part == 1) {
+                  standard_element_div_bottom_part.innerHTML = part_working_on;
+                } else {
+                  standard_element_div_bottom_part.innerHTML +=
+                    "<br />" + part_working_on;
+                }
+              }
+
+              standard_element_div_bottom_part.style.paddingLeft = "5%";
+              standard_element_div.appendChild(
+                standard_element_div_bottom_part
+              );
+            }
           } else if (element.type == "multi-part") {
             const element_display = document.createElement("div");
             right_side.appendChild(element_display);
@@ -3061,6 +3111,36 @@
             const option = document.createElement("option");
             option.innerText = sendoffs[j];
             sendoff_match_select.add(option);
+          }
+
+          const swimmer_count_label = document.createElement("div");
+          swimmer_count_label.innerText = "Swimmer Count:";
+          sendoff_match_wrapper.appendChild(swimmer_count_label);
+
+          const swimmer_count_select = document.createElement("select");
+          swimmer_count_select.multiple = false;
+          sendoff_match_wrapper.appendChild(swimmer_count_select);
+
+          for (let j = 1; j <= 30; j++) {
+            const option = document.createElement("option");
+            option.innerText = j;
+            if (j == 4) option.selected = true;
+            swimmer_count_select.add(option);
+          }
+
+          const seconds_apart_label = document.createElement("div");
+          seconds_apart_label.innerText = "Seconds apart:";
+          sendoff_match_wrapper.appendChild(seconds_apart_label);
+
+          const seconds_apart_select = document.createElement("select");
+          seconds_apart_select.multiple = false;
+          sendoff_match_wrapper.appendChild(seconds_apart_select);
+
+          for (let j = 1; j < 30; j++) {
+            const option = document.createElement("option");
+            option.innerText = j;
+            if (j == 5) option.selected = true;
+            seconds_apart_select.add(option);
           }
         }
 
@@ -3656,18 +3736,29 @@
               .trim()
           );
           const letter = wrapper.children[1].selectedOptions[0].innerText;
+          const swimmer_count = parseInt(
+            wrapper.children[3].selectedOptions[0].innerText
+          );
+          const seconds_apart = parseInt(
+            wrapper.children[5].selectedOptions[0].innerText
+          );
 
           LANES[lane].sendoff_list = sendoff_lists[letter];
           LANES[lane].letter = letter;
+          LANES[lane].swimmer_count = swimmer_count;
+          LANES[lane].seconds_apart = seconds_apart;
         }
 
+        cleanSendoffLists();
         sendSendoffLists(sendoff_lists);
+        assignSendoffLists();
 
         assign_lanes_popup.remove();
         pick_set_display.remove();
       }
 
       function sendSendoffLists(sendoff_lists) {
+        fillOutSendoffLists();
         let lanes = Object.keys(LANES);
         let data = {
           action: "sendSendoffLists",
@@ -3680,6 +3771,157 @@
         }
 
         socket.send(JSON.stringify(data));
+      }
+
+      function fillOutSendoffLists() {
+        let lanes = Object.keys(LANES);
+        for (let i = 0; i < lanes.length; i++) {
+          let lane = lanes[i];
+          LANES[lane].sendoffs_filled_out = true;
+          let sendoff_list = LANES[lane].sendoff_list.list;
+          let swimmer_count = LANES[lane].swimmer_count;
+          let seconds_apart = LANES[lane].seconds_apart;
+
+          let new_list = [];
+          for (let j = 0; j < sendoff_list.length; j++) {
+            let sendoff_adding_to = sendoff_list[j];
+            let add_time = seconds_apart;
+            sendoff_adding_to.swimmer_number = 1;
+            new_list.push(sendoff_adding_to);
+            for (let k = 1; k < swimmer_count; k++) {
+              let new_object = {
+                time: sendoff_adding_to.time + add_time,
+                rep_time: sendoff_adding_to.rep_time,
+                distance: sendoff_adding_to.distance,
+                description: sendoff_adding_to.description,
+                rep_number: sendoff_adding_to.rep_number,
+                swimmer_number: k + 1,
+              };
+              new_list.push(new_object);
+              add_time = add_time + seconds_apart;
+            }
+          }
+          LANES[lane].sendoff_list.list = new_list;
+        }
+      }
+
+      function assignSendoffLists() {
+        let lanes = Object.keys(LANES);
+        for (let i = 0; i < lanes.length; i++) {
+          let lane = LANES[lanes[i]];
+          let lane_panel = lane.lane_panel;
+
+          const sendoff_table = document.createElement("table");
+          sendoff_table.id = "lane" + lane[i] + "sendofftable";
+          lane_panel.appendChild(sendoff_table);
+
+          let sendoff_list = lane.sendoff_list.list;
+
+          for (let j = 0; j < sendoff_list.length; j++) {
+            let sendoff = sendoff_list[j];
+            const row = document.createElement("tr");
+            sendoff_table.appendChild(row);
+
+            const swimmer_number = document.createElement("td");
+            swimmer_number.innerText = "S# " + sendoff.swimmer_number;
+            row.appendChild(swimmer_number);
+
+            const rep_number = document.createElement("td");
+            rep_number.innerText = "R# " + sendoff.rep_number;
+            row.appendChild(rep_number);
+
+            const sendoff_time = document.createElement("td");
+            sendoff_time.innerText = valueToClockDisplay(sendoff.time);
+            row.appendChild(sendoff_time);
+
+            const distance = document.createElement("td");
+            distance.innerText = sendoff.distance;
+            row.appendChild(distance);
+
+            const description = document.createElement("td");
+            description.innerText = sendoff.description;
+            row.appendChild(description);
+
+            row.sendoff = sendoff;
+          }
+        }
+
+        lanes.forEach((lane) => assignDisplayFromNextInTable(lane));
+      }
+
+      function valueToClockDisplay(value) {
+        let min = Math.floor(value / 60);
+        let sec = value % 60;
+
+        min < 10 ? (min = "0" + min) : (min = min.toString());
+        sec < 10 ? (sec = "0" + sec) : (sec = sec.toString());
+
+        return min + ":" + sec;
+      }
+
+      function cleanSendoffLists() {
+        let lanes = Object.keys(LANES);
+        for (let i = 0; i < lanes.length; i++) {
+          let lane = LANES[lanes[i]];
+          let lane_panel = lane.lane_panel;
+
+          let sendoff_list = lane.sendoff_list.list;
+
+          for (let j = 0; j < sendoff_list.length; j++) {
+            let sendoff = sendoff_list[j];
+            let description = sendoff.description;
+            let split_description = description.split("\n");
+            if (split_description.count > 1)
+              sendoff.description = split_description[0];
+          }
+        }
+      }
+
+      function assignDisplayFromNextInTable(lane) {
+        try {
+          const lane_panel = LANES[lane].lane_panel;
+          const next_up_display = lane_panel.children[8];
+          const next_up_table = lane_panel.children[9];
+          if (next_up_table.children.length > 1) {
+            const sendoff = next_up_table.children[0].sendoff;
+
+            while (next_up_display.children.length > 0) {
+              next_up_display.children[0].remove();
+            }
+
+            const swimmer_number = document.createElement("div");
+            swimmer_number.innerText = "Swimmer #" + sendoff.swimmer_number;
+            next_up_display.appendChild(swimmer_number);
+
+            const swimmer_time = document.createElement("div");
+            swimmer_time.innerText =
+              valueToClockDisplay(sendoff.time) +
+              " - " +
+              sendoff.distance +
+              " " +
+              sendoff.description;
+            next_up_display.appendChild(swimmer_time);
+          }
+        } catch {}
+      }
+
+      function processTimeForLane(lane, time_display) {
+        const lane_panel = LANES[lane].lane_panel;
+        const next_up_display = lane_panel.children[8];
+        const next_up_table = lane_panel.children[9];
+        const next_up_time =
+          next_up_display.children[1].innerText.split(" - ")[0];
+
+        if (next_up_time == time_display) {
+          if (next_up_table.children.length > 1) {
+            next_up_table.children[0].remove();
+            assignDisplayFromNextInTable(lane);
+          } else {
+            while (next_up_display.children.length > 0) {
+              next_up_display.children[0].remove();
+            }
+          }
+        }
       }
     </script>
   </body>
