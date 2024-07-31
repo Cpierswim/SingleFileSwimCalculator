@@ -535,10 +535,8 @@
 
         if (row) {
           next_up_time.innerText = row.children[0].innerText;
-          next_up_swimmer.innerText = row.children[1].innerText;
-
-          if (next_up_swimmer.innerText.length === 0)
-            next_up_swimmer.innerText = row.children[2].innerText;
+          next_up_swimmer.innerText =
+            row.children[1].innerText + " " + row.children[2].innerText;
         } else {
           next_up_time.innerText = "--:--";
           next_up_swimmer.innerText = "";
@@ -701,17 +699,17 @@
         set_table.appendChild(set_table_body);
 
         let counter = 0;
-        sendoffs.forEach((sendoff) => {
+        sendoffs.list.forEach((sendoff) => {
           const sendoff_row = document.createElement("tr");
           sendoff_row.id = "sendoff" + counter;
           sendoff_row.classList.add("set_table_row");
           const sendoff_time = document.createElement("td");
           sendoff_time.id = "sendoff" + counter + "time";
           sendoff_time.classList.add("set_table_sendoff_time");
-          sendoff_time.innerText = sendoff.time;
+          sendoff_time.innerText = valueToClockDisplay(sendoff.time);
           const sendoff_name = document.createElement("td");
           sendoff_name.id = "sendoff" + counter + "name";
-          sendoff_name.innerText = sendoff.name;
+          sendoff_name.innerText = sendoff.distance;
           if (sendoff_name.innerText.length === 0)
             sendoff_name.classList.add("set_table_noname");
           else sendoff_name.classList.add("set_table_name");
@@ -925,6 +923,16 @@
 
       function onPlayerStateChange(e) {
         if (e.data == YT.PlayerState.ENDED) player.playVideo();
+      }
+
+      function valueToClockDisplay(value) {
+        let min = Math.floor(value / 60);
+        let sec = value % 60;
+
+        min < 10 ? (min = "0" + min) : (min = min.toString());
+        sec < 10 ? (sec = "0" + sec) : (sec = sec.toString());
+
+        return min + ":" + sec;
       }
     </script>
   </body>

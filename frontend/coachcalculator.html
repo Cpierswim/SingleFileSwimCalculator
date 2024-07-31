@@ -500,6 +500,168 @@
         height: 90%;
         position: relative;
       }
+
+      #pick_set_display {
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: lightgray;
+      }
+      #practices_display {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        height: 100%;
+        width: 100%;
+      }
+      #practices_div {
+        width: 30%;
+        height: 90%;
+        margin-left: 4vw;
+        margin-top: 3vw;
+        background-color: white;
+        border-style: solid;
+        border-color: darkgray;
+        padding: 8px;
+        border-radius: 8px;
+        box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+        overflow: auto;
+        user-select: none;
+      }
+      #individual_practice {
+        width: 50%;
+        height: 90%;
+        margin-top: 3vw;
+        margin-right: 4vw;
+        background-color: white;
+        border-style: solid;
+        border-color: darkgray;
+        padding: 8px;
+        border-radius: 8px;
+        box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+        overflow: auto;
+      }
+      .individual_practice_top_part {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .individual_practice_bottom_part {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        padding-top: 12px;
+      }
+      .label_wrapper {
+        display: flex;
+      }
+      .practice_small_display {
+        padding-left: 4px;
+        padding-right: 4px;
+        width: 100%;
+        padding-top: 6px;
+        padding-bottom: 6px;
+        border-radius: 3px;
+        white-space: nowrap;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+      .practice_small_display:last-child {
+        padding-bottom: 3px;
+      }
+      .practice_small_display:first-child {
+        padding-top: 3px;
+      }
+
+      .curly_brace_wrapper {
+        display: flex;
+        flex-direction: column;
+        align-self: stretch;
+      }
+      .brace {
+        width: 20px;
+        height: 25%;
+      }
+      .curly_brace_part_one {
+        border-left: 2px solid black;
+        border-top-left-radius: 12px;
+        margin-left: 18px;
+      }
+      .curly_brace_part_two {
+        border-right: 2px solid black;
+        border-bottom-right-radius: 12px;
+      }
+      .curly_brace_part_three {
+        border-right: 2px solid black;
+        border-top-right-radius: 12px;
+      }
+      .curly_brace_part_four {
+        border-left: 2px solid black;
+        border-bottom-left-radius: 12px;
+        margin-left: 18px;
+      }
+      .individual_set {
+        display: flex;
+        align-items: center;
+        flex: 1 1 auto;
+        -webkit-user-select: none; /* Safari */
+        -ms-user-select: none; /* IE 10 and IE 11 */
+        user-select: none; /* Standard syntax */
+      }
+      .individual_practice_bottom_part > .individual_set {
+        width: 98%;
+        border-style: solid;
+        border-width: 2px;
+        box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+        border-radius: 12px;
+        padding-left: 6px;
+        padding-right: 6px;
+        padding-top: 3px;
+        padding-bottom: 3px;
+      }
+      .set_display_side {
+        height: 100%;
+        flex: 1 1 auto;
+      }
+      .rep_part {
+        padding-left: 5%;
+      }
+      #assign_lanes_popup {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        backdrop-filter: blur(12px);
+      }
+      #assign_lanes_inner {
+        display: flex;
+        background-color: lightgray;
+        flex-direction: column;
+        padding: 20px;
+        border-radius: 15px;
+        border-style: solid;
+      }
+      .sendoff_match_wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+      .sendoff_match_wrapper > div {
+        margin-right: 4px;
+      }
+      #assign_lanes_button {
+        margin-top: 20px;
+      }
     </style>
     <script src="https://www.youtube.co/iframe_api"></script>
   </head>
@@ -520,6 +682,11 @@
       const SKIP_FULLSCREEN = 1;
       const MILLS_TO_DISPLAY_SPLITS_DEFAULT = 10 * 1000;
       const MILLS_TO_DISPLAY_STOPWATCH_DEFAULT = 20 * 1000;
+      const MULTI_DESCRIPTION_TYPE = Object.freeze({
+        BY_ROUND: 1,
+        SPLIT_EVENLY: 2,
+        REPEAT_ONE_AT_A_TIME: 3,
+      });
       if (!localStorage.getItem("mills_to_update_clock"))
         localStorage.setItem("mills_to_update_clock", 10);
       const MILLS_TO_UPDATE_CLOCK = parseInt(
@@ -556,7 +723,6 @@
       const COACH_ID = localStorage.getItem("coach_id");
 
       function createCoachID() {
-        debugger;
         let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         letters += letters.toLowerCase();
         letters += "1234567890";
@@ -869,6 +1035,7 @@
             pick_set_button.classList.add("nearly_full_width");
             pick_set_button.classList.add("control_button");
             pick_set_button.innerText = "Pick Set";
+            pick_set_button.addEventListener("click", pickSetClicked);
             pick_set_button.disabled = true;
             sendoff_controls_panel.appendChild(pick_set_button);
 
@@ -1176,6 +1343,10 @@
             const split_clock = getLaneClock(split_panel);
             split_clock.innerText = display_time;
 
+            lanes.forEach((lane) =>
+              processTimeForLane(lane, lane_clock.innerText)
+            );
+
             if (LANES[lane_number].stopwatch.running) {
               let time_elapsed = now - LANES[lane_number].stopwatch.start_time;
               let stopwatch = document.getElementById(
@@ -1255,7 +1426,6 @@
         };
 
         socket.onerror = (error) => {
-          debugger;
           let connections_div = document.getElementById("connections_div");
           connections_div.innerHTML = "Connection Error";
         };
@@ -1296,9 +1466,7 @@
         socket.send(JSON.stringify(data));
       }
 
-      function _processServerError(data) {
-        debugger;
-      }
+      function _processServerError(data) {}
 
       function _processRoomCreation(data) {
         let room_code_text = document.getElementById("room_code_text");
@@ -2163,7 +2331,6 @@
         e.srcElement.parentElement.parentElement.children[1].innerText =
           stopwatch_stop_time;
         e.srcElement.parentElement.parentElement.children[3].children[1].disabled = false;
-        //TODO: send stop time to swimmer
 
         setTimeout(() => {
           const stopwatch_data = {
@@ -2522,6 +2689,1239 @@
         const video_player_panel =
           document.getElementById("video_player_panel");
         if (video_player_panel) video_player_panel.remove();
+      }
+
+      function pickSetClicked() {
+        const body_collection = document.getElementsByTagName("body");
+        const body = body_collection[0];
+
+        const pick_set_display = document.createElement("div");
+        pick_set_display.id = "pick_set_display";
+        body.appendChild(pick_set_display);
+
+        const practices_display = document.createElement("div");
+        practices_display.id = "practices_display";
+        pick_set_display.appendChild(practices_display);
+
+        const practices_div = document.createElement("div");
+        practices_div.id = "practices_div";
+        practices_display.appendChild(practices_div);
+
+        const individual_practice = document.createElement("div");
+        individual_practice.id = "individual_practice";
+        practices_display.appendChild(individual_practice);
+
+        loadPractices();
+      }
+
+      async function loadPractices() {
+        let practices_div = document.getElementById("practices_div");
+        setPracticesAsLoading(practices_div);
+
+        const headers = {
+          "Content-Type": "application/json",
+        };
+
+        const requestOptions = {
+          method: "GET",
+          headers: headers,
+        };
+
+        let result = await fetch(
+          "https://c6a7fgweplcxu3yjgx5gkklxce0nopqg.lambda-url.us-east-2.on.aws/?coach_id=" +
+            COACH_ID,
+          requestOptions
+        );
+
+        let practice_info = await result.json();
+
+        let practices = practice_info.practices;
+        let metadata = practice_info.metadata;
+
+        practices.sort((a, b) => {
+          let a_date = new Date(a.year, a.month - 1, a.day).getTime();
+          let b_date = new Date(b.year, b.month - 1, b.day).getTime();
+          if (b_date - a_date == 0)
+            return b.practice_of_the_day - a.practice_of_the_day;
+          return b_date - a_date;
+        });
+
+        while (practices_div.children.length != 0)
+          practices_div.children[0].remove();
+
+        practices.forEach((practice) => {
+          if (practice.group == "") practice.group = "-undefined-";
+          const practice_div = document.createElement("div");
+          practice_div.classList.add("practice_small_display");
+          practice_div.innerText = `${practice.month}/${practice.day}/${practice.year} - Group: ${practice.group}  - #${practice.practice_of_the_day}`;
+          practice_div.practice_info = practice;
+          practice_div.addEventListener("click", practiceClicked);
+          practices_div.appendChild(practice_div);
+        });
+      }
+
+      function setPracticesAsLoading(practices_div) {
+        while (practices_div.children.length != 0)
+          practices_div.children[0].remove();
+
+        const practice_div = document.createElement("div");
+        practice_div.classList.add("practice_small_display_loading");
+        practice_div.innerText = "Loading saved practices...";
+        practices_div.appendChild(practice_div);
+      }
+
+      async function practiceClicked(e) {
+        const individual_practice = document.getElementById(
+          "individual_practice"
+        );
+        while (individual_practice.children.length != 0)
+          individual_practice.children[0].remove();
+        const loading_message = document.createElement("div");
+        loading_message.innerText = "Loading practice...";
+        individual_practice.appendChild(loading_message);
+
+        let filename = this.practice_info.filename;
+        filename = encodeURIComponent(filename);
+
+        const headers = {
+          "Content-Type": "application/json",
+        };
+
+        let url =
+          "https://lufypj7qre3hbvkvasijiv7rhy0tvrtr.lambda-url.us-east-2.on.aws/?filename=" +
+          filename;
+
+        const requestOptions = {
+          method: "GET",
+          redirect: "follow",
+        };
+
+        fetch(url, requestOptions)
+          .then((response) => response.text())
+          .then((practice) => {
+            practice = JSON.parse(practice);
+
+            while (individual_practice.children.length != 0)
+              individual_practice.children[0].remove();
+
+            const bottom_part = document.createElement("div");
+            bottom_part.classList.add("individual_practice_bottom_part");
+            individual_practice.appendChild(bottom_part);
+
+            displayPractice(bottom_part, practice);
+            let sides = document.getElementsByClassName("side");
+            for (let count = 0; count < sides.length; count++)
+              displayPractice(sides[count], practice);
+            individual_practice.filename = filename;
+          })
+          .catch((error) => {
+            working_modal.style.display = "none";
+            console.error(error);
+          });
+      }
+
+      function displayPractice(element_to_display_to, practice) {
+        let keys = Object.keys(practice.practice);
+        keys.sort((a, b) => parseInt(a) - parseInt(b));
+        for (let i = 0; i < keys.length; i++) {
+          const set_display = document.createElement("div");
+          set_display.classList.add("individual_set");
+          element_to_display_to.appendChild(set_display);
+          displaySet(set_display, practice.practice[keys[i]]);
+        }
+      }
+
+      function displaySet(element_to_display_to, set, force_display_set_rep) {
+        if (force_display_set_rep == undefined) force_display_set_rep = false;
+        if (!force_display_set_rep) {
+          element_to_display_to.addEventListener("touchstart", onFingerPress);
+          element_to_display_to.addEventListener("mousedown", onFingerPress);
+          element_to_display_to.addEventListener("touchend", onFingerRise);
+          element_to_display_to.addEventListener("mouseup", onFingerRise);
+          element_to_display_to.set = set;
+        }
+        if (set.repeats > 1 || force_display_set_rep) {
+          const left_side = document.createElement("div");
+          left_side.classList.add("set_repeat_side");
+          element_to_display_to.appendChild(left_side);
+
+          const curly_brace_wrapper = document.createElement("div");
+          curly_brace_wrapper.classList.add("curly_brace_wrapper");
+          element_to_display_to.appendChild(curly_brace_wrapper);
+
+          const curly_brace_part_one = document.createElement("div");
+          curly_brace_part_one.classList.add("curly_brace_part_one");
+          curly_brace_part_one.classList.add("brace");
+          curly_brace_wrapper.appendChild(curly_brace_part_one);
+
+          const curly_brace_part_two = document.createElement("div");
+          curly_brace_part_two.classList.add("curly_brace_part_two");
+          curly_brace_part_two.classList.add("brace");
+          curly_brace_wrapper.appendChild(curly_brace_part_two);
+
+          const curly_brace_part_three = document.createElement("div");
+          curly_brace_part_three.classList.add("curly_brace_part_three");
+          curly_brace_part_three.classList.add("brace");
+          curly_brace_wrapper.appendChild(curly_brace_part_three);
+
+          const curly_brace_part_four = document.createElement("div");
+          curly_brace_part_four.classList.add("curly_brace_part_four");
+          curly_brace_part_four.classList.add("brace");
+          curly_brace_wrapper.appendChild(curly_brace_part_four);
+
+          const set_repeat = document.createElement("div");
+          set_repeat.innerText = set.repeats + " X";
+          left_side.appendChild(set_repeat);
+        }
+
+        const right_side = document.createElement("div");
+        right_side.classList.add("set_display_side");
+        element_to_display_to.appendChild(right_side);
+
+        if (set.description && set.description != "") {
+          const set_description = document.createElement("div");
+          set_description.innerText = set.description;
+          right_side.appendChild(set_description);
+        }
+
+        let keys = Object.keys(set);
+        let temp = [];
+        for (let i = 0; i < keys.length; i++)
+          if (keys[i] != "repeats") temp.push(keys[i]);
+        keys = temp;
+        for (let i = 0; i < keys.length; i++) {
+          let key = keys[i];
+          let element = set[key];
+
+          if (set[key].type == "standard") {
+            let sendoffs = Object.keys(element.sendoffs);
+            sendoffs.sort((a, b) => b - a);
+            let A_reps = element.sendoffs[sendoffs[0]].reps;
+            let all_the_same_reps = true;
+
+            for (let k = 1; k < sendoffs.length; k++)
+              if (element.sendoffs[sendoffs[k]].reps != A_reps)
+                all_the_same_reps = false;
+
+            let description_split = element.description.split("\n");
+
+            let standard_element_div = document.createElement("div");
+            right_side.appendChild(standard_element_div);
+
+            let standard_element_div_top_part = document.createElement("div");
+            if (description_split.length == 1) {
+            }
+
+            if (A_reps > 1)
+              standard_element_div_top_part.innerText =
+                A_reps +
+                " X " +
+                element.distance +
+                " " +
+                description_split[0] +
+                " @";
+            else {
+              if (element.distance > 0)
+                standard_element_div_top_part.innerText =
+                  element.distance + " " + description_split[0] + " @";
+              else
+                standard_element_div_top_part.innerText =
+                  description_split[0] + " @";
+            }
+
+            standard_element_div_top_part.innerText +=
+              " " + timeToString(element.sendoffs[sendoffs[0]].time);
+            if (sendoffs.length != 1) {
+              for (let k = 1; k < sendoffs.length; k++) {
+                standard_element_div_top_part.innerText += " / ";
+                if (!all_the_same_reps) {
+                  if (A_reps != element.sendoffs[sendoffs[k]].reps) {
+                    standard_element_div_top_part.innerText +=
+                      "(" + element.sendoffs[sendoffs[k]].reps + "x) ";
+                  }
+                }
+                standard_element_div_top_part.innerText += timeToString(
+                  element.sendoffs[sendoffs[k]].time
+                );
+              }
+            }
+
+            standard_element_div.appendChild(standard_element_div_top_part);
+
+            if (description_split.length > 1) {
+              let standard_element_div_bottom_part =
+                document.createElement("div");
+              for (let part = 1; part < description_split.length; part++) {
+                let part_working_on = description_split[part];
+                part_working_on.trim();
+                if (!part_working_on.startsWith("-"))
+                  part_working_on = "- " + part_working_on;
+                if (part == 1) {
+                  standard_element_div_bottom_part.innerHTML = part_working_on;
+                } else {
+                  standard_element_div_bottom_part.innerHTML +=
+                    "<br />" + part_working_on;
+                }
+              }
+
+              standard_element_div_bottom_part.style.paddingLeft = "5%";
+              standard_element_div.appendChild(
+                standard_element_div_bottom_part
+              );
+            }
+          } else if (element.type == "multi-part") {
+            const element_display = document.createElement("div");
+            right_side.appendChild(element_display);
+
+            const element_display_top_part = document.createElement("div");
+            element_display_top_part.innerText =
+              element.max_reps + " X " + element.distance;
+            element_display.appendChild(element_display_top_part);
+
+            const element_display_bottom_part = document.createElement("div");
+            element_display.appendChild(element_display_bottom_part);
+
+            let sendoff_letters = Object.keys(element.sendoffs);
+            sendoff_letters.sort((a, b) => a - b);
+            let a_reps = Object.keys(element.sendoffs[sendoff_letters[0]]);
+            keys.sort((a, b) => parseInt(a) - parseInt(a));
+            for (let k = 0; k < a_reps.length; k++) {
+              const rep_part_div = document.createElement("div");
+              rep_part_div.innerText =
+                element.sendoffs[sendoff_letters[0]][a_reps[k]].rep +
+                " " +
+                element.sendoffs[sendoff_letters[0]][a_reps[k]].description +
+                " @ " +
+                timeToString(
+                  element.sendoffs[sendoff_letters[0]][a_reps[k]].value
+                );
+              rep_part_div.classList.add("rep_part");
+              rep_part_div.first_rep =
+                element.sendoffs[sendoff_letters[0]][a_reps[k]].rep;
+              rep_part_div.first_sendoff =
+                element.sendoffs[sendoff_letters[0]][a_reps[k]].value;
+              element_display_bottom_part.appendChild(rep_part_div);
+            }
+
+            let display_all_reps = false,
+              display_all_times = false;
+
+            for (let k = 1; k < sendoff_letters.length; k++) {
+              let sendoff_letter = sendoff_letters[k];
+              let sendoff_working_on = element.sendoffs[sendoff_letter];
+              for (let l = 0; l < sendoff_working_on.length; l++) {
+                let description_part = sendoff_working_on[l];
+                let corresponding_A_div =
+                  element_display_bottom_part.children[l];
+                if (
+                  corresponding_A_div.first_rep != description_part.rep &&
+                  corresponding_A_div.first_rep + ":" != description_part.rep &&
+                  corresponding_A_div.first_rep != description_part.rep + ":"
+                )
+                  display_all_reps = true;
+                else if (
+                  corresponding_A_div.first_sendoff != description_part.value
+                )
+                  display_all_times = true;
+              }
+            }
+
+            for (let k = 1; k < sendoff_letters.length; k++) {
+              let sendoff_letter = sendoff_letters[k];
+              let sendoff_working_on = element.sendoffs[sendoff_letter];
+              for (let l = 0; l < sendoff_working_on.length; l++) {
+                let description_part = sendoff_working_on[l];
+                let corresponding_A_div =
+                  element_display_bottom_part.children[l];
+                let stop = 0;
+
+                if (display_all_reps) {
+                  corresponding_A_div.innerText +=
+                    " / " +
+                    description_part.rep +
+                    " @ " +
+                    timeToString(description_part.value);
+                } else if (display_all_times) {
+                  corresponding_A_div.innerText +=
+                    " / " + timeToString(description_part.value);
+                }
+              }
+            }
+          } else if (element.type == "subset") {
+            let sub_set_display = document.createElement("div");
+            sub_set_display.classList.add("individual_set");
+            right_side.appendChild(sub_set_display);
+            displaySet(sub_set_display, element.set, true);
+          }
+        }
+      }
+
+      function timeToString(time) {
+        let min = Math.trunc(time / 60);
+        let sec = time - 60 * min;
+        if (sec < 10) sec = "0" + sec;
+        if (min > 0) return min + ":" + sec;
+        return ":" + sec;
+      }
+
+      function onFingerPress(e) {
+        this.style.boxShadow =
+          "rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset";
+      }
+
+      function onFingerRise(e) {
+        let start = performance.now();
+        this.style.boxShadow = "";
+        loadSet(this.set);
+        let time = performance.now() - start;
+      }
+
+      function loadSet(set) {
+        let sendoff_lists = _getSendoffLists(set);
+
+        let body = document.getElementsByTagName("body");
+        body = body[0];
+        const assign_lanes_popup = document.createElement("div");
+        assign_lanes_popup.id = "assign_lanes_popup";
+        body.appendChild(assign_lanes_popup);
+
+        const assign_lanes_inner = document.createElement("div");
+        assign_lanes_inner.id = "assign_lanes_inner";
+        assign_lanes_popup.appendChild(assign_lanes_inner);
+        assign_lanes_popup.sendoff_lists = sendoff_lists;
+
+        const sendoffs = Object.keys(sendoff_lists);
+        sendoffs.sort((a, b) => a - b);
+
+        const lanes_list = Object.keys(LANES);
+
+        for (let i = 0; i < lanes_list.length; i++) {
+          const sendoff_match_wrapper = document.createElement("div");
+          sendoff_match_wrapper.classList.add("sendoff_match_wrapper");
+          assign_lanes_inner.appendChild(sendoff_match_wrapper);
+
+          const sendoff_match_label = document.createElement("div");
+          sendoff_match_label.innerText = "Lane " + lanes_list[i] + ":";
+          sendoff_match_wrapper.appendChild(sendoff_match_label);
+
+          const sendoff_match_select = document.createElement("select");
+          sendoff_match_select.multiple = false;
+          sendoff_match_wrapper.appendChild(sendoff_match_select);
+          for (let j = 0; j < sendoffs.length; j++) {
+            const option = document.createElement("option");
+            option.innerText = sendoffs[j];
+            sendoff_match_select.add(option);
+          }
+
+          const swimmer_count_label = document.createElement("div");
+          swimmer_count_label.innerText = "Swimmer Count:";
+          sendoff_match_wrapper.appendChild(swimmer_count_label);
+
+          const swimmer_count_select = document.createElement("select");
+          swimmer_count_select.multiple = false;
+          sendoff_match_wrapper.appendChild(swimmer_count_select);
+
+          for (let j = 1; j <= 30; j++) {
+            const option = document.createElement("option");
+            option.innerText = j;
+            if (j == 4) option.selected = true;
+            swimmer_count_select.add(option);
+          }
+
+          const seconds_apart_label = document.createElement("div");
+          seconds_apart_label.innerText = "Seconds apart:";
+          sendoff_match_wrapper.appendChild(seconds_apart_label);
+
+          const seconds_apart_select = document.createElement("select");
+          seconds_apart_select.multiple = false;
+          sendoff_match_wrapper.appendChild(seconds_apart_select);
+
+          for (let j = 1; j < 30; j++) {
+            const option = document.createElement("option");
+            option.innerText = j;
+            if (j == 5) option.selected = true;
+            seconds_apart_select.add(option);
+          }
+        }
+
+        const assign_lanes_button = document.createElement("button");
+        assign_lanes_button.innerText = "Assign Lanes";
+        assign_lanes_button.id = "assign_lanes_button";
+        assign_lanes_button.classList.add("btn");
+        assign_lanes_button.classList.add("btn-success");
+        assign_lanes_button.addEventListener("click", assignLanesClicked);
+        assign_lanes_inner.appendChild(assign_lanes_button);
+      }
+
+      function _getSendoffs(set) {
+        if (set == null) return null;
+        let sendoffs = [];
+
+        let numbers = Object.keys(set);
+        let temp = [];
+        for (let i = 0; i < numbers.length; i++)
+          if (numbers[i] != "repeats") temp.push(numbers[i]);
+        numbers = temp;
+        for (let i = 0; i < numbers.length; i++) {
+          let element = set[numbers[i]];
+          if (element.type == "standard" || element.type == "multi-part") {
+            let letters = Object.keys(element.sendoffs);
+            for (let j = 0; j < letters.length; j++) {
+              let letter = letters[j];
+              if (!sendoffs.includes(letter)) {
+                sendoffs.push(letter);
+              }
+            }
+          } else if (element.type == "subset") {
+            let sub_set_letters = _getSendoffs(element.set);
+            for (let j = 0; j < sub_set_letters.length; j++)
+              if (!sendoffs.includes(sub_set_letters[j]))
+                sendoffs.push(sub_set_letters[j]);
+          }
+        }
+
+        return sendoffs;
+      }
+
+      function _getSendoffLists(set) {
+        let by_round_elements = [];
+        if (set == null) return null;
+        let all_sendoffs = _getSendoffs(set);
+        all_sendoffs.sort((a, b) => parseInt(a) - parseInt(b));
+        let more_than_one_sendoff = false;
+        if (all_sendoffs.length > 1) more_than_one_sendoff = true;
+
+        if (all_sendoffs.length == 0) return null;
+
+        let element_keys = Object.keys(set);
+        let temp = [];
+        for (let i = 0; i < element_keys.length; i++)
+          if (element_keys[i] != "repeats") temp.push(element_keys[i]);
+        element_keys = temp;
+        element_keys.sort((a, b) => parseInt(a) - parseInt(b));
+        let first_sendoff = all_sendoffs[0];
+        let sendoff_lists = {};
+        for (let i = 0; i < all_sendoffs.length; i++) {
+          sendoff_lists[all_sendoffs[i]] = {};
+          sendoff_lists[all_sendoffs[i]].start_time = 0;
+          sendoff_lists[all_sendoffs[i]].running_time = 0;
+          sendoff_lists[all_sendoffs[i]].list = [];
+        }
+        for (let i = 0; i < set.repeats; i++) {
+          for (let l = 0; l < element_keys.length; l++) {
+            let sendoffs_done_list = [];
+            let element = set[element_keys[l]];
+
+            //standard element processing
+            if (element.type == "standard") {
+              let list = [];
+
+              for (let j = 0; j < all_sendoffs.length; j++) {
+                let sendoff_this_is = all_sendoffs[j];
+                sendoffs_done_list.push(sendoff_this_is);
+                let letter_to_get_sendoffs_for = all_sendoffs[j];
+                let element_sendoffs = Object.keys(element.sendoffs);
+                if (
+                  element_sendoffs.length != all_sendoffs.length &&
+                  element_sendoffs.length != 1
+                )
+                  throw new Error("Sendoff Mismatch");
+                if (!element_sendoffs.includes(letter_to_get_sendoffs_for))
+                  letter_to_get_sendoffs_for = all_sendoffs[0];
+
+                for (
+                  let k = 0;
+                  k < element.sendoffs[letter_to_get_sendoffs_for].reps;
+                  k++
+                ) {
+                  let item = {
+                    time: sendoff_lists[sendoff_this_is].running_time,
+                    rep_time: element.sendoffs[letter_to_get_sendoffs_for].time,
+                    distance: element.distance,
+                    description: element.description,
+                    rep_number: k + 1,
+                  };
+                  sendoff_lists[sendoff_this_is].running_time += item.rep_time;
+                  sendoff_lists[sendoff_this_is].list.push(item);
+                }
+              }
+            }
+
+            //multi-part element processing
+            else if (element.type == "multi-part") {
+              for (let j = 0; j < all_sendoffs.length; j++) {
+                let sendoff_this_is = all_sendoffs[j];
+                let letter_to_get_sendoffs_for = all_sendoffs[j];
+                let element_sendoffs = Object.keys(element.sendoffs);
+                let temp = [];
+                for (let t = 0; t < element_sendoffs.length; t++)
+                  if (/^[a-zA-Z]$/.test(element_sendoffs[t]))
+                    temp.push(element_sendoffs[t]);
+                element_sendoffs = temp;
+                element_sendoffs.sort((a, b) => parseInt(a) - parseInt(b));
+
+                if (
+                  element_sendoffs.length != all_sendoffs.length &&
+                  element_sendoffs.length != 1
+                )
+                  throw new Error("Sendoff Mismatch");
+                let first_set_description_count =
+                  element.sendoffs[element_sendoffs[0]].length;
+                for (let p = 1; p < element_sendoffs.length; p++) {
+                  if (
+                    first_set_description_count !=
+                      element.sendoffs[element_sendoffs[p]].length &&
+                    element.sendoffs[element_sendoffs[p]].length != 1
+                  )
+                    throw new Error("Sendoff Mismatch");
+                }
+                if (!element_sendoffs.includes(letter_to_get_sendoffs_for))
+                  letter_to_get_sendoffs_for = all_sendoffs[0];
+
+                let parts_key = Object.keys(
+                  element.sendoffs[letter_to_get_sendoffs_for]
+                );
+                parts_key.sort((a, b) => parseInt(a) - parseInt(b));
+                let temp_list = [];
+                let running_time = sendoff_lists[sendoff_this_is].running_time;
+
+                if (
+                  element.multi_description_type ==
+                  MULTI_DESCRIPTION_TYPE.SPLIT_EVENLY
+                ) {
+                  for (k = 0; k < parts_key.length; k++) {
+                    let part =
+                      element.sendoffs[letter_to_get_sendoffs_for][
+                        parts_key[k]
+                      ];
+                    let numbers = _splitDescriptionIntoNumbers(part);
+                    let ind_numbers = Object.keys(numbers);
+                    ind_numbers.sort((a, b) => parseInt(a) - parseInt(b));
+                    for (let num = 0; num < ind_numbers.length; num++) {
+                      let num_to_get = ind_numbers[num];
+                      let item = {
+                        time: running_time,
+                        rep_time: numbers[num_to_get].value,
+                        distance: element.distance,
+                        description: numbers[num_to_get].description,
+                        rep_number: parseInt(num_to_get),
+                      };
+                      running_time += item.rep_time;
+                      temp_list.push(item);
+                    }
+                    temp_list.sort((item1, item2) => {
+                      return item1.rep_number - item2.rep_number;
+                    });
+                    let last_number = temp_list[0].rep_number;
+
+                    for (let q = 1; q < temp_list.length; q++) {
+                      if (last_number >= temp_list[q].rep_number)
+                        throw new Error("Sendoff Mismatch");
+                      else last_number = temp_list[q].rep_number;
+                    }
+                  }
+                  sendoff_lists[sendoff_this_is].list.push(...temp_list);
+                  sendoff_lists[sendoff_this_is].running_time = running_time;
+                } else if (
+                  element.multi_description_type ==
+                  MULTI_DESCRIPTION_TYPE.REPEAT_ONE_AT_A_TIME
+                ) {
+                  let running_time =
+                    sendoff_lists[sendoff_this_is].running_time;
+                  for (k = 0; k < parts_key.length; k++) {
+                    let part =
+                      element.sendoffs[letter_to_get_sendoffs_for][
+                        parts_key[k]
+                      ];
+                    let numbers = _splitDescriptionIntoNumbers(part);
+                    let ind_numbers = Object.keys(numbers);
+                    ind_numbers.sort((a, b) => parseInt(a) - parseInt(b));
+                    for (let num = 0; num < ind_numbers.length; num++) {
+                      let num_to_get = ind_numbers[num];
+                      let item = {
+                        time: sendoff_lists[sendoff_this_is].running_time,
+                        rep_time: numbers[num_to_get].value,
+                        distance: element.distance,
+                        description: numbers[num_to_get].description,
+                        rep_number: parseInt(num_to_get),
+                      };
+                      running_time += item.rep_time;
+                      temp_list.push(item);
+                    }
+                  }
+                  temp_list.sort((item1, item2) => {
+                    return item1.rep_number - item2.rep_number;
+                  });
+
+                  let last_number = temp_list[0].rep_number;
+                  for (let q = 1; q < temp_list.length; q++) {
+                    if (last_number >= temp_list[q].rep_number)
+                      throw new Error("Sendoff Mismatch");
+                    else last_number = temp_list[q].rep_number;
+                  }
+
+                  let rep = temp_list[0].rep_number;
+                  if (sendoff_lists[sendoff_this_is].list.length != 0) {
+                    running_time =
+                      sendoff_lists[sendoff_this_is].list[
+                        sendoff_lists[sendoff_this_is].list.length - 1
+                      ].time +
+                      sendoff_lists[sendoff_this_is].list[
+                        sendoff_lists[sendoff_this_is].list.length - 1
+                      ].rep_time;
+                  }
+                  running_time = sendoff_lists[sendoff_this_is].running_time;
+                  while (rep <= element.max_reps) {
+                    for (
+                      let w = 0;
+                      w < temp_list.length && rep <= element.max_reps;
+                      w++
+                    ) {
+                      let copy = {
+                        time: running_time,
+                        rep_time: temp_list[w].rep_time,
+                        distance: temp_list[w].distance,
+                        description: temp_list[w].description,
+                        rep_number: rep,
+                      };
+                      running_time += copy.rep_time;
+                      sendoff_lists[sendoff_this_is].list.push(copy);
+
+                      rep++;
+                    }
+                  }
+
+                  sendoff_lists[sendoff_this_is].running_time =
+                    sendoff_lists[sendoff_this_is].list[
+                      sendoff_lists[sendoff_this_is].list.length - 1
+                    ].time +
+                    sendoff_lists[sendoff_this_is].list[
+                      sendoff_lists[sendoff_this_is].list.length - 1
+                    ].rep_time;
+                } else if (
+                  element.multi_description_type ==
+                  MULTI_DESCRIPTION_TYPE.BY_ROUND
+                ) {
+                  element.id = createElelementID();
+                  by_round_elements.push(element);
+
+                  sendoff_lists[sendoff_this_is].list.push(element);
+                }
+              }
+            } else if (element.type == "subset") {
+              let subsendoffs = _getSendoffLists(element.set);
+              //have the subsendoffs, copy them to the main sendoff list
+
+              if (all_sendoffs.length != Object.keys(subsendoffs).length)
+                return null;
+
+              for (
+                let sendoff_index = 0;
+                sendoff_index < all_sendoffs.length;
+                sendoff_index++
+              ) {
+                let copying_letter = all_sendoffs[sendoff_index];
+                let temp_list = [];
+                let running_time = -1;
+                if (sendoff_lists[copying_letter].running_time)
+                  running_time = sendoff_lists[copying_letter].running_time;
+                else running_time = 0;
+                for (
+                  let index = 0;
+                  index < subsendoffs[copying_letter].list.length;
+                  index++
+                ) {
+                  subsendoffs[copying_letter].list[index].time = running_time;
+                  sendoff_lists[copying_letter].list.push(
+                    subsendoffs[copying_letter].list[index]
+                  );
+                  running_time +=
+                    subsendoffs[copying_letter].list[index].rep_time;
+                  sendoff_lists[copying_letter].running_time = running_time;
+                }
+              }
+            }
+          }
+        }
+
+        //replace by round elemeents
+        let need_to_redo_final_sendoff = false;
+
+        //go through each letter that we have sendoffs for
+        for (
+          let sendoff_index = 0;
+          sendoff_index < all_sendoffs.length;
+          sendoff_index++
+        ) {
+          let letter_working_on = all_sendoffs[sendoff_index];
+
+          let element_ids = [];
+          //get id's for each by round element
+          for (
+            let i = 0;
+            i < sendoff_lists[letter_working_on].list.length;
+            i++
+          ) {
+            if (
+              sendoff_lists[letter_working_on].list[i].multi_description_type ==
+              MULTI_DESCRIPTION_TYPE.BY_ROUND
+            ) {
+              if (
+                !element_ids.includes(
+                  sendoff_lists[letter_working_on].list[i].id
+                )
+              ) {
+                element_ids.push(sendoff_lists[letter_working_on].list[i].id);
+              }
+            }
+          }
+
+          //now we have by round elements, go through by each element id and replace the element with lists
+          for (
+            let element_index = 0;
+            element_index < element_ids.length;
+            element_index++
+          ) {
+            need_to_redo_final_sendoff = true;
+            let round_working_on = 1;
+            let element_id = element_ids[element_index];
+
+            //start copying each sendoff to a temp list until we get to an id that matches
+
+            let final_list_for_letter = [];
+            let temp_list = [];
+            let running_time = 0;
+            for (
+              let i = 0;
+              i < sendoff_lists[letter_working_on].list.length;
+              i++
+            ) {
+              if (sendoff_lists[letter_working_on].list[i].id != element_id) {
+                temp_list.push(sendoff_lists[letter_working_on].list[i]);
+              } else {
+                //we have found an element that we are replacing sendoffs for
+                if (i > 0) {
+                  running_time =
+                    sendoff_lists[letter_working_on].list[i - 1].time +
+                    sendoff_lists[letter_working_on].list[i - 1].rep_time;
+                }
+
+                let letter_to_get_sendoffs_from = letter_working_on;
+                if (
+                  !sendoff_lists[letter_working_on].list[i].sendoffs[
+                    letter_working_on
+                  ]
+                )
+                  letter_to_get_sendoffs_from = "A";
+
+                let part = sendoff_lists[letter_working_on].list[i];
+                let index_of_rep = -1;
+
+                for (
+                  let k = 0;
+                  k < part.sendoffs[letter_to_get_sendoffs_from].length;
+                  k++
+                ) {
+                  let checking = part.sendoffs[letter_to_get_sendoffs_from][
+                    k
+                  ].rep
+                    .toUpperCase()
+                    .replace("RD", "");
+                  checking = checking.replace(":", "").trim();
+                  checking = parseInt(checking);
+                  if (round_working_on == checking) {
+                    index_of_rep = k;
+                    break;
+                  }
+                }
+
+                if (index_of_rep != -1) {
+                  let added_to_temp = false;
+                  //we now have the index of the rep we are doing, copy it to the temp list
+                  for (let k = 0; k < part.max_reps; k++) {
+                    let item = {
+                      time: running_time,
+                      rep_time:
+                        part.sendoffs[letter_to_get_sendoffs_from][index_of_rep]
+                          .value,
+                      distance: part.distance,
+                      description:
+                        part.sendoffs[letter_to_get_sendoffs_from][index_of_rep]
+                          .description,
+                      rep_number: k + 1,
+                    };
+
+                    running_time = running_time + item.rep_time;
+
+                    temp_list.push(item);
+                    added_to_temp = true;
+                  }
+
+                  //we changed a round one to a sendoff list, copy the remaining and start over at the top
+                  if (added_to_temp) {
+                    for (
+                      j = i + 1;
+                      j < sendoff_lists[letter_working_on].list.length;
+                      j++
+                    ) {
+                      let old_item = sendoff_lists[letter_working_on].list[j];
+                      if (old_item.type != "multi-part") {
+                        let new_item = {
+                          time: running_time,
+                          rep_time: old_item.rep_time,
+                          distance: old_item.distance,
+                          description: old_item.description,
+                          rep_number: old_item.rep_number,
+                        };
+                        running_time = running_time + old_item.rep_time;
+                        temp_list.push(new_item);
+                      } else {
+                        temp_list.push(old_item);
+                      }
+                    }
+                    sendoff_lists[letter_working_on].list = temp_list;
+                    temp_list = [];
+                    i = -1;
+                    round_working_on++;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        //remove any unassigned by round parts
+        for (let i = 0; i < all_sendoffs.length; i++) {
+          let temp_list = [];
+          for (let k = 0; k < sendoff_lists[all_sendoffs[i]].list.length; k++) {
+            if (!sendoff_lists[all_sendoffs[i]].list[k].type) {
+              temp_list.push(sendoff_lists[all_sendoffs[i]].list[k]);
+            }
+          }
+          sendoff_lists[all_sendoffs[i]].list = temp_list;
+        }
+
+        if (need_to_redo_final_sendoff) {
+          for (let i = 0; i < all_sendoffs.length; i++) {
+            sendoff_lists[all_sendoffs[i]].running_time =
+              sendoff_lists[all_sendoffs[i]].list[
+                sendoff_lists[all_sendoffs[i]].list.length - 1
+              ].time +
+              sendoff_lists[all_sendoffs[i]].list[
+                sendoff_lists[all_sendoffs[i]].list.length - 1
+              ].rep_time;
+          }
+        }
+
+        return sendoff_lists;
+      }
+
+      function _splitDescriptionIntoNumbers(description, type) {
+        if (!type) type = 2;
+        let temp = _isValidDescriptionNumbers(description.rep, type, 1000000);
+        if (!temp) return undefined;
+
+        let rep_text = description.rep;
+        rep_text = rep_text.replace(/\s/g, "");
+        if (rep_text.endsWith(":"))
+          rep_text = rep_text.substring(0, rep_text.length - 1);
+
+        let split_by_comma = rep_text.split(",");
+        let parts = {};
+        for (let i = 0; i < split_by_comma.length; i++) {
+          let part = split_by_comma[i];
+
+          if (!part.includes("-")) {
+            let sub_description = {};
+            sub_description.description = description.description;
+            sub_description.value = description.value;
+
+            parts[part] = sub_description;
+          } else {
+            let split_by_hypen = split_by_comma[i].split("-");
+            let min = parseInt(split_by_hypen[0]);
+            let max = parseInt(split_by_hypen[1]);
+            for (let j = min; j <= max; j++) {
+              let sub_description = {};
+              sub_description.description = description.description;
+              sub_description.value = description.value;
+
+              parts[j] = sub_description;
+            }
+          }
+        }
+
+        return parts;
+      }
+
+      function createElelementID() {
+        let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        letters += letters.toLowerCase();
+        letters += "1234567890";
+        letters += "-_";
+
+        let id = "";
+
+        while (id.length < 80) {
+          id += letters.charAt(Math.floor(Math.random() * letters.length));
+        }
+
+        return id;
+      }
+
+      function _isValidDescriptionNumbers(value, type, max_reps) {
+        value = value.replace(/\s/g, "");
+        value = value.replace(/:/g, "");
+        if (type == MULTI_DESCRIPTION_TYPE.BY_ROUND) {
+          value = value.toUpperCase();
+          value = value.replace("RD", "");
+        }
+        if (!containsOnlyAcceptableChars(value)) return false;
+        let comma_split = value.split(",");
+        let numbers = [];
+        for (let i = 0; i < comma_split.length; i++) {
+          let split_part = comma_split[i];
+          if (split_part.includes("-")) {
+            let split_dash = split_part.split("-");
+            if (split_dash.length != 2) {
+              return false;
+            }
+            let first_number = parseInt(split_dash[0]);
+            let second_number = parseInt(split_dash[1]);
+            if (isNaN(first_number) || isNaN(second_number)) {
+              return false;
+            }
+            for (let j = first_number; j <= second_number; j++) {
+              numbers.push(j);
+            }
+          } else {
+            let number = parseInt(split_part);
+            if (isNaN(number)) {
+              return false;
+            }
+
+            numbers.push(number);
+          }
+        }
+
+        if (type != MULTI_DESCRIPTION_TYPE.BY_ROUND) {
+          for (let i = 0; i < numbers.length; i++) {
+            if (numbers[i] > max_reps) {
+              return false;
+            }
+          }
+        }
+
+        return true;
+      }
+
+      function containsOnlyAcceptableChars(str) {
+        return /^[0-9,-]+$/.test(str);
+      }
+
+      function assignLanesClicked() {
+        const assign_lanes_popup =
+          document.getElementById("assign_lanes_popup");
+        const pick_set_display = document.getElementById("pick_set_display");
+        const sendoff_lists = assign_lanes_popup.sendoff_lists;
+
+        const assign_lanes_inner = assign_lanes_popup.children[0];
+
+        for (let i = 0; i < assign_lanes_inner.children.length - 1; i++) {
+          const wrapper = assign_lanes_inner.children[i];
+          const lane = parseInt(
+            wrapper.children[0].innerText
+              .substring("Lane ".length)
+              .replace(":", "")
+              .trim()
+          );
+          const letter = wrapper.children[1].selectedOptions[0].innerText;
+          const swimmer_count = parseInt(
+            wrapper.children[3].selectedOptions[0].innerText
+          );
+          const seconds_apart = parseInt(
+            wrapper.children[5].selectedOptions[0].innerText
+          );
+
+          LANES[lane].sendoff_list = sendoff_lists[letter];
+          LANES[lane].letter = letter;
+          LANES[lane].swimmer_count = swimmer_count;
+          LANES[lane].seconds_apart = seconds_apart;
+        }
+
+        cleanSendoffLists();
+        sendSendoffLists(sendoff_lists);
+        assignSendoffLists();
+
+        assign_lanes_popup.remove();
+        pick_set_display.remove();
+      }
+
+      function sendSendoffLists(sendoff_lists) {
+        fillOutSendoffLists();
+        let lanes = Object.keys(LANES);
+        let data = {
+          action: "sendSendoffLists",
+          roomKey: roomKey,
+          lists: {},
+        };
+
+        for (let i = 0; i < lanes.length; i++) {
+          data.lists[lanes[i]] = LANES[lanes[i]].sendoff_list;
+        }
+
+        socket.send(JSON.stringify(data));
+      }
+
+      function fillOutSendoffLists() {
+        let lanes = Object.keys(LANES);
+        for (let i = 0; i < lanes.length; i++) {
+          let lane = lanes[i];
+          LANES[lane].sendoffs_filled_out = true;
+          let sendoff_list = LANES[lane].sendoff_list.list;
+          let swimmer_count = LANES[lane].swimmer_count;
+          let seconds_apart = LANES[lane].seconds_apart;
+
+          let new_list = [];
+          for (let j = 0; j < sendoff_list.length; j++) {
+            let sendoff_adding_to = sendoff_list[j];
+            let add_time = seconds_apart;
+            sendoff_adding_to.swimmer_number = 1;
+            new_list.push(sendoff_adding_to);
+            for (let k = 1; k < swimmer_count; k++) {
+              let new_object = {
+                time: sendoff_adding_to.time + add_time,
+                rep_time: sendoff_adding_to.rep_time,
+                distance: sendoff_adding_to.distance,
+                description: sendoff_adding_to.description,
+                rep_number: sendoff_adding_to.rep_number,
+                swimmer_number: k + 1,
+              };
+              new_list.push(new_object);
+              add_time = add_time + seconds_apart;
+            }
+          }
+          LANES[lane].sendoff_list.list = new_list;
+        }
+      }
+
+      function assignSendoffLists() {
+        let lanes = Object.keys(LANES);
+        for (let i = 0; i < lanes.length; i++) {
+          let lane = LANES[lanes[i]];
+          let lane_panel = lane.lane_panel;
+
+          const sendoff_table = document.createElement("table");
+          sendoff_table.id = "lane" + lane[i] + "sendofftable";
+          lane_panel.appendChild(sendoff_table);
+
+          let sendoff_list = lane.sendoff_list.list;
+
+          for (let j = 0; j < sendoff_list.length; j++) {
+            let sendoff = sendoff_list[j];
+            const row = document.createElement("tr");
+            sendoff_table.appendChild(row);
+
+            const swimmer_number = document.createElement("td");
+            swimmer_number.innerText = "S# " + sendoff.swimmer_number;
+            row.appendChild(swimmer_number);
+
+            const rep_number = document.createElement("td");
+            rep_number.innerText = "R# " + sendoff.rep_number;
+            row.appendChild(rep_number);
+
+            const sendoff_time = document.createElement("td");
+            sendoff_time.innerText = valueToClockDisplay(sendoff.time);
+            row.appendChild(sendoff_time);
+
+            const distance = document.createElement("td");
+            distance.innerText = sendoff.distance;
+            row.appendChild(distance);
+
+            const description = document.createElement("td");
+            description.innerText = sendoff.description;
+            row.appendChild(description);
+
+            row.sendoff = sendoff;
+          }
+        }
+
+        lanes.forEach((lane) => assignDisplayFromNextInTable(lane));
+      }
+
+      function valueToClockDisplay(value) {
+        let min = Math.floor(value / 60);
+        let sec = value % 60;
+
+        min < 10 ? (min = "0" + min) : (min = min.toString());
+        sec < 10 ? (sec = "0" + sec) : (sec = sec.toString());
+
+        return min + ":" + sec;
+      }
+
+      function cleanSendoffLists() {
+        let lanes = Object.keys(LANES);
+        for (let i = 0; i < lanes.length; i++) {
+          let lane = LANES[lanes[i]];
+          let lane_panel = lane.lane_panel;
+
+          let sendoff_list = lane.sendoff_list.list;
+
+          for (let j = 0; j < sendoff_list.length; j++) {
+            let sendoff = sendoff_list[j];
+            let description = sendoff.description;
+            let split_description = description.split("\n");
+            if (split_description.count > 1)
+              sendoff.description = split_description[0];
+          }
+        }
+      }
+
+      function assignDisplayFromNextInTable(lane) {
+        try {
+          const lane_panel = LANES[lane].lane_panel;
+          const next_up_display = lane_panel.children[8];
+          const next_up_table = lane_panel.children[9];
+          if (next_up_table.children.length > 1) {
+            const sendoff = next_up_table.children[0].sendoff;
+
+            while (next_up_display.children.length > 0) {
+              next_up_display.children[0].remove();
+            }
+
+            const swimmer_number = document.createElement("div");
+            swimmer_number.innerText = "Swimmer #" + sendoff.swimmer_number;
+            next_up_display.appendChild(swimmer_number);
+
+            const swimmer_time = document.createElement("div");
+            swimmer_time.innerText =
+              valueToClockDisplay(sendoff.time) +
+              " - " +
+              sendoff.distance +
+              " " +
+              sendoff.description;
+            next_up_display.appendChild(swimmer_time);
+          }
+        } catch {}
+      }
+
+      function processTimeForLane(lane, time_display) {
+        const lane_panel = LANES[lane].lane_panel;
+        const next_up_display = lane_panel.children[8];
+        const next_up_table = lane_panel.children[9];
+        const next_up_time =
+          next_up_display.children[1].innerText.split(" - ")[0];
+
+        if (next_up_time == time_display) {
+          if (next_up_table.children.length > 1) {
+            next_up_table.children[0].remove();
+            assignDisplayFromNextInTable(lane);
+          } else {
+            while (next_up_display.children.length > 0) {
+              next_up_display.children[0].remove();
+            }
+          }
+        }
       }
     </script>
   </body>
