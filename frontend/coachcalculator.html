@@ -659,7 +659,7 @@
       .sendoff_match_wrapper > div {
         margin-right: 4px;
       }
-      #assign_lanes_button {
+      .assign_lanes_button {
         margin-top: 20px;
       }
     </style>
@@ -1047,8 +1047,24 @@
             start_on_top_button.classList.add("nearly_full_width");
             start_on_top_button.classList.add("control_button");
             start_on_top_button.innerText = "Start Set on next :00";
+            start_on_top_button.addEventListener("click", setAllOnTopClicked);
             start_on_top_button.disabled = true;
             sendoff_controls_panel.appendChild(start_on_top_button);
+
+            const start_on_thirty_button = document.createElement("button");
+            start_on_thirty_button.id = "start_on_thirty_button";
+            start_on_thirty_button.type = "button";
+            start_on_thirty_button.classList.add("btn");
+            start_on_thirty_button.classList.add("btn-success");
+            start_on_thirty_button.classList.add("nearly_full_width");
+            start_on_thirty_button.classList.add("control_button");
+            start_on_thirty_button.innerText = "Start Set on next :30";
+            start_on_thirty_button.addEventListener(
+              "click",
+              setAllOnTopClicked
+            );
+            start_on_thirty_button.disabled = true;
+            sendoff_controls_panel.appendChild(start_on_thirty_button);
 
             const switch_mode_button = document.createElement("button");
             switch_mode_button.id = "switch_mode_button";
@@ -1481,7 +1497,14 @@
 
         let buttons = document.getElementsByTagName("button");
         for (i = 0; i < buttons.length; i++) {
-          buttons[i].disabled = false;
+          if (
+            buttons[i].id != "start_on_top_button" &&
+            buttons[i].id != "start_on_thirty_button" &&
+            buttons[i].id != "switch_mode_button" &&
+            buttons[i].id != "pause_all_lanes_button" &&
+            buttons[i].id != "stop_all_lanes_button"
+          )
+            buttons[i].disabled = false;
         }
       }
 
@@ -3145,13 +3168,31 @@
           }
         }
 
+        const button_wrapper = document.createElement("div");
+        button_wrapper.style.display = "flex";
+        button_wrapper.style.justifyContent = "space-evenly";
+        assign_lanes_inner.appendChild(button_wrapper);
+
         const assign_lanes_button = document.createElement("button");
         assign_lanes_button.innerText = "Assign Lanes";
         assign_lanes_button.id = "assign_lanes_button";
         assign_lanes_button.classList.add("btn");
         assign_lanes_button.classList.add("btn-success");
+        assign_lanes_button.classList.add("assign_lanes_button");
         assign_lanes_button.addEventListener("click", assignLanesClicked);
-        assign_lanes_inner.appendChild(assign_lanes_button);
+        button_wrapper.appendChild(assign_lanes_button);
+
+        const cancel_assign_lanes_button = document.createElement("button");
+        cancel_assign_lanes_button.innerText = "Cancel";
+        cancel_assign_lanes_button.id = "cancel_assign_lanes_button";
+        cancel_assign_lanes_button.classList.add("btn");
+        cancel_assign_lanes_button.classList.add("btn-primary");
+        cancel_assign_lanes_button.classList.add("assign_lanes_button");
+        cancel_assign_lanes_button.addEventListener(
+          "click",
+          cancelAssignLanesClicked
+        );
+        button_wrapper.appendChild(cancel_assign_lanes_button);
       }
 
       function _getSendoffs(set) {
@@ -3751,15 +3792,26 @@
         }
 
         cleanSendoffLists();
-        sendSendoffLists(sendoff_lists);
+        sendSendoffLists(true);
         assignSendoffLists();
+        rollOverSendoffLists();
 
+        assign_lanes_popup.remove();
+        pick_set_display.remove();
+        document.getElementById("start_on_top_button").disabled = false;
+        document.getElementById("start_on_thirty_button").disabled = false;
+      }
+
+      function cancelAssignLanesClicked() {
         assign_lanes_popup.remove();
         pick_set_display.remove();
       }
 
-      function sendSendoffLists(sendoff_lists) {
-        fillOutSendoffLists();
+      function sendSendoffLists(fill_out_sendoff_lists) {
+        if (fill_out_sendoff_lists == undefined) {
+          fill_out_sendoff_lists = true;
+        }
+        if (fill_out_sendoff_lists) fillOutSendoffLists();
         let lanes = Object.keys(LANES);
         let data = {
           action: "sendSendoffLists",
@@ -3811,6 +3863,12 @@
         for (let i = 0; i < lanes.length; i++) {
           let lane = LANES[lanes[i]];
           let lane_panel = lane.lane_panel;
+
+          if (
+            lane_panel.children[lane_panel.children.length - 1].tagName ==
+            "TABLE"
+          )
+            lane_panel.children[lane_panel.children.length - 1].remove();
 
           const sendoff_table = document.createElement("table");
           sendoff_table.id = "lane" + lane[i] + "sendofftable";
@@ -3938,6 +3996,72 @@
           element.style.backgroundColor = `rgb(0, ${element.green_amount}, 0)`;
           element.green_amount--;
         }
+      }
+
+      function setAllOnTopClicked(e) {
+        //debugger;
+
+        let lanes = Object.keys(LANES);
+        for (let i = 0; i < lanes.length; i++) {
+          let lane = LANES[lanes[i]];
+
+          let clock_display = lane.lane_panel.children[1].innerText;
+          clock_display = clock_display.split(":");
+          let start_time = 0;
+          if (this.id == "start_on_top_button")
+            start_time = (parseInt(clock_display[0]) + 1) * 60;
+          else {
+            start_time = parseInt(clock_display[0]) * 60 + 30;
+            let current_clock_time =
+              parseInt(clock_display[0]) * 60 + parseInt(clock_display[1]);
+            if (start_time < current_clock_time) start_time += 60;
+          }
+
+          start_time = rollOverNumber(start_time);
+
+          lane.sendoff_list.start_time = start_time;
+          lane.sendoff_list.running_time += start_time;
+
+          for (let j = 0; j < lane.sendoff_list.list.length; j++) {
+            if (lane.sendoff_list.list[j].hasOwnProperty("original_time")) {
+              lane.sendoff_list.list[j].time =
+                lane.sendoff_list.list[j].original_time + start_time;
+            } else {
+              lane.sendoff_list.list[j].original_time =
+                lane.sendoff_list.list[j].time;
+              lane.sendoff_list.list[j].time += start_time;
+            }
+            if (i == 79) {
+              debugger;
+            }
+          }
+        }
+
+        rollOverSendoffLists();
+        sendSendoffLists(false);
+        assignSendoffLists();
+        lanes.forEach((lane) => assignDisplayFromNextInTable(lane));
+      }
+
+      function rollOverSendoffLists() {
+        let lanes = Object.keys(LANES);
+        for (let i = 0; i < lanes.length; i++) {
+          let lane_key = lanes[i];
+          let sendoff_list = LANES[lane_key].sendoff_list;
+          let list = sendoff_list.list;
+          sendoff_list.running_time = rollOverNumber(sendoff_list.running_time);
+          sendoff_list.start_time = rollOverNumber(sendoff_list.start_time);
+          list.forEach((sendoff) => {
+            sendoff.time = rollOverNumber(sendoff.time);
+            if (sendoff.hasOwnProperty("original_time"))
+              sendoff.original_time = rollOverNumber(sendoff.original_time);
+          });
+        }
+      }
+
+      function rollOverNumber(number) {
+        if (number >= 3600) return number - 3600;
+        return number;
       }
     </script>
   </body>
