@@ -1365,6 +1365,7 @@
         fitText(clock, true);
         fitText(document.getElementById("room_code_text"));
         fitText(document.getElementById("room_code_text_above"));
+        processGreenChanges();
       }
 
       function checkOrientation() {
@@ -3901,6 +3902,7 @@
               " " +
               sendoff.description;
             next_up_display.appendChild(swimmer_time);
+            displayChange(next_up_display);
           }
         } catch {}
       }
@@ -3921,6 +3923,20 @@
               next_up_display.children[0].remove();
             }
           }
+        }
+      }
+
+      let ELEMENTS_CHANGING = [];
+      function displayChange(element) {
+        element.green_amount = 255;
+        ELEMENTS_CHANGING.push(element);
+      }
+
+      function processGreenChanges() {
+        for (let i = 0; i < ELEMENTS_CHANGING.length; i++) {
+          const element = ELEMENTS_CHANGING[i];
+          element.style.backgroundColor = `rgb(0, ${element.green_amount}, 0)`;
+          element.green_amount--;
         }
       }
     </script>
