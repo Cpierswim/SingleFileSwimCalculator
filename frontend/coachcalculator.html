@@ -662,6 +662,11 @@
       .assign_lanes_button {
         margin-top: 20px;
       }
+      .sendoff_table {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+      }
     </style>
     <script src="https://www.youtube.co/iframe_api"></script>
   </head>
@@ -3871,7 +3876,8 @@
             lane_panel.children[lane_panel.children.length - 1].remove();
 
           const sendoff_table = document.createElement("table");
-          sendoff_table.id = "lane" + lane[i] + "sendofftable";
+          sendoff_table.id = "lane" + lanes[i] + "sendofftable";
+          sendoff_table.classList.add("sendoff_table");
           lane_panel.appendChild(sendoff_table);
 
           let sendoff_list = lane.sendoff_list.list;
@@ -3941,12 +3947,11 @@
           const lane_panel = LANES[lane].lane_panel;
           const next_up_display = lane_panel.children[8];
           const next_up_table = lane_panel.children[9];
-          if (next_up_table.children.length > 1) {
+          while (next_up_display.children.length > 0) {
+            next_up_display.children[0].remove();
+          }
+          if (next_up_table.children.length > 0) {
             const sendoff = next_up_table.children[0].sendoff;
-
-            while (next_up_display.children.length > 0) {
-              next_up_display.children[0].remove();
-            }
 
             const swimmer_number = document.createElement("div");
             swimmer_number.innerText = "Swimmer #" + sendoff.swimmer_number;
@@ -3968,6 +3973,11 @@
       function processTimeForLane(lane, time_display) {
         const lane_panel = LANES[lane].lane_panel;
         const next_up_display = lane_panel.children[8];
+        if (next_up_display.children.length == 0) {
+          if (lane_panel.children[9].children.length != 0)
+            lane_panel.children[9].children[0].remove();
+          return "";
+        }
         const next_up_table = lane_panel.children[9];
         const next_up_time =
           next_up_display.children[1].innerText.split(" - ")[0];
@@ -3995,6 +4005,15 @@
           const element = ELEMENTS_CHANGING[i];
           element.style.backgroundColor = `rgb(0, ${element.green_amount}, 0)`;
           element.green_amount--;
+          if (element.green_amount == -1) {
+            let temp = [];
+            for (let j = 0; j < ELEMENTS_CHANGING.length; j++) {
+              if (i != j) {
+                temp.push(ELEMENTS_CHANGING[j]);
+              }
+            }
+            ELEMENTS_CHANGING = temp;
+          }
         }
       }
 
