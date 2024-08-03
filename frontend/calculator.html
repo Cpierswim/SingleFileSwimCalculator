@@ -260,6 +260,7 @@
         checkOrientation();
       }, 10);
       let ignore_rotate_screen = true;
+      let run_clock = true;
 
       function closeWebSocket() {
         socket.close();
@@ -423,25 +424,27 @@
         let curr = Date.now();
         curr += time_delta + additional_time_delta;
         let display_time = new Date(curr);
-        clock.innerText = `${checkTime(display_time.getMinutes())}:${checkTime(
-          display_time.getSeconds()
-        )}`;
+        if (run_clock)
+          clock.innerText = `${checkTime(
+            display_time.getMinutes()
+          )}:${checkTime(display_time.getSeconds())}`;
         const set_table = document.getElementById("set_table");
         let set_display = document.getElementById("set_display");
 
         if (split_display && split_display.children.length > 0) {
           set_display.style.display = "none";
           split_display.style.display = "";
-          for (let i = 0; i < split_display.children.length; i++) {
-            if (
-              split_display.children[i].time_to_stop_displaying_split <
-              Date.now()
-            ) {
-              split_display.removeChild(split_display.children[i]);
-            } else {
-              fitText(split_display.children[i].children[0]);
+          if (run_clock)
+            for (let i = 0; i < split_display.children.length; i++) {
+              if (
+                split_display.children[i].time_to_stop_displaying_split <
+                Date.now()
+              ) {
+                split_display.removeChild(split_display.children[i]);
+              } else {
+                fitText(split_display.children[i].children[0]);
+              }
             }
-          }
           for (i = 0; i < split_display.children.length && i < 2; i++) {
             if (split_display.children[i].green_amount > -1) {
               split_display.children[i].style.backgroundColor =
@@ -550,7 +553,7 @@
         connection_messages_display.innerHTML =
           "Attempting to connect to server...";
         socket = new WebSocket(
-          "wss://mjim68pp6h.execute-api.us-east-2.amazonaws.com/production/"
+          "wss://22r6ugvqd1.execute-api.us-east-2.amazonaws.com/production/"
         );
 
         socket.onopen = (event) => {
@@ -584,6 +587,7 @@
         };
 
         socket.onmessage = (event) => {
+          if (event.data == "") return "";
           let data = JSON.parse(event.data);
           if (data?.message == "Internal server error")
             _handleInternalServerError();
@@ -614,6 +618,12 @@
                 break;
               case "videoEvent":
                 youtubeDataRecieved(data.videoAction);
+                break;
+              case "stopClock":
+                stopClock();
+                break;
+              case "startClock":
+                restartClock();
                 break;
             }
           }
@@ -933,6 +943,14 @@
         sec < 10 ? (sec = "0" + sec) : (sec = sec.toString());
 
         return min + ":" + sec;
+      }
+
+      function stopClock() {
+        run_clock = false;
+      }
+
+      function restartClock() {
+        run_clock = true;
       }
     </script>
   </body>

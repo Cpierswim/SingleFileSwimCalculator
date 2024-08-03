@@ -198,7 +198,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: space-evenly;
+        justify-content: flex-start;
       }
 
       .control_lane {
@@ -279,6 +279,10 @@
       .next_up_display {
         width: 93%;
         font-size: 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-weight: 600;
       }
 
       .lane_split_panel {
@@ -659,8 +663,19 @@
       .sendoff_match_wrapper > div {
         margin-right: 4px;
       }
-      #assign_lanes_button {
+      .assign_lanes_button {
         margin-top: 20px;
+      }
+      .sendoff_table {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+      }
+      #pick_set_button_display {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
       }
     </style>
     <script src="https://www.youtube.co/iframe_api"></script>
@@ -1047,8 +1062,24 @@
             start_on_top_button.classList.add("nearly_full_width");
             start_on_top_button.classList.add("control_button");
             start_on_top_button.innerText = "Start Set on next :00";
+            start_on_top_button.addEventListener("click", setAllOnTopClicked);
             start_on_top_button.disabled = true;
             sendoff_controls_panel.appendChild(start_on_top_button);
+
+            const start_on_thirty_button = document.createElement("button");
+            start_on_thirty_button.id = "start_on_thirty_button";
+            start_on_thirty_button.type = "button";
+            start_on_thirty_button.classList.add("btn");
+            start_on_thirty_button.classList.add("btn-success");
+            start_on_thirty_button.classList.add("nearly_full_width");
+            start_on_thirty_button.classList.add("control_button");
+            start_on_thirty_button.innerText = "Start Set on next :30";
+            start_on_thirty_button.addEventListener(
+              "click",
+              setAllOnTopClicked
+            );
+            start_on_thirty_button.disabled = true;
+            sendoff_controls_panel.appendChild(start_on_thirty_button);
 
             const switch_mode_button = document.createElement("button");
             switch_mode_button.id = "switch_mode_button";
@@ -1057,20 +1088,24 @@
             switch_mode_button.classList.add("btn-success");
             switch_mode_button.classList.add("nearly_full_width");
             switch_mode_button.classList.add("control_button");
-            switch_mode_button.innerText = "Enable Lane Time Edit Mode";
+            switch_mode_button.innerText = "Switch Lane Time Edit Mode";
+            switch_mode_button.addEventListener(
+              "click",
+              switchModeButtonClicked
+            );
             switch_mode_button.disabled = true;
             sendoff_controls_panel.appendChild(switch_mode_button);
 
-            const pause_all_lanes_button = document.createElement("button");
-            pause_all_lanes_button.id = "pause_all_lanes_button";
-            pause_all_lanes_button.type = "button";
-            pause_all_lanes_button.classList.add("btn");
-            pause_all_lanes_button.classList.add("btn-warning");
-            pause_all_lanes_button.classList.add("nearly_full_width");
-            pause_all_lanes_button.classList.add("control_button");
-            pause_all_lanes_button.innerText = "Pause All Lanes";
-            pause_all_lanes_button.disabled = true;
-            sendoff_controls_panel.appendChild(pause_all_lanes_button);
+            // const pause_all_lanes_button = document.createElement("button");
+            // pause_all_lanes_button.id = "pause_all_lanes_button";
+            // pause_all_lanes_button.type = "button";
+            // pause_all_lanes_button.classList.add("btn");
+            // pause_all_lanes_button.classList.add("btn-warning");
+            // pause_all_lanes_button.classList.add("nearly_full_width");
+            // pause_all_lanes_button.classList.add("control_button");
+            // pause_all_lanes_button.innerText = "Pause All Lanes";
+            // pause_all_lanes_button.disabled = true;
+            // sendoff_controls_panel.appendChild(pause_all_lanes_button);
 
             const stop_all_lanes_button = document.createElement("button");
             stop_all_lanes_button.id = "stop_all_lanes_button";
@@ -1080,6 +1115,10 @@
             stop_all_lanes_button.classList.add("nearly_full_width");
             stop_all_lanes_button.classList.add("control_button");
             stop_all_lanes_button.innerText = "Stop All Lanes";
+            stop_all_lanes_button.addEventListener(
+              "click",
+              stopAllLanesClicked
+            );
             stop_all_lanes_button.disabled = true;
             sendoff_controls_panel.appendChild(stop_all_lanes_button);
 
@@ -1135,19 +1174,6 @@
             lanes_display = document.createElement("div");
             lanes_display.id = "lanes_display";
             lower_div.appendChild(lanes_display);
-
-            const send_info_button = document.createElement("button");
-            send_info_button.id = "send_info_button";
-            send_info_button.innerText = "Send Info...";
-            send_info_button.addEventListener("click", sendInfo);
-
-            const split_button = document.createElement("button");
-            split_button.id = "split_button";
-            split_button.innerText = "Split";
-            split_button.addEventListener("click", Split);
-
-            lanes_display.appendChild(send_info_button);
-            lanes_display.appendChild(split_button);
           };
           const add_initial_empty_splits_display = () => {
             const lower_div = document.getElementById("lower_div");
@@ -1331,7 +1357,7 @@
         lanes.sort((a, b) => parseInt(a) - parseInt(b));
 
         lanes.forEach((lane_number) => {
-          if (LANES[lane_number].connected) {
+          if (LANES[lane_number].connected && LANES[lane_number].run_clock) {
             const lane_panel = LANES[lane_number].lane_panel;
             const split_panel = LANES[lane_number].split_panel;
 
@@ -1365,6 +1391,7 @@
         fitText(clock, true);
         fitText(document.getElementById("room_code_text"));
         fitText(document.getElementById("room_code_text_above"));
+        processGreenChanges();
       }
 
       function checkOrientation() {
@@ -1405,7 +1432,7 @@
 
       function OpenForConnections() {
         socket = new WebSocket(
-          "wss://mjim68pp6h.execute-api.us-east-2.amazonaws.com/production/"
+          "wss://22r6ugvqd1.execute-api.us-east-2.amazonaws.com/production/"
         );
 
         socket.onopen = (event) => {
@@ -1431,6 +1458,7 @@
         };
 
         socket.onmessage = (event) => {
+          if (event.data == "") return "";
           let data = JSON.parse(event.data);
           if (data?.message == "Internal server error")
             _processServerError(event.data);
@@ -1480,7 +1508,14 @@
 
         let buttons = document.getElementsByTagName("button");
         for (i = 0; i < buttons.length; i++) {
-          buttons[i].disabled = false;
+          if (
+            buttons[i].id != "start_on_top_button" &&
+            buttons[i].id != "start_on_thirty_button" &&
+            buttons[i].id != "switch_mode_button" &&
+            buttons[i].id != "pause_all_lanes_button" &&
+            buttons[i].id != "stop_all_lanes_button"
+          )
+            buttons[i].disabled = false;
         }
       }
 
@@ -1488,6 +1523,7 @@
         let lane = parseInt(laneNumber);
         LANES[lane] = {
           connected: true,
+          run_clock: true,
           lane_clock: new LaneClock(time_delta, additional_time_delta),
         };
         UpdateLaneConnections();
@@ -1625,24 +1661,36 @@
         new_time.setMilliseconds(0);
 
         let diff = new_time.getTime() - running_time.getTime();
-        sendSyncClocksCommand(diff);
+
         const lanes = Object.keys(LANES);
         lanes.forEach((lane) => {
-          const lane_clock = LANES[lane].lane_clock;
-          if (lane_clock.additional_time_delta == additional_time_delta)
-            lane_clock.additional_time_delta = diff;
+          if (LANES[lane].hasOwnProperty("is_same_as_main")) {
+            if (LANES[lane].is_same_as_main) {
+              const lane_clock = LANES[lane].lane_clock;
+              if (lane_clock.additional_time_delta == additional_time_delta)
+                lane_clock.additional_time_delta = diff;
+            }
+          }
         });
         additional_time_delta = diff;
+        sendSyncClocksCommand();
       }
 
-      function sendSyncClocksCommand(diff) {
-        let data = {
-          action: "syncClocks",
-          additional_time_delta: diff,
-          roomKey: roomKey,
-        };
+      function sendSyncClocksCommand() {
+        const lane_keys = Object.keys(LANES);
+        lane_keys.forEach((lane_key) => {
+          sendSyncClocksCommandForLane(
+            lane_key,
+            LANES[lane_key].lane_clock.additional_time_delta
+          );
+        });
+        // let data = {
+        //   action: "syncClocks",
+        //   additional_time_delta: diff,
+        //   roomKey: roomKey,
+        // };
 
-        socket.send(JSON.stringify(data));
+        // socket.send(JSON.stringify(data));
       }
 
       function addOneMinute() {
@@ -1670,28 +1718,13 @@
       }
 
       function syncClocks() {
+        const lane_keys = Object.keys(LANES);
+        lane_keys.forEach((lane_key) => {
+          LANES[lane_key].lane_clock.additional_time_delta =
+            additional_time_delta;
+          LANES[lane_key].is_same_as_main = true;
+        });
         sendSyncClocksCommand(additional_time_delta);
-      }
-
-      function sendInfo() {
-        data = {
-          action: "sendMessage",
-          roomKey: roomKey,
-          message: {
-            1: [
-              { name: "Swimmer 1", time: "00:30", description: "100 FR" },
-              { name: "", time: "00:35", description: "100 FR" },
-              { name: "", time: "00:40", description: "100 FR" },
-              { name: "", time: "00:45", description: "100 FR" },
-              { name: "", time: "01:00", description: "100 FR" },
-              { name: "", time: "01:05", description: "100 FR" },
-              { name: "", time: "01:10", description: "100 FR" },
-              { name: "", time: "01:15", description: "100 FR" },
-            ],
-          },
-        };
-
-        socket.send(JSON.stringify(data));
       }
 
       function truncateToHundreth(n) {
@@ -1789,23 +1822,26 @@
           lane_controls_major_div.id =
             "lane" + lane_number + "_controls_major_lane" + lane_number;
           lane_controls_major_div.classList.add("lane_controls");
+          lane_controls_major_div.style.display = "none";
           lane_div.appendChild(lane_controls_major_div);
 
-          const pause_button = document.createElement("button");
-          pause_button.type = "button";
-          pause_button.id = "lane" + lane_number + "_pause_button";
-          pause_button.classList.add("btn");
-          pause_button.classList.add("btn-warning");
-          pause_button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000" height="35" width="35" version="1.1" id="Capa_1" viewBox="0 0 512 512" xml:space="preserve">
-                  <path d="M256,0C114.617,0,0,114.615,0,256s114.617,256,256,256s256-114.615,256-256S397.383,0,256,0z M224,320  c0,8.836-7.164,16-16,16h-32c-8.836,0-16-7.164-16-16V192c0-8.836,7.164-16,16-16h32c8.836,0,16,7.164,16,16V320z M352,320  c0,8.836-7.164,16-16,16h-32c-8.836,0-16-7.164-16-16V192c0-8.836,7.164-16,16-16h32c8.836,0,16,7.164,16,16V320z"></path>
-                </svg>`;
-          lane_controls_major_div.appendChild(pause_button);
+          // const pause_button = document.createElement("button");
+          // pause_button.type = "button";
+          // pause_button.id = "lane" + lane_number + "_pause_button";
+          // pause_button.classList.add("btn");
+          // pause_button.classList.add("btn-warning");
+          // pause_button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000" height="35" width="35" version="1.1" id="Capa_1" viewBox="0 0 512 512" xml:space="preserve">
+          //         <path d="M256,0C114.617,0,0,114.615,0,256s114.617,256,256,256s256-114.615,256-256S397.383,0,256,0z M224,320  c0,8.836-7.164,16-16,16h-32c-8.836,0-16-7.164-16-16V192c0-8.836,7.164-16,16-16h32c8.836,0,16,7.164,16,16V320z M352,320  c0,8.836-7.164,16-16,16h-32c-8.836,0-16-7.164-16-16V192c0-8.836,7.164-16,16-16h32c8.836,0,16,7.164,16,16V320z"></path>
+          //       </svg>`;
+          // lane_controls_major_div.appendChild(pause_button);
 
           const stop_button = document.createElement("button");
           stop_button.type = "button";
           stop_button.id = "lane" + lane_number + "_stop_button";
           stop_button.classList.add("btn");
           stop_button.classList.add("btn-danger");
+          stop_button.run_clock = true;
+          stop_button.addEventListener("click", stopLaneClockClicked);
           stop_button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="35" width="35" version="1.1" id="Capa_1" viewBox="0 0 30.05 30.05" xml:space="preserve">
                   <g>
                     <path style="fill: #030104" d="M18.993,10.688h-7.936c-0.19,0-0.346,0.149-0.346,0.342v8.022c0,0.189,0.155,0.344,0.346,0.344   h7.936c0.19,0,0.344-0.154,0.344-0.344V11.03C19.336,10.838,19.183,10.688,18.993,10.688z"></path>
@@ -1813,6 +1849,18 @@
                   </g>
                 </svg>`;
           lane_controls_major_div.appendChild(stop_button);
+
+          const edit_lane_control_button = document.createElement("button");
+          edit_lane_control_button.id =
+            "lane" + lane_number + "_edit_lane_control_button";
+          edit_lane_control_button.classList.add("btn");
+          edit_lane_control_button.classList.add("btn-success");
+          edit_lane_control_button.innerText = "Clock Controls";
+          edit_lane_control_button.addEventListener(
+            "click",
+            laneClockControlsClicked
+          );
+          lane_controls_major_div.appendChild(edit_lane_control_button);
         };
         const addLaneClockControls = () => {
           const lane_clock_controls_div = document.createElement("div");
@@ -1821,13 +1869,17 @@
           lane_clock_controls_div.classList.add("lane_clock_controls");
           lane_div.appendChild(lane_clock_controls_div);
 
-          const edit_lane_control_button = document.createElement("button");
-          edit_lane_control_button.id =
-            "lane" + lane_number + "_edit_lane_control_button";
-          edit_lane_control_button.classList.add("btn");
-          edit_lane_control_button.classList.add("btn-success");
-          edit_lane_control_button.innerText = "Clock Controls";
-          lane_clock_controls_div.appendChild(edit_lane_control_button);
+          // const edit_lane_control_button = document.createElement("button");
+          // edit_lane_control_button.id =
+          //   "lane" + lane_number + "_edit_lane_control_button";
+          // edit_lane_control_button.classList.add("btn");
+          // edit_lane_control_button.classList.add("btn-success");
+          // edit_lane_control_button.innerText = "Clock Controls";
+          // edit_lane_control_button.addEventListener(
+          //   "click",
+          //   laneClockControlsClicked
+          // );
+          // lane_clock_controls_div.appendChild(edit_lane_control_button);
 
           const start_controls_div = document.createElement("div");
           start_controls_div.id = "lane" + lane_number + "_start_controls";
@@ -1840,6 +1892,7 @@
           start_on_top_button.classList.add("btn");
           start_on_top_button.classList.add("btn-success");
           start_on_top_button.innerText = "Start on :00";
+          start_on_top_button.addEventListener("click", laneStartOnTopClicked);
           start_controls_div.appendChild(start_on_top_button);
 
           const start_on_thirty_button = document.createElement("button");
@@ -1847,6 +1900,10 @@
           start_on_thirty_button.classList.add("btn");
           start_on_thirty_button.classList.add("btn-success");
           start_on_thirty_button.innerText = "Start on :30";
+          start_on_thirty_button.addEventListener(
+            "click",
+            laneStartOnTopClicked
+          );
           start_controls_div.appendChild(start_on_thirty_button);
 
           const lane_controls_subtract_time_div = document.createElement("div");
@@ -1861,6 +1918,10 @@
           subtract_min_button.classList.add("btn");
           subtract_min_button.classList.add("btn-primary");
           subtract_min_button.innerText = "-1:00";
+          subtract_min_button.addEventListener(
+            "click",
+            subtractOneMinuteToLaneClicked
+          );
           lane_controls_subtract_time_div.appendChild(subtract_min_button);
 
           const subtract_ten_button = document.createElement("button");
@@ -1868,6 +1929,10 @@
           subtract_ten_button.classList.add("btn");
           subtract_ten_button.classList.add("btn-primary");
           subtract_ten_button.innerText = "-:10";
+          subtract_ten_button.addEventListener(
+            "click",
+            subtractTenSecondsToLaneClicked
+          );
           lane_controls_subtract_time_div.appendChild(subtract_ten_button);
 
           const subtract_one_button = document.createElement("button");
@@ -1875,6 +1940,10 @@
           subtract_one_button.classList.add("btn");
           subtract_one_button.classList.add("btn-primary");
           subtract_one_button.innerText = "-:01";
+          subtract_one_button.addEventListener(
+            "click",
+            subtractOneSecondsToLaneClicked
+          );
           lane_controls_subtract_time_div.appendChild(subtract_one_button);
 
           const lane_controls_tare_div = document.createElement("div");
@@ -1888,6 +1957,7 @@
           tare_button.classList.add("btn");
           tare_button.classList.add("btn-primary");
           tare_button.innerText = "set to :00";
+          tare_button.addEventListener("click", setLaneToZeroClicked);
           lane_controls_tare_div.appendChild(tare_button);
 
           const lane_controls_addtime_div = document.createElement("div");
@@ -1902,6 +1972,7 @@
           add_min_button.classList.add("btn");
           add_min_button.classList.add("btn-primary");
           add_min_button.innerText = "+1:00";
+          add_min_button.addEventListener("click", addOneMinuteToLaneClicked);
           lane_controls_addtime_div.appendChild(add_min_button);
 
           const add_ten_button = document.createElement("button");
@@ -1909,6 +1980,7 @@
           add_ten_button.classList.add("btn");
           add_ten_button.classList.add("btn-primary");
           add_ten_button.innerText = "+:10";
+          add_ten_button.addEventListener("click", addTenSecondsToLaneClicked);
           lane_controls_addtime_div.appendChild(add_ten_button);
 
           const add_one_button = document.createElement("button");
@@ -1916,6 +1988,7 @@
           add_one_button.classList.add("btn");
           add_one_button.classList.add("btn-primary");
           add_one_button.innerText = "+:01";
+          add_one_button.addEventListener("click", addOneSecondsToLaneClicked);
           lane_controls_addtime_div.appendChild(add_one_button);
         };
         const addDisplays = () => {
@@ -2707,6 +2780,18 @@
         practices_div.id = "practices_div";
         practices_display.appendChild(practices_div);
 
+        const pick_set_button_display = document.createElement("div");
+        pick_set_button_display.id = "pick_set_button_display";
+        practices_display.appendChild(pick_set_button_display);
+
+        const cancel_button = document.createElement("div");
+        cancel_button.type = "button";
+        cancel_button.classList.add("btn");
+        cancel_button.classList.add("btn-primary");
+        cancel_button.innerText = "Cancel";
+        cancel_button.addEventListener("click", cancelPickSetClicked);
+        pick_set_button_display.appendChild(cancel_button);
+
         const individual_practice = document.createElement("div");
         individual_practice.id = "individual_practice";
         practices_display.appendChild(individual_practice);
@@ -3144,13 +3229,31 @@
           }
         }
 
+        const button_wrapper = document.createElement("div");
+        button_wrapper.style.display = "flex";
+        button_wrapper.style.justifyContent = "space-evenly";
+        assign_lanes_inner.appendChild(button_wrapper);
+
         const assign_lanes_button = document.createElement("button");
         assign_lanes_button.innerText = "Assign Lanes";
         assign_lanes_button.id = "assign_lanes_button";
         assign_lanes_button.classList.add("btn");
         assign_lanes_button.classList.add("btn-success");
+        assign_lanes_button.classList.add("assign_lanes_button");
         assign_lanes_button.addEventListener("click", assignLanesClicked);
-        assign_lanes_inner.appendChild(assign_lanes_button);
+        button_wrapper.appendChild(assign_lanes_button);
+
+        const cancel_assign_lanes_button = document.createElement("button");
+        cancel_assign_lanes_button.innerText = "Cancel";
+        cancel_assign_lanes_button.id = "cancel_assign_lanes_button";
+        cancel_assign_lanes_button.classList.add("btn");
+        cancel_assign_lanes_button.classList.add("btn-primary");
+        cancel_assign_lanes_button.classList.add("assign_lanes_button");
+        cancel_assign_lanes_button.addEventListener(
+          "click",
+          cancelAssignLanesClicked
+        );
+        button_wrapper.appendChild(cancel_assign_lanes_button);
       }
 
       function _getSendoffs(set) {
@@ -3750,15 +3853,33 @@
         }
 
         cleanSendoffLists();
-        sendSendoffLists(sendoff_lists);
+        sendSendoffLists(true);
         assignSendoffLists();
+        rollOverSendoffLists();
 
         assign_lanes_popup.remove();
         pick_set_display.remove();
+        document.getElementById("start_on_top_button").disabled = false;
+        document.getElementById("start_on_thirty_button").disabled = false;
+        document.getElementById("switch_mode_button").disabled = false;
+        document.getElementById("stop_all_lanes_button").disabled = false;
       }
 
-      function sendSendoffLists(sendoff_lists) {
-        fillOutSendoffLists();
+      function cancelAssignLanesClicked() {
+        assign_lanes_popup.remove();
+        //pick_set_display.remove();
+      }
+
+      function cancelPickSetClicked() {
+        //assign_lanes_popup.remove();
+        pick_set_display.remove();
+      }
+
+      function sendSendoffLists(fill_out_sendoff_lists) {
+        if (fill_out_sendoff_lists == undefined) {
+          fill_out_sendoff_lists = true;
+        }
+        if (fill_out_sendoff_lists) fillOutSendoffLists();
         let lanes = Object.keys(LANES);
         let data = {
           action: "sendSendoffLists",
@@ -3811,8 +3932,15 @@
           let lane = LANES[lanes[i]];
           let lane_panel = lane.lane_panel;
 
+          if (
+            lane_panel.children[lane_panel.children.length - 1].tagName ==
+            "TABLE"
+          )
+            lane_panel.children[lane_panel.children.length - 1].remove();
+
           const sendoff_table = document.createElement("table");
-          sendoff_table.id = "lane" + lane[i] + "sendofftable";
+          sendoff_table.id = "lane" + lanes[i] + "sendofftable";
+          sendoff_table.classList.add("sendoff_table");
           lane_panel.appendChild(sendoff_table);
 
           let sendoff_list = lane.sendoff_list.list;
@@ -3882,12 +4010,11 @@
           const lane_panel = LANES[lane].lane_panel;
           const next_up_display = lane_panel.children[8];
           const next_up_table = lane_panel.children[9];
-          if (next_up_table.children.length > 1) {
+          while (next_up_display.children.length > 0) {
+            next_up_display.children[0].remove();
+          }
+          if (next_up_table.children.length > 0) {
             const sendoff = next_up_table.children[0].sendoff;
-
-            while (next_up_display.children.length > 0) {
-              next_up_display.children[0].remove();
-            }
 
             const swimmer_number = document.createElement("div");
             swimmer_number.innerText = "Swimmer #" + sendoff.swimmer_number;
@@ -3901,6 +4028,7 @@
               " " +
               sendoff.description;
             next_up_display.appendChild(swimmer_time);
+            displayChange(next_up_display);
           }
         } catch {}
       }
@@ -3908,6 +4036,11 @@
       function processTimeForLane(lane, time_display) {
         const lane_panel = LANES[lane].lane_panel;
         const next_up_display = lane_panel.children[8];
+        if (next_up_display.children.length == 0) {
+          if (lane_panel.children[9].children.length != 0)
+            lane_panel.children[9].children[0].remove();
+          return "";
+        }
         const next_up_table = lane_panel.children[9];
         const next_up_time =
           next_up_display.children[1].innerText.split(" - ")[0];
@@ -3922,6 +4055,376 @@
             }
           }
         }
+      }
+
+      let ELEMENTS_CHANGING = [];
+      function displayChange(element) {
+        element.green_amount = 255;
+        ELEMENTS_CHANGING.push(element);
+      }
+
+      function processGreenChanges() {
+        for (let i = 0; i < ELEMENTS_CHANGING.length; i++) {
+          const element = ELEMENTS_CHANGING[i];
+          element.style.backgroundColor = `rgb(0, ${element.green_amount}, 0)`;
+          element.green_amount--;
+          if (element.green_amount == -1) {
+            let temp = [];
+            for (let j = 0; j < ELEMENTS_CHANGING.length; j++) {
+              if (i != j) {
+                temp.push(ELEMENTS_CHANGING[j]);
+              }
+            }
+            ELEMENTS_CHANGING = temp;
+          }
+        }
+      }
+
+      function setAllOnTopClicked(e) {
+        //debugger;
+
+        let lanes = Object.keys(LANES);
+        for (let i = 0; i < lanes.length; i++) {
+          let lane = LANES[lanes[i]];
+
+          let clock_display = lane.lane_panel.children[1].innerText;
+          clock_display = clock_display.split(":");
+          let start_time = 0;
+          if (this.id == "start_on_top_button")
+            start_time = (parseInt(clock_display[0]) + 1) * 60;
+          else {
+            start_time = parseInt(clock_display[0]) * 60 + 30;
+            let current_clock_time =
+              parseInt(clock_display[0]) * 60 + parseInt(clock_display[1]);
+            if (start_time < current_clock_time) start_time += 60;
+          }
+
+          start_time = rollOverNumber(start_time);
+
+          lane.sendoff_list.start_time = start_time;
+          lane.sendoff_list.running_time += start_time;
+
+          for (let j = 0; j < lane.sendoff_list.list.length; j++) {
+            if (lane.sendoff_list.list[j].hasOwnProperty("original_time")) {
+              lane.sendoff_list.list[j].time =
+                lane.sendoff_list.list[j].original_time + start_time;
+            } else {
+              lane.sendoff_list.list[j].original_time =
+                lane.sendoff_list.list[j].time;
+              lane.sendoff_list.list[j].time += start_time;
+            }
+            if (i == 79) {
+              debugger;
+            }
+          }
+        }
+
+        rollOverSendoffLists();
+        sendSendoffLists(false);
+        assignSendoffLists();
+        lanes.forEach((lane) => assignDisplayFromNextInTable(lane));
+      }
+
+      function rollOverSendoffLists() {
+        let lanes = Object.keys(LANES);
+        for (let i = 0; i < lanes.length; i++) {
+          let lane_key = lanes[i];
+          let sendoff_list = LANES[lane_key].sendoff_list;
+          let list = sendoff_list.list;
+          sendoff_list.running_time = rollOverNumber(sendoff_list.running_time);
+          sendoff_list.start_time = rollOverNumber(sendoff_list.start_time);
+          list.forEach((sendoff) => {
+            sendoff.time = rollOverNumber(sendoff.time);
+            if (sendoff.hasOwnProperty("original_time"))
+              sendoff.original_time = rollOverNumber(sendoff.original_time);
+          });
+        }
+      }
+
+      function rollOverNumber(number) {
+        if (number >= 3600) return number - 3600;
+        return number;
+      }
+
+      function laneClockControlsClicked(e) {
+        if (this.innerText == "Clock Controls") {
+          this.parentElement.parentElement.children[4].style.display = "";
+          this.parentElement.parentElement.children[5].style.display = "";
+          this.parentElement.parentElement.children[6].style.display = "";
+          this.parentElement.parentElement.children[7].style.display = "";
+          this.innerText = "Hide Clock Controls";
+          this.classList.remove("btn-success");
+          this.classList.add("btn-primary");
+        } else {
+          this.parentElement.parentElement.children[4].style.display = "none";
+          this.parentElement.parentElement.children[5].style.display = "none";
+          this.parentElement.parentElement.children[6].style.display = "none";
+          this.parentElement.parentElement.children[7].style.display = "none";
+          this.innerText = "Clock Controls";
+          this.classList.remove("btn-primary");
+          this.classList.add("btn-success");
+        }
+      }
+
+      function laneStartOnTopClicked(e) {
+        let lane_key =
+          this.parentElement.parentElement.children[0].innerText.replace(
+            "Lane ",
+            ""
+          );
+        let lane = LANES[lane_key];
+
+        let clock_display = lane.lane_panel.children[1].innerText;
+        clock_display = clock_display.split(":");
+        let start_time = 0;
+        if (this.innerText == "Start on :00")
+          start_time = (parseInt(clock_display[0]) + 1) * 60;
+        else {
+          start_time = parseInt(clock_display[0]) * 60 + 30;
+          let current_clock_time =
+            parseInt(clock_display[0]) * 60 + parseInt(clock_display[1]);
+          if (start_time < current_clock_time) start_time += 60;
+        }
+
+        start_time = rollOverNumber(start_time);
+
+        lane.sendoff_list.start_time = start_time;
+        lane.sendoff_list.running_time += start_time;
+
+        for (let j = 0; j < lane.sendoff_list.list.length; j++) {
+          if (lane.sendoff_list.list[j].hasOwnProperty("original_time")) {
+            lane.sendoff_list.list[j].time =
+              lane.sendoff_list.list[j].original_time + start_time;
+          } else {
+            lane.sendoff_list.list[j].original_time =
+              lane.sendoff_list.list[j].time;
+            lane.sendoff_list.list[j].time += start_time;
+          }
+          if (i == 79) {
+            debugger;
+          }
+        }
+
+        rollOverSendoffLists();
+        sendSendoffLists(false);
+        assignSendoffLists();
+        assignDisplayFromNextInTable(lane_key);
+      }
+
+      function addOneMinuteToLaneClicked(e) {
+        let lane_key =
+          this.parentElement.parentElement.children[0].innerText.replace(
+            "Lane ",
+            ""
+          );
+        let lane = LANES[lane_key];
+        lane.lane_clock.additional_time_delta += 60000;
+        lane.is_same_as_main = false;
+        sendSyncClocksCommandForLane(
+          lane_key,
+          lane.lane_clock.additional_time_delta
+        );
+      }
+
+      function addTenSecondsToLaneClicked(e) {
+        let lane_key =
+          this.parentElement.parentElement.children[0].innerText.replace(
+            "Lane ",
+            ""
+          );
+        let lane = LANES[lane_key];
+        lane.lane_clock.additional_time_delta += 10000;
+        lane.is_same_as_main = false;
+        sendSyncClocksCommandForLane(
+          lane_key,
+          lane.lane_clock.additional_time_delta
+        );
+      }
+
+      function addOneSecondsToLaneClicked(e) {
+        let lane_key =
+          this.parentElement.parentElement.children[0].innerText.replace(
+            "Lane ",
+            ""
+          );
+        let lane = LANES[lane_key];
+        lane.lane_clock.additional_time_delta += 1000;
+        lane.is_same_as_main = false;
+        sendSyncClocksCommandForLane(
+          lane_key,
+          lane.lane_clock.additional_time_delta
+        );
+      }
+
+      function subtractOneMinuteToLaneClicked(e) {
+        let lane_key =
+          this.parentElement.parentElement.children[0].innerText.replace(
+            "Lane ",
+            ""
+          );
+        let lane = LANES[lane_key];
+        lane.lane_clock.additional_time_delta -= 60000;
+        lane.is_same_as_main = false;
+        sendSyncClocksCommandForLane(
+          lane_key,
+          lane.lane_clock.additional_time_delta
+        );
+      }
+
+      function subtractTenSecondsToLaneClicked(e) {
+        let lane_key =
+          this.parentElement.parentElement.children[0].innerText.replace(
+            "Lane ",
+            ""
+          );
+        let lane = LANES[lane_key];
+        lane.lane_clock.additional_time_delta -= 10000;
+        lane.is_same_as_main = false;
+        sendSyncClocksCommandForLane(
+          lane_key,
+          lane.lane_clock.additional_time_delta
+        );
+      }
+
+      function subtractOneSecondsToLaneClicked(e) {
+        let lane_key =
+          this.parentElement.parentElement.children[0].innerText.replace(
+            "Lane ",
+            ""
+          );
+        let lane = LANES[lane_key];
+        lane.lane_clock.additional_time_delta -= 1000;
+        lane.is_same_as_main = false;
+        sendSyncClocksCommandForLane(
+          lane_key,
+          lane.lane_clock.additional_time_delta
+        );
+      }
+
+      function sendSyncClocksCommandForLane(lane_key, new_time_delta) {
+        let data = {
+          action: "syncClockForLane",
+          additional_time_delta: new_time_delta,
+          roomKey: roomKey,
+          lane_key: lane_key,
+        };
+
+        socket.send(JSON.stringify(data));
+      }
+
+      function setLaneToZeroClicked(e) {
+        let temp = Date.now();
+
+        let lane_key =
+          this.parentElement.parentElement.children[0].innerText.replace(
+            "Lane ",
+            ""
+          );
+
+        let split_clock_text =
+          this.parentElement.parentElement.children[1].innerText.split(":");
+        let minutes = parseInt(split_clock_text[0]);
+        // let seconds = parseInt(split_clock_text[1]);
+
+        let running_time = new Date(
+          temp + LANES[lane_key].lane_clock.time_delta
+        );
+        let new_time = new Date(running_time);
+        new_time.setMinutes(minutes);
+        new_time.setSeconds(0);
+        new_time.setMilliseconds(0);
+
+        let diff = new_time.getTime() - running_time.getTime();
+
+        LANES[lane_key].lane_clock.additional_time_delta = diff;
+
+        sendSyncClocksCommandForLane(
+          lane_key,
+          LANES[lane_key].lane_clock.additional_time_delta
+        );
+      }
+
+      function stopLaneClockClicked(e) {
+        let lane_key =
+          this.parentElement.parentElement.children[0].innerText.replace(
+            "Lane ",
+            ""
+          );
+
+        if (this.run_clock) {
+          LANES[lane_key].run_clock = false;
+          this.run_clock = false;
+          this.classList.remove("btn-danger");
+          this.classList.add("btn-success");
+          this.innerHTML = `<svg height="35" width="35" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+<g id="SVGRepo_bgCarrier" stroke-width="0"/>
+
+<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"/>
+
+<g id="SVGRepo_iconCarrier"> <path d="M21.4086 9.35258C23.5305 10.5065 23.5305 13.4935 21.4086 14.6474L8.59662 21.6145C6.53435 22.736 4 21.2763 4 18.9671L4 5.0329C4 2.72368 6.53435 1.26402 8.59661 2.38548L21.4086 9.35258Z" fill="#1C274C"/> </g>
+
+</svg>`;
+          let data = {
+            action: "stopLane",
+            roomKey: roomKey,
+            lane_key: lane_key,
+          };
+          socket.send(JSON.stringify(data));
+        } else {
+          LANES[lane_key].run_clock = true;
+          this.run_clock = true;
+          this.classList.remove("btn-success");
+          this.classList.add("btn-danger");
+          this.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="35" width="35" version="1.1" id="Capa_1" viewBox="0 0 30.05 30.05" xml:space="preserve">
+                  <g>
+                    <path style="fill: #030104" d="M18.993,10.688h-7.936c-0.19,0-0.346,0.149-0.346,0.342v8.022c0,0.189,0.155,0.344,0.346,0.344   h7.936c0.19,0,0.344-0.154,0.344-0.344V11.03C19.336,10.838,19.183,10.688,18.993,10.688z"></path>
+                    <path style="fill: #030104" d="M15.026,0C6.729,0,0.001,6.726,0.001,15.025S6.729,30.05,15.026,30.05   c8.298,0,15.023-6.726,15.023-15.025S23.324,0,15.026,0z M15.026,27.54c-6.912,0-12.516-5.604-12.516-12.515   c0-6.914,5.604-12.517,12.516-12.517c6.913,0,12.514,5.603,12.514,12.517C27.54,21.936,21.939,27.54,15.026,27.54z"></path>
+                  </g>
+                </svg>`;
+          let data = {
+            action: "startLane",
+            roomKey: roomKey,
+            lane_key: lane_key,
+          };
+          socket.send(JSON.stringify(data));
+        }
+      }
+
+      function switchModeButtonClicked(e) {
+        const lanes_keys = Object.keys(LANES);
+        lanes_keys.forEach((lane) => {
+          const lane_panel = LANES[lane].lane_panel;
+          if (lane_panel.children[2].style.display == "none")
+            lane_panel.children[2].style.display = "";
+          else {
+            if (
+              (lane_panel.children[2].children[1].innerText =
+                "Hide Clock Controls")
+            )
+              lane_panel.children[2].children[1].click();
+            lane_panel.children[2].style.display = "none";
+          }
+        });
+      }
+
+      function stopAllLanesClicked(e) {
+        if (this.innerText == "Stop All Lanes") {
+          this.innerText = "Start All Lanes";
+          this.classList.remove("btn-danger");
+          this.classList.add("btn-success");
+        } else {
+          this.innerText = "Stop All Lanes";
+          this.classList.remove("btn-success");
+          this.classList.add("btn-danger");
+        }
+        const lanes_keys = Object.keys(LANES);
+        lanes_keys.forEach((lane_key) => {
+          const lane_panel = LANES[lane_key].lane_panel;
+          if (lane_panel.children[2].style.display == "none")
+            lane_panel.children[2].style.display = "";
+          lane_panel.children[2].children[0].click();
+        });
       }
     </script>
   </body>
