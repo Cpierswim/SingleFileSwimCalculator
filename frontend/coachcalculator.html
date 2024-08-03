@@ -1432,7 +1432,7 @@
 
       function OpenForConnections() {
         socket = new WebSocket(
-          "wss://mjim68pp6h.execute-api.us-east-2.amazonaws.com/production/"
+          "wss://22r6ugvqd1.execute-api.us-east-2.amazonaws.com/production/"
         );
 
         socket.onopen = (event) => {
@@ -1458,6 +1458,7 @@
         };
 
         socket.onmessage = (event) => {
+          if (event.data == "") return "";
           let data = JSON.parse(event.data);
           if (data?.message == "Internal server error")
             _processServerError(event.data);
@@ -4364,6 +4365,12 @@
 <g id="SVGRepo_iconCarrier"> <path d="M21.4086 9.35258C23.5305 10.5065 23.5305 13.4935 21.4086 14.6474L8.59662 21.6145C6.53435 22.736 4 21.2763 4 18.9671L4 5.0329C4 2.72368 6.53435 1.26402 8.59661 2.38548L21.4086 9.35258Z" fill="#1C274C"/> </g>
 
 </svg>`;
+          let data = {
+            action: "stopLane",
+            roomKey: roomKey,
+            lane_key: lane_key,
+          };
+          socket.send(JSON.stringify(data));
         } else {
           LANES[lane_key].run_clock = true;
           this.run_clock = true;
@@ -4375,6 +4382,12 @@
                     <path style="fill: #030104" d="M15.026,0C6.729,0,0.001,6.726,0.001,15.025S6.729,30.05,15.026,30.05   c8.298,0,15.023-6.726,15.023-15.025S23.324,0,15.026,0z M15.026,27.54c-6.912,0-12.516-5.604-12.516-12.515   c0-6.914,5.604-12.517,12.516-12.517c6.913,0,12.514,5.603,12.514,12.517C27.54,21.936,21.939,27.54,15.026,27.54z"></path>
                   </g>
                 </svg>`;
+          let data = {
+            action: "startLane",
+            roomKey: roomKey,
+            lane_key: lane_key,
+          };
+          socket.send(JSON.stringify(data));
         }
       }
 
@@ -4384,7 +4397,14 @@
           const lane_panel = LANES[lane].lane_panel;
           if (lane_panel.children[2].style.display == "none")
             lane_panel.children[2].style.display = "";
-          else lane_panel.children[2].style.display = "none";
+          else {
+            if (
+              (lane_panel.children[2].children[1].innerText =
+                "Hide Clock Controls")
+            )
+              lane_panel.children[2].children[1].click();
+            lane_panel.children[2].style.display = "none";
+          }
         });
       }
 
