@@ -68,6 +68,12 @@
         color: beige;
       }
 
+      .disconnected_but_ok {
+        border-color: white;
+        background-color: lightslategrey;
+        color: black;
+      }
+
       #upper_div {
         width: 100%;
         height: 20%;
@@ -184,6 +190,11 @@
       .disconnected_lane {
         border-color: red;
         color: red;
+      }
+
+      .disconnected_but_ok_lane {
+        border-color: white;
+        color: white;
       }
 
       .lane_display_container {
@@ -1122,6 +1133,21 @@
             stop_all_lanes_button.disabled = true;
             sendoff_controls_panel.appendChild(stop_all_lanes_button);
 
+            const add_unconnected_lane_button =
+              document.createElement("button");
+            add_unconnected_lane_button.id = "add_unconnected_lane_button";
+            add_unconnected_lane_button.type = "button";
+            add_unconnected_lane_button.classList.add("btn");
+            add_unconnected_lane_button.classList.add("btn-primary");
+            add_unconnected_lane_button.classList.add("control_button");
+            add_unconnected_lane_button.innerText = "Add Unconnected Lane";
+            add_unconnected_lane_button.disabled = true;
+            add_unconnected_lane_button.addEventListener(
+              "click",
+              addUnconnectedLane
+            );
+            sendoff_controls_panel.appendChild(add_unconnected_lane_button);
+
             const stopwatch_start_all_lanes_button =
               document.createElement("button");
             stopwatch_start_all_lanes_button.type = "button";
@@ -1357,7 +1383,11 @@
         lanes.sort((a, b) => parseInt(a) - parseInt(b));
 
         lanes.forEach((lane_number) => {
-          if (LANES[lane_number].connected && LANES[lane_number].run_clock) {
+          if (
+            (LANES[lane_number].connected && LANES[lane_number].run_clock) ||
+            (LANES[lane_number].is_disconnected_ok &&
+              LANES[lane_number].run_clock)
+          ) {
             const lane_panel = LANES[lane_number].lane_panel;
             const split_panel = LANES[lane_number].split_panel;
 
@@ -1525,6 +1555,7 @@
           connected: true,
           run_clock: true,
           lane_clock: new LaneClock(time_delta, additional_time_delta),
+          is_disconnected_ok: false,
         };
         UpdateLaneConnections();
         LANES[lane].lane_panel = createLaneTable(lane);
@@ -1596,7 +1627,12 @@
           if (LANES[lane].connected) {
             connections_screen.appendChild(_getNewLaneButton(lane));
           } else {
-            connections_screen.appendChild(_getNewDisConnectedLaneButton(lane));
+            connections_screen.appendChild(
+              _getNewDisConnectedLaneButton(
+                lane,
+                LANES[lane].is_disconnected_ok
+              )
+            );
           }
         });
       }
@@ -1614,14 +1650,15 @@
         return lane_div;
       }
 
-      function _getNewDisConnectedLaneButton(lane_number) {
+      function _getNewDisConnectedLaneButton(lane_number, is_disconnected_ok) {
         let lane_div = document.createElement("div");
         let lane_p = document.createElement("p");
 
         lane_p.innerText = lane_number;
         lane_p.classList.add("pfill");
         lane_div.appendChild(lane_p);
-        lane_div.classList.add("disconnected");
+        if (is_disconnected_ok) lane_div.classList.add("disconnected_but_ok");
+        else lane_div.classList.add("disconnected");
         lane_div.classList.add("lane");
         lane_div.id = "lane_" + lane_number;
         return lane_div;
@@ -1794,12 +1831,14 @@
         const lanes_display = document.getElementById("lanes_display");
 
         let active_lane = LANES[lane_number].connected;
+        let disconnected_but_ok = LANES[lane_number].is_disconnected_ok;
         const lane_div = document.createElement("div");
         lane_div.id = "lane" + lane_number;
         lane_div.classList.add("lane_display_container");
-        active_lane
-          ? lane_div.classList.add("active_lane")
-          : lane_div.classList.add("disconnected_lane");
+        if (active_lane) lane_div.classList.add("active_lane");
+        else if (disconnected_but_ok)
+          lane_div.classList.add("disconnected_but_ok_lane");
+        else lane_div.classList.add("disconnected_lane");
 
         const addLaneLabel = () => {
           const lane_label = document.createElement("h5");
@@ -2018,9 +2057,11 @@
         const lane_split_panel = document.createElement("div");
         lane_split_panel.id = "lane" + lane_number + "_split_panel";
         let active_lane = LANES[lane_number].connected;
-        active_lane
-          ? lane_split_panel.classList.add("active_lane")
-          : lane_split_panel.classList.add("disconnected_lane");
+        let is_disconnected_ok = LANES[lane_number].is_disconnected_ok;
+        if (active_lane) lane_split_panel.classList.add("active_lane");
+        else if (is_disconnected_ok)
+          lane_split_panel.classList.add("disconnected_but_ok_lane");
+        else lane_split_panel.classList.add("disconnected_lane");
         lane_split_panel.classList.add("lane_split_panel");
 
         const lane_label = document.createElement("h5");
@@ -2059,9 +2100,11 @@
         const lane_stopwatch_panel = document.createElement("div");
         lane_stopwatch_panel.id = "lane" + lane_number + "_stopwatch_panel";
         let active_lane = LANES[lane_number].connected;
-        active_lane
-          ? lane_stopwatch_panel.classList.add("active_lane")
-          : lane_stopwatch_panel.classList.add("disconnected_lane");
+        let is_disconnected_ok = LANES[lane_number].connected;
+        if (active_lane) lane_stopwatch_panel.classList.add("active_lane");
+        else if (is_disconnected_ok)
+          lane_stopwatch_panel.classList.add("disconnected_but_ok_lane");
+        else lane_stopwatch_panel.classList.add("disconnected_lane");
         lane_stopwatch_panel.classList.add("stopwatch_split_panel");
 
         const lane_label = document.createElement("h5");
@@ -4425,6 +4468,41 @@
             lane_panel.children[2].style.display = "";
           lane_panel.children[2].children[0].click();
         });
+      }
+
+      function addUnconnectedLane(e) {
+        let lane_keys = Object.keys(LANES);
+        lane_keys.sort((a, b) => parseInt(a) - parseInt(b));
+        let lane = parseInt(lane_keys.length) + 1;
+        LANES[lane] = {
+          connected: false,
+          run_clock: true,
+          lane_clock: new LaneClock(time_delta, additional_time_delta),
+          is_disconnected_ok: true,
+        };
+
+        UpdateLaneConnections();
+        LANES[lane].lane_panel = createLaneTable(lane);
+        LANES[lane].split_panel = createSplitTable(lane);
+        LANES[lane].stopwatch_panel = createStopWatchTable(lane);
+
+        const lanes_display = document.getElementById("lanes_display");
+        while (lanes_display.children.length > 0)
+          lanes_display.children[0].remove();
+        const splits_display = document.getElementById("splits_display");
+        while (splits_display.children.length > 0)
+          splits_display.children[0].remove();
+        const stopwatch_display = document.getElementById("stopwatch_display");
+        while (stopwatch_display.children.length > 0)
+          stopwatch_display.children[0].remove();
+        lane_keys = Object.keys(LANES);
+        lane_keys.sort((a, b) => parseInt(a) - parseInt(b));
+        lane_keys.forEach((lane) => {
+          lanes_display.appendChild(LANES[lane].lane_panel);
+          splits_display.appendChild(LANES[lane].split_panel);
+          stopwatch_display.appendChild(LANES[lane].stopwatch_panel);
+        });
+        syncClocks();
       }
     </script>
   </body>
