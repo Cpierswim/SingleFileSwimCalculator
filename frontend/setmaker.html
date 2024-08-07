@@ -574,6 +574,21 @@
         user-select: none;
         max-height: 90vh;
       }
+      #sets_display_div {
+        width: 30%;
+        height: 90%;
+        margin-left: 4vw;
+        margin-top: 3vw;
+        background-color: white;
+        border-style: solid;
+        border-color: darkgray;
+        padding: 8px;
+        border-radius: 8px;
+        box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+        overflow: auto;
+        user-select: none;
+        max-height: 90vh;
+      }
       .practice_small_display:hover {
         cursor: pointer;
         background-color: rgb(166, 244, 255);
@@ -608,12 +623,31 @@
         overflow: auto;
         max-height: 90vh;
       }
+      #individual_set {
+        width: 50%;
+        height: 90%;
+        margin-top: 3vw;
+        margin-right: 4vw;
+        background-color: white;
+        border-style: solid;
+        border-color: darkgray;
+        padding: 8px;
+        border-radius: 8px;
+        box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+        overflow: auto;
+        max-height: 90vh;
+      }
       #practices_display {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
       }
-      #middle_display {
+      #sets_load_display {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
+      .middle_display {
         width: 10%;
         align-self: stretch;
         height: 100%;
@@ -786,6 +820,9 @@
         >
           Practices
         </div>
+        <div id="sets_tab" class="tab" onclick="switchToSetsTab(this)">
+          Sets
+        </div>
         <div id="settings_tab" class="tab" onclick="switchToSettings(this)">
           Settings
         </div>
@@ -833,9 +870,37 @@
         </button>
       </div>
       <div id="set_display" class="display"></div>
+      <div id="sets_load_display" class="display hide">
+        <div id="sets_display_div"></div>
+        <div class="middle_display">
+          <button
+            id="load_button"
+            class="btn btn-primary middle_button"
+            disabled="true"
+          >
+            Load
+          </button>
+          <button
+            id="edit_button"
+            class="btn btn-primary middle_button"
+            disabled="true"
+          >
+            Edit
+          </button>
+          <button
+            id="set_delete_button"
+            class="btn btn-danger middle_button"
+            disabled="true"
+            onclick="deleteDisplayedSet()"
+          >
+            Delete
+          </button>
+        </div>
+        <div id="individual_set"></div>
+      </div>
       <div id="practices_display" class="display hide">
         <div id="practices_div"></div>
-        <div id="middle_display">
+        <div class="middle_display">
           <button
             id="load_button"
             class="btn btn-primary middle_button"
@@ -980,7 +1045,11 @@
               Cancel
             </button>
           </div>
-          <input id="set_id" type="hidden" />
+          <div
+            id="set_saving_status"
+            class="saving_status"
+            style="display: none"
+          ></div>
         </div>
       </div>
     </div>
@@ -1154,6 +1223,7 @@
     );
 
     loadPractices();
+    loadSets();
 
     function mouseExists(e) {
       mouse = true;
@@ -2533,6 +2603,14 @@
       addCurves(document.getElementById("practices_display"));
     }
 
+    function switchToSetsTab(e) {
+      switchToTab(
+        document.getElementById("sets_tab"),
+        document.getElementById("sets_load_display")
+      );
+      addCurves(document.getElementById("sets_load_display"));
+    }
+
     function saveIndividualSetClicked(e) {
       const practice_short_description = document.getElementById(
         "practice_short_description"
@@ -2607,57 +2685,85 @@
       return new_array;
     }
 
-    function saveIndivdualSet(e) {
-      let set_display = document.getElementById("set_display");
-      let set_repeats = parseInt(
-        set_display.children[0].children[0].children[1].children[0].value
-      );
-      let main_set = set_display.children[0].children[1].children[1].children;
+    async function saveIndivdualSet(e) {
+      let set_saving_status = document.getElementById("set_saving_status");
+      set_saving_status.innerText = "Saving practice...";
+      set_saving_status.style.display = "";
 
-      let start = Date.now();
-      let set = _getSetObject(main_set, set_repeats);
-      let sendoffs = _getSendoffLists(set);
-      let end = Date.now();
-      let time = end - start;
+      try {
+        let set_display = document.getElementById("set_display");
+        let set_repeats = parseInt(
+          set_display.children[0].children[0].children[1].children[0].value
+        );
+        let main_set = set_display.children[0].children[1].children[1].children;
 
-      let name =
-        e.parentElement.parentElement.children[1].children[0].children[1]
-          .children[0].value;
-      let date =
-        e.parentElement.parentElement.children[1].children[1].children[1]
-          .children[0].value;
-      let key_words =
-        e.parentElement.parentElement.children[1].children[2].children[1]
-          .children[0].value;
-      let description =
-        e.parentElement.parentElement.children[1].children[3].children[1]
-          .children[0].value;
+        let set_object = {};
+        let start = performance.now();
 
-      let today = new Date();
+        let set = _getSetObject(main_set, set_repeats);
+        let sendoffs = _getSendoffLists(set);
 
-      let filename =
-        today.getFullYear() +
-        "-" +
-        today.getMonth() +
-        "-" +
-        today.getDay() +
-        "-SET-" +
-        name.replace(/\s/g, "");
+        let name =
+          e.parentElement.parentElement.children[1].children[0].children[1]
+            .children[0].value;
+        let date =
+          e.parentElement.parentElement.children[1].children[1].children[1]
+            .children[0].value;
+        let key_words =
+          e.parentElement.parentElement.children[1].children[2].children[1]
+            .children[0].value;
+        let description =
+          e.parentElement.parentElement.children[1].children[3].children[1]
+            .children[0].value;
 
-      if (name != "") {
-        let individual_set = {
-          name: name,
-          date: date,
-          key_words: key_words,
-          description: description,
-          set: set,
-        };
+        set_object.name = name;
+        set_object.date = date;
+        set_object.key_words = key_words;
+        set_object.description = description;
+        set_object.coach_id = COACH_ID;
+        set_object.set = set;
 
-        e.parentElement.parentElement.parentElement.parentElement.style.display =
-          "none";
-        e.parentElement.parentElement.children[0].style.display = "none";
-      } else {
+        let today = new Date(date);
+
+        let filename =
+          today.getFullYear() +
+          "-" +
+          (today.getMonth() + 1) +
+          "-" +
+          today.getDate() +
+          "-SET-" +
+          name +
+          ".json";
+
+        set_object.filename = filename;
+
+        let end = performance.now();
+        let time = end - start;
+        console.log("Time to process set: " + time + "ms");
+
+        let answer = await fetch(
+          "https://kn3q7dx45ldr73zai5ijz45yoe0rkufg.lambda-url.us-east-2.on.aws/",
+          {
+            method: "POST",
+            body: JSON.stringify(set_object),
+          }
+        );
+
+        if (!answer.ok || Math.trunc(answer.status / 100) != 2) {
+          set_saving_status.style.color = "red";
+          set_saving_status.innerText = "ERROR SAVING PRACTICE";
+        } else {
+          e.parentElement.parentElement.parentElement.parentElement.style.display =
+            "none";
+          e.parentElement.parentElement.children[0].style.display = "none";
+          set_saving_status.style.display = "none";
+          set_saving_status.innerText = "";
+          loadSets();
+          document.getElementById("practices_tab").click();
+        }
+      } catch (error) {
         e.parentElement.parentElement.children[0].style.display = "";
+        console.log(error);
       }
     }
 
@@ -3948,7 +4054,6 @@
       try {
         let set = _getSetObject(main_set, reps);
         let sendoff_lists = _getSendoffLists(set);
-        debugger;
       } catch {
         recolorCalculatedSendoffsToError(main_set);
       }
@@ -3976,6 +4081,16 @@
       practice_div.classList.add("practice_small_display_loading");
       practice_div.innerText = "Loading saved practices...";
       practices_div.appendChild(practice_div);
+    }
+
+    function setSetsAsLoading(sets_display_div) {
+      while (sets_display_div.children.length != 0)
+        sets_display_div.children[0].remove();
+
+      const set_div = document.createElement("div");
+      set_div.classList.add("practice_small_display_loading");
+      set_div.innerText = "Loading saved sets...";
+      sets_display_div.appendChild(set_div);
     }
 
     async function loadPractices() {
@@ -4022,6 +4137,185 @@
         practice_div.addEventListener("click", practiceClicked);
         practices_div.appendChild(practice_div);
       });
+    }
+
+    async function loadSets() {
+      let sets_display_div = document.getElementById("sets_display_div");
+      setSetsAsLoading(sets_display_div);
+
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      const requestOptions = {
+        method: "GET",
+        headers: headers,
+      };
+
+      let result = await fetch(
+        "https://lqcpchfbespvlg6ok2zxg3f4640mqmje.lambda-url.us-east-2.on.aws//?coach_id=" +
+          COACH_ID,
+        requestOptions
+      );
+
+      let set_info = await result.json();
+
+      let sets = set_info.sets;
+      let metadata = set_info.metadata;
+
+      sets.sort((a, b) => {
+        if (a.name < b.name) {
+          return -1;
+        }
+        if (a.name > b.name) {
+          return 1;
+        }
+        return 0;
+      });
+
+      while (sets_display_div.children.length != 0)
+        sets_display_div.children[0].remove();
+
+      sets.forEach((set) => {
+        const set_div = document.createElement("div");
+        set_div.classList.add("practice_small_display");
+        set_div.innerText = `${set.month}/${set.day}/${set.year} - ${set.name}`;
+        set_div.set_info = set;
+        set_div.addEventListener("click", setClicked);
+        sets_display_div.appendChild(set_div);
+      });
+    }
+
+    async function setClicked(e) {
+      const individual_set = document.getElementById("individual_set");
+      while (individual_set.children.length != 0)
+        individual_set.children[0].remove();
+      const loading_message = document.createElement("div");
+      loading_message.innerText = "Loading set...";
+      individual_set.appendChild(loading_message);
+
+      const working_modal = document.getElementById("working_modal");
+      working_modal.style.display = "";
+      let filename = this.set_info.filename;
+      filename = encodeURIComponent(filename);
+
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      let url =
+        "https://lufypj7qre3hbvkvasijiv7rhy0tvrtr.lambda-url.us-east-2.on.aws/?filename=" +
+        filename;
+
+      const requestOptions = {
+        method: "GET",
+        redirect: "follow",
+      };
+
+      fetch(url, requestOptions)
+        .then((response) => response.text())
+        .then((set) => {
+          working_modal.style.display = "none";
+          set = JSON.parse(set);
+
+          while (individual_set.children.length != 0)
+            individual_set.children[0].remove();
+
+          const top_part = document.createElement("div");
+          top_part.classList.add("individual_practice_top_part");
+          individual_set.appendChild(top_part);
+
+          const date_wrapper = document.createElement("div");
+          date_wrapper.classList.add("label_wrapper");
+          top_part.appendChild(date_wrapper);
+
+          const date_label = document.createElement("label");
+          date_label.innerText = "Date:";
+          date_label.htmlFor = "date_data";
+          date_wrapper.appendChild(date_label);
+
+          const date_data = document.createElement("input");
+          date_data.type = "text";
+          date_data.id = "set_date_data";
+          date_data.name = "set_date_data";
+          const date = new Date(set.date);
+          let day_of_week = date.getDay();
+          switch (day_of_week) {
+            case 0:
+              day_of_week = "Sunday";
+              break;
+            case 1:
+              day_of_week = "Monday";
+              break;
+            case 2:
+              day_of_week = "Tuesday";
+              break;
+            case 3:
+              day_of_week = "Wednesday";
+              break;
+            case 4:
+              day_of_week = "Thursday";
+              break;
+            case 5:
+              day_of_week = "Friday";
+              break;
+            case 6:
+              day_of_week = "Saturday";
+              break;
+          }
+          date_data.value = day_of_week + " " + date.toLocaleDateString();
+          date_data.disabled = true;
+          date_wrapper.appendChild(date_data);
+
+          const key_words_wrapper = document.createElement("div");
+          key_words_wrapper.classList.add("label_wrapper");
+          top_part.appendChild(key_words_wrapper);
+
+          const key_words_label = document.createElement("label");
+          key_words_label.innerText = "Key Words:";
+          key_words_label.htmlFor = "set_key_words_data";
+          key_words_wrapper.appendChild(key_words_label);
+
+          const key_words_data = document.createElement("input");
+          key_words_data.type = "text";
+          key_words_data.value = set.key_words;
+          key_words_data.id = "set_key_words_data";
+          key_words_data.name = "set_key_words_data";
+          key_words_data.disabled = true;
+          key_words_wrapper.appendChild(key_words_data);
+
+          const description_wrapper = document.createElement("div");
+          description_wrapper.classList.add("label_wrapper");
+          top_part.appendChild(description_wrapper);
+
+          const description_label = document.createElement("label");
+          description_label.innerText = "Description:";
+          description_label.htmlFor = "set_description_data";
+          description_wrapper.appendChild(description_label);
+
+          const description_data = document.createElement("input");
+          description_data.type = "text";
+          description_data.id = "set_description_data";
+          description_data.name = "set_description_data";
+          description_data.value = set.description;
+          description_data.disabled = true;
+          description_wrapper.appendChild(description_data);
+
+          const bottom_part = document.createElement("div");
+          bottom_part.classList.add("individual_practice_bottom_part");
+          individual_set.appendChild(bottom_part);
+
+          displaySet(bottom_part, set.set);
+          // let sides = document.getElementsByClassName("side");
+          // for (let count = 0; count < sides.length; count++)
+          //   displayPractice(sides[count], practice);
+          individual_set.filename = filename;
+          document.getElementById("set_delete_button").disabled = false;
+        })
+        .catch((error) => {
+          working_modal.style.display = "none";
+          console.error(error);
+        });
     }
 
     async function practiceClicked(e) {

@@ -17,20 +17,21 @@ def lambda_handler(event, context):
     print("coach_id: " + coach_id)
 
     response = s3.list_objects_v2(Bucket = BUCKET_NAME,
-                                Prefix = BUCKET_PREFIX + coach_id + "/practices" )
+                                Prefix = BUCKET_PREFIX + coach_id +
+                                "/sets" )
     
-    meta_response = s3.get_object(Bucket = BUCKET_NAME, Key = BUCKET_PREFIX + coach_id + "/practices/metadata.json")
+    meta_response = s3.get_object(Bucket = BUCKET_NAME, Key = BUCKET_PREFIX + coach_id + "/sets/metadata.json")
     file_contents = meta_response["Body"]
     as_string = file_contents.read().decode('utf-8')
     metadata = json.loads(as_string)
 
     print("Metadata" + json.dumps(metadata))
 
-    practices = []
+    sets = []
     for file in response['Contents']:
         if(file['Key'].find("metadata.json") == -1):
             file_string = file['Key']
-            start_index = file_string.index("practices/") + len("practices/")
+            start_index = file_string.index("sets/") + len("sets/")
             year = int(file_string[start_index:start_index + 4])
             month_start = start_index + 5
             month_end = file_string.index("-", month_start)
@@ -38,24 +39,20 @@ def lambda_handler(event, context):
             day_start = month_end + 1
             day_end = file_string.index("-", day_start)
             day = int(file_string[day_start:day_end])
-            practice_of_the_day_start = day_end + len("-PRACTICE-")
-            practice_of_the_day_end = file_string.index("-", practice_of_the_day_start)
-            practice_of_the_day = int(file_string[practice_of_the_day_start:practice_of_the_day_end])
-            group = file_string[practice_of_the_day_end + 1: -5]
-            practice = {
+            name = file_string[ day_end + len("-SET-"): len(file_string) - len(".json")]
+            set = {
                 'year': year,
                 'month': month,
                 'day': day,
-                'practice_of_the_day': practice_of_the_day,
-                'group': group,
+                'name': name,
                 'filename': file_string
             }
-            practices.append(practice)
+            sets.append(set)
 
-    print("Practices: " + json.dumps(practices))
+    print("Sets: " + json.dumps(sets))
 
     data = {
-        'practices': practices,
+        'sets': sets,
         'metadata': metadata
     }
     
